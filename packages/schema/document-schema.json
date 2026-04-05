@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CanonicalKnowledgeDocument",
+  "type": "object",
+  "required": [
+    "document_id",
+    "source_type",
+    "authority_level",
+    "version",
+    "language",
+    "title",
+    "provenance",
+    "acl",
+    "structure",
+    "terminology",
+    "content_blocks"
+  ],
+  "properties": {
+    "document_id": { "type": "string" },
+    "source_type": {
+      "type": "string",
+      "enum": ["md", "pdf", "docx", "xlsx", "pptx", "jira", "confluence"]
+    },
+    "authority_level": {
+      "type": "string",
+      "enum": ["canonical", "supporting", "contextual"]
+    },
+    "version": { "type": "string" },
+    "language": { "type": "string" },
+    "title": { "type": "string" },
+    "provenance": {
+      "type": "object",
+      "required": ["source_uri", "ingested_at"],
+      "properties": {
+        "source_uri": { "type": "string" },
+        "ingested_at": { "type": "string" }
+      }
+    },
+    "acl": {
+      "type": "object",
+      "required": ["policy", "inherits_from"],
+      "properties": {
+        "policy": { "type": "string" },
+        "inherits_from": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "structure": {
+      "type": "object",
+      "required": ["pages", "sections"],
+      "properties": {
+        "pages": { "type": "array" },
+        "sections": { "type": "array" },
+        "tables": { "type": "array" },
+        "figures": { "type": "array" },
+        "worksheets": { "type": "array" },
+        "slides": { "type": "array" }
+      }
+    },
+    "terminology": {
+      "type": "object",
+      "required": ["terms"],
+      "properties": {
+        "terms": { "type": "array" }
+      }
+    },
+    "content_blocks": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  }
+}
+

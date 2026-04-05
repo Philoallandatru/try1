@@ -1,0 +1,149 @@
+{
+  "documents": [
+    {
+      "document_id": "nvme-spec-v1",
+      "source_type": "pdf",
+      "authority_level": "canonical",
+      "version": "1.0",
+      "language": "en",
+      "title": "NVMe Flush Command",
+      "provenance": {
+        "source_uri": "fixtures/corpus/pdf/sample.pdf",
+        "ingested_at": "2026-04-05T00:00:00Z"
+      },
+      "acl": {
+        "policy": "team:ssd",
+        "inherits_from": null
+      },
+      "structure": {
+        "pages": [
+          {"page": 1},
+          {"page": 2}
+        ],
+        "sections": [
+          {"id": "section-1", "clause": "1", "heading": "Overview", "page": 1},
+          {"id": "section-2", "clause": "1.1", "heading": "Flush Semantics", "page": 2}
+        ],
+        "tables": [
+          {"id": "table-1", "title": "Telemetry Fields", "page": 1}
+        ],
+        "figures": [
+          {"id": "figure-1", "title": "Controller Flow", "page": 1}
+        ],
+        "worksheets": [],
+        "slides": []
+      },
+      "terminology": {
+        "terms": [
+          {"term": "FTL", "canonical": "Flash Translation Layer"},
+          {"term": "刷新", "canonical": "flush"}
+        ]
+      },
+      "content_blocks": [
+        {"id": "block-1", "page": 1, "text": "NVMe flush command overview and telemetry table."},
+        {"id": "block-2", "page": 2, "text": "Flush ordering is preserved for the flash translation layer."}
+      ]
+    },
+    {
+      "document_id": "design-note-cn",
+      "source_type": "docx",
+      "authority_level": "supporting",
+      "version": "2026-04",
+      "language": "zh",
+      "title": "延迟设计说明",
+      "provenance": {
+        "source_uri": "fixtures/corpus/office/sample.docx",
+        "ingested_at": "2026-04-05T00:00:00Z"
+      },
+      "acl": {
+        "policy": "team:ssd",
+        "inherits_from": null
+      },
+      "structure": {
+        "pages": [],
+        "sections": [
+          {"id": "sec-1", "heading": "延迟预算"}
+        ],
+        "tables": [],
+        "figures": [],
+        "worksheets": [],
+        "slides": []
+      },
+      "terminology": {
+        "terms": [
+          {"term": "latency", "canonical": "延迟"}
+        ]
+      },
+      "content_blocks": [
+        {"id": "block-1", "text": "该设计说明描述主控延迟预算和刷新路径。"}
+      ]
+    },
+    {
+      "document_id": "press-release",
+      "source_type": "md",
+      "authority_level": "contextual",
+      "version": "2026-03",
+      "language": "en",
+      "title": "SSD Press Release",
+      "provenance": {
+        "source_uri": "fixtures/corpus/markdown/sample.md",
+        "ingested_at": "2026-04-05T00:00:00Z"
+      },
+      "acl": {
+        "policy": "public",
+        "inherits_from": null
+      },
+      "structure": {
+        "pages": [],
+        "sections": [
+          {"id": "sec-1", "heading": "Marketing Summary"}
+        ],
+        "tables": [],
+        "figures": [],
+        "worksheets": [],
+        "slides": []
+      },
+      "terminology": {
+        "terms": [
+          {"term": "flush", "canonical": "flush"}
+        ]
+      },
+      "content_blocks": [
+        {"id": "block-1", "text": "Our new SSD supports flush faster than ever."}
+      ]
+    },
+    {
+      "document_id": "restricted-review",
+      "source_type": "confluence",
+      "authority_level": "supporting",
+      "version": "5",
+      "language": "en",
+      "title": "Restricted Design Review",
+      "provenance": {
+        "source_uri": "fixtures/connectors/confluence/page_sync.json",
+        "ingested_at": "2026-04-05T00:00:00Z"
+      },
+      "acl": {
+        "policy": "team:secret",
+        "inherits_from": null
+      },
+      "structure": {
+        "pages": [],
+        "sections": [
+          {"id": "sec-1", "heading": "Flush Review"}
+        ],
+        "tables": [],
+        "figures": [],
+        "worksheets": [],
+        "slides": []
+      },
+      "terminology": {
+        "terms": []
+      },
+      "content_blocks": [
+        {"id": "block-1", "text": "Confidential flush timing review."}
+      ]
+    }
+  ]
+}
+

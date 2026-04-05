@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSD Knowledge Platform Ops Portal</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Internal Ops Portal</p>
+      <h1>SSD Knowledge Platform</h1>
+      <p class="lede">Monitor ingestion, inspect corpus coverage, execute seeded search flows, and drill into evidence-backed citations.</p>
+    </header>
+
+    <section class="grid" aria-label="Portal workspace">
+      <article class="panel" id="ingestion-status-panel">
+        <h2>Ingestion Status</h2>
+        <ul id="ingestion-status-list"></ul>
+      </article>
+
+      <article class="panel" id="evaluation-health-panel">
+        <h2>Evaluation Health</h2>
+        <ul id="evaluation-health-list"></ul>
+      </article>
+
+      <article class="panel wide" id="corpus-inventory-panel">
+        <h2>Corpus Inventory</h2>
+        <table id="corpus-inventory-table">
+          <thead>
+            <tr>
+              <th>Document</th>
+              <th>Source</th>
+              <th>Authority</th>
+              <th>Version</th>
+              <th>Language</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </article>
+
+      <article class="panel wide" id="search-workspace-panel">
+        <h2>Search Workspace</h2>
+        <p id="search-query"></p>
+        <div id="search-results"></div>
+      </article>
+
+      <article class="panel wide" id="citation-inspection-panel">
+        <h2>Citation Inspection</h2>
+        <pre id="citation-inspection"></pre>
+      </article>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+

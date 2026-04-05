@@ -1,0 +1,19 @@
+{
+  "sync_type": "full",
+  "cursor": "conf-full-001",
+  "pages": [
+    {
+      "id": "CONF-201",
+      "space": "SSDENG",
+      "title": "Telemetry Architecture",
+      "version": "7",
+      "attachments": [
+        {
+          "name": "telemetry-diagram.png",
+          "media_type": "image/png"
+        }
+      ]
+    }
+  ]
+}
+

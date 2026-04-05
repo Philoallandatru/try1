@@ -1,0 +1,29 @@
+{
+  "document_id": "pdf-sample-001",
+  "source_type": "pdf",
+  "authority_level": "canonical",
+  "version": "1.0",
+  "language": "en",
+  "title": "PDF Sample",
+  "provenance": {
+    "source_uri": "fixtures/corpus/pdf/sample.pdf",
+    "ingested_at": "2026-04-05T00:00:00Z"
+  },
+  "acl": {
+    "policy": "team:ssd",
+    "inherits_from": null
+  },
+  "structure": {
+    "pages": [{"page": 1}],
+    "sections": [{"id": "1", "heading": "Introduction"}],
+    "tables": [{"id": "table-1"}],
+    "figures": [{"id": "figure-1"}],
+    "worksheets": [],
+    "slides": []
+  },
+  "terminology": {
+    "terms": [{"term": "NVMe", "canonical": "Non-Volatile Memory Express"}]
+  },
+  "content_blocks": [{"id": "block-1", "text": "Spec content"}]
+}
+

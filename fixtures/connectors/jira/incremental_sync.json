@@ -1,0 +1,16 @@
+{
+  "sync_type": "incremental",
+  "cursor": "jira-incr-002",
+  "issues": [
+    {
+      "key": "SSD-102",
+      "project": "SSD",
+      "summary": "Incremental telemetry sync update",
+      "updated_at": "2026-04-05T09:30:00Z",
+      "comments": [
+        "Only changed issues should be ingested in this sync window."
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,17 @@
+{
+  "sync_type": "full",
+  "cursor": "jira-full-001",
+  "issues": [
+    {
+      "key": "SSD-101",
+      "project": "SSD",
+      "summary": "Define flush behavior requirements",
+      "updated_at": "2026-04-05T08:00:00Z",
+      "comments": [
+        "Need canonical mapping to NVMe flush semantics.",
+        "Track review notes for firmware implementation."
+      ]
+    }
+  ]
+}
+

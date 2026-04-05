@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "source_type": "jira",
+      "status": "healthy",
+      "last_sync": "2026-04-05T10:00:00Z",
+      "lag_minutes": 12
+    },
+    {
+      "source_type": "confluence",
+      "status": "healthy",
+      "last_sync": "2026-04-05T10:02:00Z",
+      "lag_minutes": 10
+    }
+  ],
+  "budget_minutes": 30
+}
+

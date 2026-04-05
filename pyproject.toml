@@ -1,0 +1,15 @@
+[project]
+name = "ssd-knowledge-platform"
+version = "0.1.0"
+description = "Internal SSD knowledge platform foundation for trusted retrieval and grounded Q&A."
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+

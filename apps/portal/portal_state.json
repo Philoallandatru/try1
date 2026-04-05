@@ -1,0 +1,220 @@
+{
+  "ingestion_status": [
+    {
+      "source_type": "confluence",
+      "status": "healthy",
+      "document_count": 1
+    },
+    {
+      "source_type": "docx",
+      "status": "healthy",
+      "document_count": 1
+    },
+    {
+      "source_type": "md",
+      "status": "healthy",
+      "document_count": 1
+    },
+    {
+      "source_type": "pdf",
+      "status": "healthy",
+      "document_count": 1
+    }
+  ],
+  "corpus_inventory": [
+    {
+      "document_id": "nvme-spec-v1",
+      "title": "NVMe Flush Command",
+      "source_type": "pdf",
+      "authority_level": "canonical",
+      "version": "1.0",
+      "language": "en"
+    },
+    {
+      "document_id": "design-note-cn",
+      "title": "延迟设计说明",
+      "source_type": "docx",
+      "authority_level": "supporting",
+      "version": "2026-04",
+      "language": "zh"
+    },
+    {
+      "document_id": "press-release",
+      "title": "SSD Press Release",
+      "source_type": "md",
+      "authority_level": "contextual",
+      "version": "2026-03",
+      "language": "en"
+    },
+    {
+      "document_id": "restricted-review",
+      "title": "Restricted Design Review",
+      "source_type": "confluence",
+      "authority_level": "supporting",
+      "version": "5",
+      "language": "en"
+    }
+  ],
+  "search_query": "nvme flush",
+  "search_workspace": [
+    {
+      "document_id": "nvme-spec-v1",
+      "title": "NVMe Flush Command",
+      "authority_level": "canonical",
+      "scores": {
+        "lexical": 5,
+        "semantic": 2,
+        "authority": 3.0,
+        "total": 15.0
+      },
+      "citation": {
+        "document": "nvme-spec-v1",
+        "title": "NVMe Flush Command",
+        "version": "1.0",
+        "page": 1,
+        "section": "Overview",
+        "clause": "1",
+        "table_id": "table-1",
+        "figure_id": "figure-1",
+        "source_uri": "fixtures/corpus/pdf/sample.pdf",
+        "evidence_span": [
+          "NVMe flush command overview and telemetry table."
+        ]
+      },
+      "inspection": {
+        "document_id": "nvme-spec-v1",
+        "title": "NVMe Flush Command",
+        "version": "1.0",
+        "authority_level": "canonical",
+        "page": 1,
+        "language": "en",
+        "source_uri": "fixtures/corpus/pdf/sample.pdf",
+        "section": "Overview",
+        "clause": "1",
+        "table_id": "table-1",
+        "figure_id": "figure-1",
+        "content_blocks": [
+          {
+            "id": "block-1",
+            "page": 1,
+            "text": "NVMe flush command overview and telemetry table."
+          }
+        ]
+      }
+    },
+    {
+      "document_id": "nvme-spec-v1",
+      "title": "NVMe Flush Command",
+      "authority_level": "canonical",
+      "scores": {
+        "lexical": 5,
+        "semantic": 2,
+        "authority": 3.0,
+        "total": 15.0
+      },
+      "citation": {
+        "document": "nvme-spec-v1",
+        "title": "NVMe Flush Command",
+        "version": "1.0",
+        "page": 2,
+        "section": "Flush Semantics",
+        "clause": "1.1",
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "fixtures/corpus/pdf/sample.pdf",
+        "evidence_span": [
+          "Flush ordering is preserved for the flash translation layer."
+        ]
+      },
+      "inspection": {
+        "document_id": "nvme-spec-v1",
+        "title": "NVMe Flush Command",
+        "version": "1.0",
+        "authority_level": "canonical",
+        "page": 2,
+        "language": "en",
+        "source_uri": "fixtures/corpus/pdf/sample.pdf",
+        "section": "Flush Semantics",
+        "clause": "1.1",
+        "table_id": null,
+        "figure_id": null,
+        "content_blocks": [
+          {
+            "id": "block-2",
+            "page": 2,
+            "text": "Flush ordering is preserved for the flash translation layer."
+          }
+        ]
+      }
+    },
+    {
+      "document_id": "press-release",
+      "title": "SSD Press Release",
+      "authority_level": "contextual",
+      "scores": {
+        "lexical": 3,
+        "semantic": 1,
+        "authority": 1.0,
+        "total": 8.0
+      },
+      "citation": {
+        "document": "press-release",
+        "title": "SSD Press Release",
+        "version": "2026-03",
+        "page": null,
+        "section": "Marketing Summary",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "fixtures/corpus/markdown/sample.md",
+        "evidence_span": [
+          "Our new SSD supports flush faster than ever."
+        ]
+      },
+      "inspection": {
+        "document_id": "press-release",
+        "title": "SSD Press Release",
+        "version": "2026-03",
+        "authority_level": "contextual",
+        "page": null,
+        "language": "en",
+        "source_uri": "fixtures/corpus/markdown/sample.md",
+        "section": "Marketing Summary",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "content_blocks": [
+          {
+            "id": "block-1",
+            "text": "Our new SSD supports flush faster than ever."
+          }
+        ]
+      }
+    }
+  ],
+  "citation_inspection": {
+    "document_id": "nvme-spec-v1",
+    "title": "NVMe Flush Command",
+    "version": "1.0",
+    "authority_level": "canonical",
+    "page": 1,
+    "language": "en",
+    "source_uri": "fixtures/corpus/pdf/sample.pdf",
+    "section": "Overview",
+    "clause": "1",
+    "table_id": "table-1",
+    "figure_id": "figure-1",
+    "content_blocks": [
+      {
+        "id": "block-1",
+        "page": 1,
+        "text": "NVMe flush command overview and telemetry table."
+      }
+    ]
+  },
+  "evaluation_health": {
+    "recall@10": 1.0,
+    "ndcg@10": 1.0,
+    "citation_fidelity": 1.0
+  }
+}

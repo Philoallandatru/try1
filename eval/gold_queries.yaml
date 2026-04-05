@@ -1,0 +1,109 @@
+{
+  "thresholds": {
+    "recall@10": 0.90,
+    "ndcg@10": 0.80,
+    "citation_fidelity": 0.95
+  },
+  "queries": [
+    {
+      "id": "q-clause-lookup",
+      "category": "clause lookup",
+      "query": "flush command overview",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 1,
+        "clause": "1"
+      }
+    },
+    {
+      "id": "q-field-lookup",
+      "category": "field lookup",
+      "query": "telemetry field",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 1,
+        "clause": "1"
+      }
+    },
+    {
+      "id": "q-table-hit",
+      "category": "table hit",
+      "query": "telemetry table",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 1,
+        "clause": "1"
+      }
+    },
+    {
+      "id": "q-version-diff",
+      "category": "version-difference",
+      "query": "flush semantics",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 2,
+        "clause": "1.1"
+      }
+    },
+    {
+      "id": "q-term-mapping",
+      "category": "terminology mapping",
+      "query": "flash translation layer",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 2,
+        "clause": "1.1"
+      }
+    },
+    {
+      "id": "q-zh-to-en",
+      "category": "Chinese query to English spec retrieval",
+      "query": "刷新 命令",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 1,
+        "clause": "1"
+      }
+    },
+    {
+      "id": "q-en-to-zh",
+      "category": "English query to Chinese design retrieval",
+      "query": "latency budget",
+      "expected": {
+        "document": "design-note-cn",
+        "version": "2026-04",
+        "page": null,
+        "clause": null
+      }
+    },
+    {
+      "id": "q-abbrev-to-full",
+      "category": "abbreviation to full-term retrieval",
+      "query": "FTL",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 2,
+        "clause": "1.1"
+      }
+    },
+    {
+      "id": "q-full-to-abbrev",
+      "category": "full-term to abbreviation retrieval",
+      "query": "flash translation layer",
+      "expected": {
+        "document": "nvme-spec-v1",
+        "version": "1.0",
+        "page": 2,
+        "clause": "1.1"
+      }
+    }
+  ]
+}
+

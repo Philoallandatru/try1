@@ -1,0 +1,30 @@
+{
+  "documents": [
+    {
+      "document_id": "root-doc",
+      "acl": {
+        "policy": "team:ssd",
+        "inherits_from": null
+      }
+    },
+    {
+      "document_id": "child-doc",
+      "acl": {
+        "policy": "inherit",
+        "inherits_from": "root-doc"
+      }
+    },
+    {
+      "document_id": "restricted-doc",
+      "acl": {
+        "policy": "deny",
+        "inherits_from": null
+      }
+    }
+  ],
+  "rules": {
+    "default_policy": "deny",
+    "inheritance_enabled": true
+  }
+}
+

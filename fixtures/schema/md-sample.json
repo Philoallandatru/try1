@@ -1,0 +1,29 @@
+{
+  "document_id": "md-sample-001",
+  "source_type": "md",
+  "authority_level": "supporting",
+  "version": "v1",
+  "language": "en",
+  "title": "Markdown Sample",
+  "provenance": {
+    "source_uri": "fixtures/corpus/markdown/sample.md",
+    "ingested_at": "2026-04-05T00:00:00Z"
+  },
+  "acl": {
+    "policy": "team:ssd",
+    "inherits_from": null
+  },
+  "structure": {
+    "pages": [],
+    "sections": [{"id": "sec-1", "heading": "Overview"}],
+    "tables": [],
+    "figures": [],
+    "worksheets": [],
+    "slides": []
+  },
+  "terminology": {
+    "terms": [{"term": "FTL", "canonical": "Flash Translation Layer"}]
+  },
+  "content_blocks": [{"id": "block-1", "text": "Overview content"}]
+}
+

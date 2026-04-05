@@ -1,0 +1,13 @@
+{
+  "backup": {
+    "status": "healthy",
+    "last_backup": "2026-04-05T09:00:00Z",
+    "location": "ops/backups/phase1-snapshot.tar"
+  },
+  "restore": {
+    "status": "validated",
+    "last_restore_test": "2026-04-05T09:30:00Z",
+    "target_env": "pilot-restore"
+  }
+}
+

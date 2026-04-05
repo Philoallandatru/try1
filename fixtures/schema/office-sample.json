@@ -1,0 +1,29 @@
+{
+  "document_id": "office-sample-001",
+  "source_type": "xlsx",
+  "authority_level": "supporting",
+  "version": "2026-Q2",
+  "language": "zh",
+  "title": "Office Sample",
+  "provenance": {
+    "source_uri": "fixtures/corpus/office/sample.xlsx",
+    "ingested_at": "2026-04-05T00:00:00Z"
+  },
+  "acl": {
+    "policy": "team:ssd",
+    "inherits_from": null
+  },
+  "structure": {
+    "pages": [],
+    "sections": [],
+    "tables": [{"id": "table-1"}],
+    "figures": [],
+    "worksheets": [{"name": "Sheet1"}],
+    "slides": []
+  },
+  "terminology": {
+    "terms": [{"term": "垃圾回收", "canonical": "Garbage Collection"}]
+  },
+  "content_blocks": [{"id": "block-1", "text": "Worksheet content"}]
+}
+
