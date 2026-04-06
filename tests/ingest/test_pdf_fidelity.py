@@ -6,7 +6,7 @@ from services.ingest.adapters.pdf.adapter import extract_pdf_structure
 
 class PdfFidelityTest(unittest.TestCase):
     def test_pdf_adapter_preserves_sections_clauses_tables_and_figures(self) -> None:
-        payload = extract_pdf_structure(Path("fixtures/corpus/pdf/sample.pdf"))
+        payload = extract_pdf_structure(Path("fixtures/corpus/pdf/sample.pdf"), preferred_parser="pypdf")
         sections = payload["structure"]["sections"]
         tables = payload["structure"]["tables"]
         figures = payload["structure"]["figures"]
@@ -18,7 +18,7 @@ class PdfFidelityTest(unittest.TestCase):
         self.assertEqual(payload["language"], "en")
 
     def test_pdf_adapter_records_page_level_structure(self) -> None:
-        payload = extract_pdf_structure(Path("fixtures/corpus/pdf/sample.pdf"))
+        payload = extract_pdf_structure(Path("fixtures/corpus/pdf/sample.pdf"), preferred_parser="pypdf")
         section_pages = {section["clause"]: section["page"] for section in payload["structure"]["sections"]}
         self.assertEqual(section_pages["1"], 1)
         self.assertEqual(section_pages["1.1"], 2)
@@ -26,4 +26,3 @@ class PdfFidelityTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
