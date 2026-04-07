@@ -11,6 +11,15 @@ import tempfile
 
 from pypdf import PdfReader
 
+from services.ingest.normalizer import (
+    append_caption_item,
+    append_content_block,
+    append_section,
+    build_base_document,
+    finalize_document,
+    register_page,
+)
+
 
 SECTION_PATTERN = re.compile(r"^(?P<clause>\d+(?:\.\d+)*)\s+(?P<title>.+)$")
 TABLE_PATTERN = re.compile(r"^Table\s+(?P<id>[A-Za-z0-9_.-]+)\s*:\s*(?P<title>.+)$", re.IGNORECASE)
@@ -20,122 +29,34 @@ MARKDOWN_HEADING_PATTERN = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<title>.+)$")
 MARKDOWN_TABLE_ROW_PATTERN = re.compile(r"^\|.+\|$")
 
 
-def _base_payload(source: Path, parser_name: str) -> dict:
-    return {
-        "document_id": source.stem,
-        "source_type": "pdf",
-        "authority_level": "canonical",
-        "version": "fixture",
-        "language": "en",
-        "title": source.stem,
-        "provenance": {
-            "source_uri": str(source).replace("\\", "/"),
-            "ingested_at": "fixture",
-            "parser": parser_name,
-        },
-        "acl": {
-            "policy": "team:ssd",
-            "inherits_from": None,
-        },
-        "structure": {
-            "pages": [],
-            "sections": [],
-            "tables": [],
-            "figures": [],
-            "worksheets": [],
-            "slides": [],
-        },
-        "terminology": {
-            "terms": [],
-        },
-        "content_blocks": [],
-    }
-
-
-def _finalize_payload(payload: dict) -> dict:
-    sections = payload["structure"]["sections"]
-    if sections:
-        payload["title"] = sections[0]["heading"]
-    elif payload["content_blocks"]:
-        payload["title"] = payload["content_blocks"][0]["text"][:120]
-    return payload
-
-
-def _register_page(payload: dict, page_number: int, seen_pages: set[int] | None = None) -> None:
-    if seen_pages is not None and page_number in seen_pages:
-        return
-    payload["structure"]["pages"].append({"page": page_number})
-    if seen_pages is not None:
-        seen_pages.add(page_number)
-
-
-def _append_section(payload: dict, clause: str, heading: str, page_number: int, **extra_fields: object) -> None:
-    payload["structure"]["sections"].append(
-        {
-            "id": f"section-{len(payload['structure']['sections']) + 1}",
-            "clause": clause,
-            "heading": heading,
-            "page": page_number,
-            **extra_fields,
-        }
-    )
-
-
-def _append_caption_item(payload: dict, key: str, item_id: str, title: str, page_number: int) -> None:
-    payload["structure"][key].append(
-        {
-            "id": item_id,
-            "title": title,
-            "page": page_number,
-        }
-    )
-
-
-def _append_content_block(
-    payload: dict,
-    block_index: int,
-    page_number: int,
-    text: str,
-    **extra_fields: object,
-) -> None:
-    payload["content_blocks"].append(
-        {
-            "id": f"block-{block_index}",
-            "page": page_number,
-            "text": text,
-            **extra_fields,
-        }
-    )
-
-
 def _index_structural_text(payload: dict, text: str, page_number: int) -> None:
     section_match = SECTION_PATTERN.match(text)
     if section_match:
-        _append_section(
+        append_section(
             payload,
-            clause=section_match.group("clause"),
             heading=section_match.group("title"),
-            page_number=page_number,
+            clause=section_match.group("clause"),
+            page=page_number,
         )
 
     table_match = TABLE_PATTERN.match(text)
     if table_match:
-        _append_caption_item(
+        append_caption_item(
             payload,
             key="tables",
             item_id=f"table-{table_match.group('id')}",
             title=table_match.group("title"),
-            page_number=page_number,
+            page=page_number,
         )
 
     figure_match = FIGURE_PATTERN.match(text)
     if figure_match:
-        _append_caption_item(
+        append_caption_item(
             payload,
             key="figures",
             item_id=f"figure-{figure_match.group('id')}",
             title=figure_match.group("title"),
-            page_number=page_number,
+            page=page_number,
         )
 
 
@@ -175,9 +96,18 @@ def _try_mineru_runner(label: str, runner, *args: object) -> tuple[dict | None, 
 
 def _extract_pdf_structure_pypdf(path: str | Path) -> dict:
     source = Path(path)
-    payload = _base_payload(source, "pypdf")
+    payload = build_base_document(
+        document_id=source.stem,
+        source_type="pdf",
+        authority_level="canonical",
+        version="fixture",
+        language="en",
+        title=source.stem,
+        source_uri=str(source).replace("\\", "/"),
+        ingested_at="fixture",
+        parser="pypdf",
+    )
     reader = PdfReader(str(source))
-    block_index = 0
     logical_pages_seen: set[int] = set()
 
     for physical_page_number, page in enumerate(reader.pages, start=1):
@@ -191,23 +121,32 @@ def _extract_pdf_structure_pypdf(path: str | Path) -> dict:
             page_match = PAGE_PATTERN.match(line)
             if page_match:
                 current_page = int(page_match.group("page"))
-                _register_page(payload, current_page, logical_pages_seen)
+                register_page(payload, current_page, logical_pages_seen)
                 page_registered = True
                 continue
 
             if not page_registered and current_page not in logical_pages_seen:
-                _register_page(payload, current_page, logical_pages_seen)
+                register_page(payload, current_page, logical_pages_seen)
                 page_registered = True
 
-            block_index += 1
             _index_structural_text(payload, line, current_page)
-            _append_content_block(payload, block_index, current_page, line)
+            append_content_block(payload, line, page=current_page)
 
-    return _finalize_payload(payload)
+    return finalize_document(payload)
 
 
 def _parse_mineru_markdown(source: Path, markdown_text: str, parser_name: str) -> dict:
-    payload = _base_payload(source, parser_name)
+    payload = build_base_document(
+        document_id=source.stem,
+        source_type="pdf",
+        authority_level="canonical",
+        version="fixture",
+        language="en",
+        title=source.stem,
+        source_uri=str(source).replace("\\", "/"),
+        ingested_at="fixture",
+        parser=parser_name,
+    )
     current_page = 1
     page_registered = False
     last_heading_clause = 0
@@ -219,7 +158,7 @@ def _parse_mineru_markdown(source: Path, markdown_text: str, parser_name: str) -
             continue
 
         if not page_registered:
-            _register_page(payload, current_page)
+            register_page(payload, current_page)
             page_registered = True
 
         heading_match = MARKDOWN_HEADING_PATTERN.match(line)
@@ -233,45 +172,45 @@ def _parse_mineru_markdown(source: Path, markdown_text: str, parser_name: str) -
                 last_heading_clause += 1
                 clause = str(last_heading_clause)
                 heading = title
-            _append_section(
+            append_section(
                 payload,
-                clause=clause,
                 heading=heading,
-                page_number=current_page,
+                clause=clause,
+                page=current_page,
             )
 
         table_match = TABLE_PATTERN.match(line)
         if table_match:
-            _append_caption_item(
+            append_caption_item(
                 payload,
                 key="tables",
                 item_id=f"table-{table_match.group('id')}",
                 title=table_match.group("title"),
-                page_number=current_page,
+                page=current_page,
             )
         elif MARKDOWN_TABLE_ROW_PATTERN.match(line):
             table_index = len(payload["structure"]["tables"]) + 1
-            _append_caption_item(
+            append_caption_item(
                 payload,
                 key="tables",
                 item_id=f"table-{table_index}",
                 title=f"Markdown Table {table_index}",
-                page_number=current_page,
+                page=current_page,
             )
 
         figure_match = FIGURE_PATTERN.match(line)
         if figure_match:
-            _append_caption_item(
+            append_caption_item(
                 payload,
                 key="figures",
                 item_id=f"figure-{figure_match.group('id')}",
                 title=figure_match.group("title"),
-                page_number=current_page,
+                page=current_page,
             )
 
-        _append_content_block(payload, idx, current_page, line)
+        append_content_block(payload, line, page=current_page)
 
-    return _finalize_payload(payload)
+    return finalize_document(payload)
 
 
 def _collect_mineru_span_text(block: dict) -> str:
@@ -290,13 +229,22 @@ def _collect_mineru_span_text(block: dict) -> str:
 
 
 def _parse_mineru_middle_json(source: Path, middle_json: dict, parser_name: str) -> dict:
-    payload = _base_payload(source, parser_name)
-    block_index = 0
+    payload = build_base_document(
+        document_id=source.stem,
+        source_type="pdf",
+        authority_level="canonical",
+        version="fixture",
+        language="en",
+        title=source.stem,
+        source_uri=str(source).replace("\\", "/"),
+        ingested_at="fixture",
+        parser=parser_name,
+    )
     pdf_info = middle_json.get("pdf_info", [])
 
     for fallback_page_number, page in enumerate(pdf_info, start=1):
         page_number = int(page.get("page_idx", fallback_page_number - 1)) + 1
-        _register_page(payload, page_number)
+        register_page(payload, page_number)
         page_blocks = page.get("para_blocks", []) or page.get("preproc_blocks", [])
         for page_block in page_blocks:
             text = _collect_mineru_span_text(page_block)
@@ -310,28 +258,25 @@ def _parse_mineru_middle_json(source: Path, middle_json: dict, parser_name: str)
             if not normalized_text:
                 continue
 
-            block_index += 1
-
             if block_type == "title" and not SECTION_PATTERN.match(normalized_text):
-                _append_section(
+                append_section(
                     payload,
-                    clause=str(len(payload["structure"]["sections"]) + 1),
                     heading=normalized_text,
-                    page_number=page_number,
+                    clause=str(len(payload["structure"]["sections"]) + 1),
+                    page=page_number,
                     level=block_level,
                 )
             else:
                 _index_structural_text(payload, normalized_text, page_number)
 
-            _append_content_block(
+            append_content_block(
                 payload,
-                block_index,
-                page_number,
                 normalized_text,
+                page=page_number,
                 block_type=block_type,
             )
 
-    return _finalize_payload(payload)
+    return finalize_document(payload)
 
 
 def _read_mineru_output(source: Path, output_dir: Path, parser_name: str = "mineru") -> dict:

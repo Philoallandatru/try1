@@ -22,3 +22,8 @@ This package defines the canonical normalized knowledge document model used acro
 - `terminology`
 - `content_blocks`
 
+## Additional Contracts
+
+- `document-schema.json`: canonical normalized knowledge document
+- `ops-profile-schema.json`: profile contract for `scripts/platform_cli.py multi-sync-health`
+- `jira-field-aliases.json`: default alias contract for Jira bug-template field normalization

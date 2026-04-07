@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MultiSyncHealthProfile",
+  "type": "object",
+  "required": ["jira", "confluence"],
+  "properties": {
+    "snapshot_dir": { "type": "string" },
+    "corpus": { "type": "string" },
+    "freshness_budget_minutes": { "type": "integer", "minimum": 1 },
+    "reference_time_iso": { "type": "string" },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "freshness_budget_minutes": { "type": "integer", "minimum": 1 },
+        "reference_time_iso": { "type": "string" }
+      }
+    },
+    "jira": {
+      "$ref": "#/$defs/sourceProfile"
+    },
+    "confluence": {
+      "$ref": "#/$defs/sourceProfile"
+    }
+  },
+  "$defs": {
+    "sourceProfile": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "live": { "type": "boolean" },
+        "base_url": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "token": { "type": "string" },
+        "auth_mode": { "type": "string", "enum": ["auto", "basic", "bearer"] },
+        "cursor": { "type": "string" },
+        "page_size": { "type": "integer", "minimum": 1 },
+        "jql": { "type": "string" },
+        "cql": { "type": "string" },
+        "space_key": { "type": "string" },
+        "insecure": { "type": "boolean" }
+      }
+    }
+  }
+}

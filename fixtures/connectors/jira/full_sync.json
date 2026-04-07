@@ -5,13 +5,35 @@
     {
       "key": "SSD-101",
       "project": "SSD",
-      "summary": "Define flush behavior requirements",
+      "summary": "[SV][FwVersion880] xx平台进入S4后黑屏",
+      "type": "FW Bug",
+      "labels": ["BSOD"],
+      "priority": "Highest",
+      "component": "FW",
+      "affects_versions": ["FwVersion880"],
+      "resolution": "Unresolved",
+      "status": "In Progress",
+      "fix_versions": [],
+      "severity": "Major",
+      "report_department": "SV",
+      "root_cause": "Undefine",
+      "action": "0302: 进行复测\n0301: 发现蓝屏",
+      "frequency": "Always",
+      "fail_runtime": "",
+      "description": "Firmware Version / Density / Form Factor / Platform Name / Script Name / Test step: Save Crystal Disk Info -> Run Crystal Disk Mark -> Enter S4 -> Run Crystal Disk Mark again / Actual Result: black screen after S4.",
       "updated_at": "2026-04-05T08:00:00Z",
       "comments": [
-        "Need canonical mapping to NVMe flush semantics.",
-        "Track review notes for firmware implementation."
+        {
+          "author": {"displayName": "xx"},
+          "created": "2026-04-04T09:00:00Z",
+          "body": "发现多个平台BSOD，uart log显示admin create queue failed"
+        },
+        {
+          "author": {"displayName": "xxx"},
+          "created": "2026-04-04T10:00:00Z",
+          "body": "分析minidump和log发现Max Queue Exceeded，怀疑与BIOS不兼容，扩大MQES并提供debugfw复测"
+        }
       ]
     }
   ]
 }
-

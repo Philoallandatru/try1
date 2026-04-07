@@ -61,6 +61,9 @@ Normalize Markdown, Office, and PDF sources into a structure-preserving evidence
 
 - expose normalized JSON as the portable output
 - keep schema-specific naming in config or docs, not hard-coded project assumptions
+- preferred reusable seam:
+  - `services/ingest/normalizer.py`
+  - source adapters should delegate document assembly here instead of reimplementing payload builders
 
 ## Candidate Skill 3: Grounded Retrieval Toolkit
 
@@ -83,6 +86,9 @@ Build page-level indexes, run hybrid search, and produce citations and source in
 
 - keep authority weighting configurable
 - keep ACL behavior strict and visible in the contract
+- preferred reusable seam:
+  - `services/retrieval/toolkit.py`
+  - keep `page_index`, `hybrid_search`, and citation assembly behind these stable entrypoints
 
 ## Candidate Skill 4: Retrieval Quality Gate
 
@@ -122,4 +128,3 @@ Evaluate retrieval quality and gate release readiness.
 2. Offline Document Normalizer
 3. Grounded Retrieval Toolkit
 4. Retrieval Quality Gate
-

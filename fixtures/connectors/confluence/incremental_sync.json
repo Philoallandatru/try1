@@ -6,14 +6,24 @@
       "id": "CONF-202",
       "space": "SSDREQ",
       "title": "Latency Budget Update",
-      "version": "3",
+      "version": {
+        "number": 3,
+        "when": "2026-04-06T09:45:00Z"
+      },
+      "body": {
+        "storage": {
+          "value": "<h2>Changes</h2><ul><li>Reduced queue wait</li><li>Added retry guard</li></ul>"
+        }
+      },
       "attachments": [
         {
           "name": "latency-budget.xlsx",
-          "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "_links": {
+            "download": "/download/attachments/202/latency-budget.xlsx"
+          }
         }
       ]
     }
   ]
 }
-

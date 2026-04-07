@@ -4,6 +4,25 @@ from typing import Iterable
 
 from services.retrieval.indexing.page_index import AUTHORITY_BOOST, tokenize
 
+CONTEXTUAL_INTENT_TERMS = {
+    "background",
+    "announcement",
+    "announcements",
+    "press",
+    "release",
+    "news",
+    "context",
+    "contextual",
+    "non",
+    "normative",
+}
+
+CONTEXTUAL_AUTHORITY_BOOST = {
+    "canonical": 0.0,
+    "supporting": 2.0,
+    "contextual": 6.0,
+}
+
 
 def _is_acl_allowed(policy: str, allowed_policies: set[str]) -> bool:
     if policy == "deny":
@@ -31,8 +50,16 @@ def _query_expansions(query: str) -> set[str]:
     return terms
 
 
+def _prefers_contextual_sources(query_terms: set[str], query: str) -> bool:
+    normalized = query.lower()
+    if "press release" in normalized or "non-normative" in normalized:
+        return True
+    return any(term in CONTEXTUAL_INTENT_TERMS for term in query_terms)
+
+
 def search_page_index(entries: Iterable[dict], query: str, allowed_policies: set[str], top_k: int = 10) -> list[dict]:
     query_terms = _query_expansions(query)
+    contextual_intent = _prefers_contextual_sources(query_terms, query)
     filtered_entries = [
         entry for entry in entries
         if _is_acl_allowed(entry["acl"]["policy"], allowed_policies)
@@ -41,10 +68,12 @@ def search_page_index(entries: Iterable[dict], query: str, allowed_policies: set
     scored = []
     for entry in filtered_entries:
         lexical_score = sum(entry["token_counts"].get(term, 0) for term in query_terms)
-        semantic_score = len(query_terms & entry["tokens"])
+        entry_tokens = entry["tokens"] if isinstance(entry["tokens"], set) else set(entry["tokens"])
+        semantic_score = len(query_terms & entry_tokens)
         if lexical_score == 0 and semantic_score == 0:
             continue
-        authority_score = AUTHORITY_BOOST.get(entry["authority_level"], 0.0)
+        authority_table = CONTEXTUAL_AUTHORITY_BOOST if contextual_intent else AUTHORITY_BOOST
+        authority_score = authority_table.get(entry["authority_level"], 0.0)
         total = (lexical_score * 2.0) + semantic_score + authority_score
         scored.append(
             {

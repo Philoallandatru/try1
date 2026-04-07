@@ -1,181 +1,237 @@
 # SSD Knowledge Platform Agent Manual
 
-## 1. 项目目标
+## 1. Project Goal
 
-本仓库服务于 SSD 内部知识平台的 Phase 1 交付。Phase 1 的目标是构建一个可信的检索与 grounded Q&A 基础设施，用于协议规范、固件与 ASIC 设计文档、产品需求、Jira 和 Confluence 内容的统一摄取、检索、引用与评估。
+This repository implements the Phase 1 foundation of an internal SSD knowledge platform.
 
-该系统是检索基础设施，不是通用 AI 助手。任何实现都必须优先保证证据保真、引用可审计、权限过滤正确，以及评测结果可复现。
+Phase 1 is not a general AI assistant. It is a retrieval and grounded Q&A substrate for:
 
-## 2. 范围边界
+- specifications
+- firmware and ASIC design documents
+- product requirements
+- Jira issues
+- Confluence pages
+
+The system must preserve:
+
+- evidence fidelity
+- auditable citations
+- correct ACL filtering
+- reproducible evaluation
+
+## 2. Scope Boundary
 
 ### In Scope for Phase 1
 
-- Internal ingestion for `md`, `pdf`, `docx`, `xlsx`, `pptx`, Jira, and Confluence.
-- Layout-preserving preprocessing with a PDF path built around MinerU or an equivalent offline parser.
-- Canonical normalized document schema with provenance, ACL metadata, structure metadata, and terminology metadata.
-- PageIndex-first retrieval with hybrid search, reranking, and exact citations.
-- Internal operations portal for ingestion status, corpus inventory, search, citation inspection, and evaluation health.
-- Retrieval evaluation harness with explicit recall and citation fidelity gates.
-- Internal deployment only, with self-hosted inference only.
+- ingestion for `md`, `pdf`, `docx`, `xlsx`, `pptx`, Jira, and Confluence
+- canonical document normalization with provenance, ACL, structure, and terminology metadata
+- page-index-first retrieval
+- citation assembly and source inspection
+- evaluation and rollout gates
+- local skill-ready entrypoints for normalization and retrieval
+- local snapshot persistence and incremental refresh
 
-### Explicitly Out of Scope for Phase 1
+### Explicitly Out of Scope for This Phase
 
-- PR review automation.
-- Testcase optimization.
-- Product design optimization.
-- Any Jira or Confluence write-back workflow.
-- Broad multi-team workflow orchestration.
-- Human annotation product surfaces.
+- PR review automation
+- testcase optimization
+- product design optimization
+- Jira or Confluence write-back
+- hosted portal migration
+- database-backed storage
+- request-scoped identity ACL
 
-## 3. 工作优先级
+## 3. Implementation Priorities
 
-实现顺序必须遵循以下优先级：
+Work should still follow this order:
 
-1. 合同与 gate
-2. schema 与 ACL
-3. ingestion
-4. retrieval 与 citation
-5. eval
+1. contracts and gates
+2. schema and ACL
+3. ingestion and normalization
+4. retrieval and citation
+5. evaluation
 6. portal
 7. ops
 8. deferred modules
 
-任何实现都不得绕过以下约束：
+Do not bypass:
 
 - ACL filtering
 - citation fidelity
-- retrieval evaluation gate
+- retrieval evaluation gates
 
-## 4. 执行规则
+## 4. Current Stable Reusable Seams
 
-### TDD
+### Normalization
 
-- Ingestion 能力采用 fixture-first TDD。
-- API 与跨模块契约采用 contract-first TDD。
-- Portal 与 operator workflow 采用 E2E-first validation。
-- Bug fix 必须遵循 red, green, refactor。
-- 架构任务必须先定义 contract 和 validation，再进入实现。
+- `services/ingest/normalizer.py`
+- `scripts/ingest/normalize_cli.py`
 
-### Commit
+This is the preferred reusable seam for:
 
-- 每个 commit 必须是垂直切片、可独立验证、单独保留也安全。
-- 不允许把 deferred module 脚手架和 Phase 1 运行时功能混在同一提交。
-- 任何提交前必须完成该切片对应的测试、fixture 或 gate 校验。
+- markdown
+- PDF
+- fixture-backed Jira sync payloads
+- fixture-backed Confluence sync payloads
+
+### Retrieval
+
+- `services/retrieval/toolkit.py`
+- `scripts/retrieval/toolkit_cli.py`
+
+This is the preferred reusable seam for:
+
+- page index building
+- ACL-safe search
+- citation assembly
+- source inspection
+
+### Local Snapshot Persistence
+
+- `services/retrieval/persistence/snapshot_store.py`
+- `scripts/retrieval/snapshot_cli.py`
+
+This is the preferred seam for:
+
+- local recoverable snapshots
+- manifest tracking
+- incremental refresh by `document_id`
+
+## 5. Local Skills
+
+Repository-local skills now exist under `skills/`:
+
+- `skills/offline-document-normalizer/SKILL.md`
+- `skills/grounded-retrieval-toolkit/SKILL.md`
+
+These skills wrap stable CLI entrypoints and should be preferred over ad hoc scripting when the task matches their scope.
+
+## 6. Execution Rules
+
+### Validation First
+
+Every meaningful change must keep a validation path.
+
+Preferred validation layers:
+
+- unit tests
+- contract checks
+- CLI smoke checks
+- compile checks
+
+### Contract Stability
+
+Do not change canonical document shape, citation shape, or retrieval contract shape casually.
+
+If a new capability is needed, adapt at the edges first:
+
+- connector normalization
+- local persistence
+- skill-ready wrappers
 
 ### Evidence
 
-- 所有执行证据统一存放到 `.sisyphus/evidence/`。
-- 每个 major task 至少包含一个 happy-path 和一个 failure-path 验证产物。
+Store meaningful execution evidence under `.sisyphus/evidence/` when the task is large enough to require recorded artifacts.
 
-### Gate
+### Self-Loop Entry Rule
 
-- Retrieval 质量是 release gate，不是非正式检查。
-- 安全与 ACL 负向测试必须作为强制门禁存在。
+When the user says `continue`, `继续`, or otherwise delegates the next step without narrowing scope, enter a bounded self-loop.
 
-## 5. 架构硬约束
+Each loop iteration must follow this sequence:
 
-- Retrieval 必须采用 PageIndex-first 设计。
-- ACL filtering 必须发生在 rerank 和 answer assembly 之前。
-- Citation 至少精确到 `document + version + page + section/clause`，在可用时包含 `table_id` 或 `figure_id`。
-- Ranking 默认遵循 `canonical > supporting > contextual`。
-- 原始语言证据必须保留，且系统必须支持跨语言检索。
-- Heading、clause numbering、worksheet、slide、table、figure、page 等结构信息必须作为一等对象保留下来。
+1. restate the current target module or gap
+2. check the phase boundary before changing code
+3. implement one coherent increment
+4. run the smallest validation set that proves the increment
+5. record what changed, what passed, and what remains
+6. choose the next highest-leverage in-scope increment
 
-## 6. Skill 化原则
+Do not enter an open-ended loop across multiple deferred modules at once.
 
-优先把可复用能力沉淀为独立模块、契约或脚本入口，再考虑提升为独立 skill。不要把 Phase 1 的业务策略、团队约束或临时实现细节写死在 skill 中。
+### Self-Loop Stop Conditions
 
-第一批适合 skill 化的能力：
+Exit the loop and ask for direction when any of these becomes true:
 
-- 文档结构归一化
-- PDF fidelity 校验
-- ACL 合同校验
-- Retrieval eval runner
-- Rollout gate runner
+- the next step crosses the current phase boundary
+- the next step requires a product or architecture decision not already documented
+- the next step weakens citation, ACL, page index, or contract guarantees
+- validation cannot be completed with available local tooling
+- the remaining work is clearly in an explicit out-of-scope area
 
-Skill 只封装通用且可迁移的能力，不承载 SSD Phase 1 的特定发布边界、团队流程或项目期次判断。
+### Self-Loop Reporting Contract
 
-## 7. 建议的可复用边界
+At the end of each loop iteration, report only:
 
-建议优先把以下边界设计为可复用单元：
+- the increment completed
+- the validation actually run
+- the next recommended in-scope step
 
-- `packages/schema`
-  - 知识文档标准模型
-  - provenance、ACL、structure、terminology 的统一 contract
-- `packages/acl`
-  - ACL 传播、继承、过滤契约
-- `packages/terminology`
-  - 术语、缩写、别名、字段、命令与错误术语映射契约
-- `scripts/gates/*`
-  - 合同校验、发布门禁与质量门禁脚本
-- `scripts/eval/*`
-  - 检索评测、gold-set runner、回归检查入口
+Never claim the loop is complete without fresh validation in the same iteration.
 
-这些边界在设计时应保持项目无关、接口稳定、便于日后迁移为 skill 或接入 CI。
+## 7. Architecture Hard Constraints
 
-## 8. 执行顺序
+- retrieval must remain PageIndex-first
+- ACL filtering must happen before ranking and answer assembly
+- citation must resolve to `document + version + page + section/clause` where available
+- ranking default remains `canonical > supporting > contextual`
+- structure metadata such as page, clause, worksheet, slide, table, and figure must remain first-class
 
-### Critical Path
+## 8. Snapshot Rules
 
-Task 1 -> Task 3 -> Task 5 and Task 6 -> Task 7 and Task 8 -> Task 9 -> Task 10 -> Task 11 -> Task 12 -> Task 13 -> Task 14
+Local snapshot persistence is file-backed in this phase.
 
-### Parallelism Guidance
+Persist only:
 
-- Task 2 can start immediately after Task 1.
-- Task 3 and Task 4 can proceed in parallel after Task 1.
-- Task 5 and Task 6 can proceed in parallel after schema and ACL contracts stabilize.
-- Task 7 and Task 8 can proceed in parallel after connector contracts stabilize.
-- Portal work should begin only after retrieval and citation contracts are stable enough to avoid UI churn.
-- Task 15 does not block the pilot if release gates are already satisfied.
+- `manifest.json`
+- `documents.json`
+- `page_index.json`
 
-所有执行都必须以合同为先、验证为先、证据为先。
+Refresh rules:
 
-## 9. 全局验收清单
+- normalize raw connector payloads before refresh when needed
+- merge by stable `document_id`
+- rebuild page index after every create or refresh
 
-任何阶段、任务或提交在宣称完成前，都必须至少核对以下条目：
+Do not add database abstractions here yet.
 
-- 范围没有越界，没有引入 Phase 1 明确排除的能力。
-- 当前切片有对应的测试、fixture 或 gate，且验证已通过。
-- ACL、安全、引用、权威排序约束没有被绕过。
-- 新增接口、schema、脚本入口已在对应 contract 文档中反映。
-- 执行证据已落到 `.sisyphus/evidence/` 或已有明确证据留存方案。
-- 改动边界支持后续 skill 化，没有把项目专属逻辑硬编码进通用模块。
-- 当前产物可以被后续 agent 直接消费，而不需要额外口头解释。
+## 9. Recommended Validation Entry Points
 
-## 10. 阶段输出模板
+### Contracts and Gates
 
-后续 agent 在推进每个阶段时，输出物建议按以下模板组织，确保 handoff 清晰且可审计：
+- `python scripts/gates/check_adr_contract.py`
+- `python scripts/gates/check_repo_shape.py`
+- `python scripts/gates/check_module_contracts.py`
 
-### Stage Output Summary
+### Unified Platform CLI
 
-- Stage
-- Goal
-- Status
-- Owner or Agent
-- Date
+- `python scripts/platform_cli.py eval`
+- `python scripts/platform_cli.py gate`
+- `python scripts/platform_cli.py ops-health`
 
-### Deliverables
+### Skill-Ready CLIs
 
-- Implemented artifacts
-- Updated contracts
-- Added scripts or gates
-- Added fixtures or datasets
+- `python scripts/ingest/normalize_cli.py markdown fixtures/corpus/markdown/sample.md`
+- `python scripts/ingest/normalize_cli.py jira-sync fixtures/connectors/jira/full_sync.json`
+- `python scripts/retrieval/toolkit_cli.py search "flush command" --corpus fixtures/retrieval/pageindex_corpus.json`
+- `python scripts/retrieval/toolkit_cli.py citation "flush command" --corpus fixtures/retrieval/pageindex_corpus.json`
 
-### Validation Evidence
+### Snapshot CLI
 
-- Happy-path checks
-- Failure-path checks
-- Gate results
-- Evidence locations
+- `python scripts/retrieval/snapshot_cli.py create --snapshot-dir .tmp/snapshot --corpus fixtures/retrieval/pageindex_corpus.json`
+- `python scripts/retrieval/snapshot_cli.py refresh --snapshot-dir .tmp/snapshot --sync-payload fixtures/connectors/jira/incremental_sync.json --source-name jira`
+- `python scripts/retrieval/snapshot_cli.py show --snapshot-dir .tmp/snapshot`
 
-### Open Risks
+### Test Suites
 
-- Known limitations
-- Deferred decisions
-- Blocking dependencies
+- `python -m unittest discover -s tests -t . -p "test_*.py" -v`
+- `python -m compileall skills docs scripts services tests`
 
-### Next Handoff
+## 10. Handoff Template
 
-- Recommended next task
-- Required inputs for the next task
-- Reusable outputs that should be promoted into packages or skills
+For substantial work, summarize in this order:
+
+- goal
+- changed artifacts
+- validation run
+- open gaps
+- next recommended step

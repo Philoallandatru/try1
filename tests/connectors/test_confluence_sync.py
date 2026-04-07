@@ -10,14 +10,25 @@ class ConfluenceSyncTest(unittest.TestCase):
         self.assertEqual(payload["sync_type"], "full")
         self.assertEqual(payload["documents"][0]["attachments"][0]["name"], "telemetry-diagram.png")
         self.assertFalse(payload["documents"][0]["metadata"]["incremental"])
+        self.assertEqual(payload["documents"][0]["metadata"]["space"], "SSDENG")
+        self.assertEqual(payload["documents"][0]["version"], "7")
+        self.assertEqual(payload["documents"][0]["provenance"]["ingested_at"], "2026-04-06T08:30:00Z")
+        self.assertIn("# Telemetry Architecture", payload["documents"][0]["markdown"])
+        self.assertIn("Overview", payload["documents"][0]["markdown"])
+        self.assertIn("Telemetry ingest pipeline.", payload["documents"][0]["markdown"])
+        self.assertIn("## Attachments", payload["documents"][0]["markdown"])
+        self.assertIn("[telemetry-diagram.png](/download/attachments/201/telemetry-diagram.png)", payload["documents"][0]["markdown"])
 
     def test_confluence_incremental_sync_marks_incremental_metadata(self) -> None:
         payload = load_confluence_sync(Path("fixtures/connectors/confluence/incremental_sync.json"))
         self.assertEqual(payload["sync_type"], "incremental")
         self.assertTrue(payload["documents"][0]["metadata"]["incremental"])
         self.assertEqual(payload["documents"][0]["version"], "3")
+        self.assertEqual(payload["documents"][0]["provenance"]["ingested_at"], "2026-04-06T09:45:00Z")
+        self.assertIn("## Changes", payload["documents"][0]["markdown"])
+        self.assertIn("- Reduced queue wait", payload["documents"][0]["markdown"])
+        self.assertIn("- Added retry guard", payload["documents"][0]["markdown"])
 
 
 if __name__ == "__main__":
     unittest.main()
-

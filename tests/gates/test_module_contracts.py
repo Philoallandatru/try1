@@ -7,6 +7,10 @@ REQUIRED_MODULES = [
     "docs/modules/testcase-optimization.md",
     "docs/modules/wiki-summarization-intelligence.md",
     "docs/modules/pr-review-intelligence.md",
+    "docs/modules/live-source-normalization-and-indexing.md",
+    "docs/modules/local-snapshot-persistence-and-refresh.md",
+    "docs/modules/profile-driven-ops-orchestration.md",
+    "docs/modules/jira-analysis-reporting.md",
 ]
 
 REQUIRED_HEADINGS = [
@@ -16,6 +20,21 @@ REQUIRED_HEADINGS = [
     "## Dependencies",
     "## KPIs",
 ]
+
+MODULE_REQUIRED_TOKENS = {
+    "docs/modules/live-source-normalization-and-indexing.md": [
+        "docs/jira-bug-field-mapping.md",
+        "packages/schema/jira-field-aliases.json",
+        "docs/confluence-page-mapping.md",
+    ],
+    "docs/modules/jira-analysis-reporting.md": [
+        "services/analysis/jira_issue_analysis.py",
+        "scripts/platform_cli.py jira-report",
+        "scripts/platform_cli.py jira-spec-qa",
+        "scripts/platform_cli.py jira-batch-spec-report",
+        "tests.analysis.test_jira_issue_analysis",
+    ],
+}
 
 
 class ModuleContractsTest(unittest.TestCase):
@@ -27,8 +46,9 @@ class ModuleContractsTest(unittest.TestCase):
                 text = path.read_text(encoding="utf-8")
                 for heading in REQUIRED_HEADINGS:
                     self.assertIn(heading, text)
+                for token in MODULE_REQUIRED_TOKENS.get(module_path, []):
+                    self.assertIn(token, text)
 
 
 if __name__ == "__main__":
     unittest.main()
-

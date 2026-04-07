@@ -1,0 +1,11 @@
+{
+  "snapshot_dir": ".tmp/profile-snapshot",
+  "freshness_budget_minutes": 30,
+  "reference_time_iso": "2026-04-06T09:10:00Z",
+  "jira": {
+    "path": "fixtures/connectors/jira/incremental_sync.json"
+  },
+  "confluence": {
+    "path": "fixtures/connectors/confluence/incremental_sync.json"
+  }
+}

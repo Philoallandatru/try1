@@ -7,6 +7,10 @@ REQUIRED_MODULES = [
     "docs/modules/testcase-optimization.md",
     "docs/modules/wiki-summarization-intelligence.md",
     "docs/modules/pr-review-intelligence.md",
+    "docs/modules/live-source-normalization-and-indexing.md",
+    "docs/modules/local-snapshot-persistence-and-refresh.md",
+    "docs/modules/profile-driven-ops-orchestration.md",
+    "docs/modules/jira-analysis-reporting.md",
 ]
 
 REQUIRED_HEADINGS = [
@@ -16,6 +20,21 @@ REQUIRED_HEADINGS = [
     "## Dependencies",
     "## KPIs",
 ]
+
+MODULE_REQUIRED_TOKENS = {
+    "docs/modules/live-source-normalization-and-indexing.md": [
+        "docs/jira-bug-field-mapping.md",
+        "packages/schema/jira-field-aliases.json",
+        "docs/confluence-page-mapping.md",
+    ],
+    "docs/modules/jira-analysis-reporting.md": [
+        "services/analysis/jira_issue_analysis.py",
+        "scripts/platform_cli.py jira-report",
+        "scripts/platform_cli.py jira-spec-qa",
+        "scripts/platform_cli.py jira-batch-spec-report",
+        "tests.analysis.test_jira_issue_analysis",
+    ],
+}
 
 
 def main() -> int:
@@ -29,6 +48,9 @@ def main() -> int:
         for heading in REQUIRED_HEADINGS:
             if heading not in text:
                 failures.append(f"{module_path}: missing heading {heading}")
+        for token in MODULE_REQUIRED_TOKENS.get(module_path, []):
+            if token not in text:
+                failures.append(f"{module_path}: missing required token {token}")
     if failures:
         print("\n".join(failures))
         return 1
@@ -38,4 +60,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
