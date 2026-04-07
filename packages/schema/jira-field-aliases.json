@@ -1,0 +1,17 @@
+{
+  "Type": ["issuetype", "type"],
+  "Labels": ["labels"],
+  "Priority": ["priority"],
+  "Component": ["components", "component"],
+  "Affects Version/s": ["versions", "affects_versions", "affectsVersion/s"],
+  "Resolution": ["resolution"],
+  "Status": ["status"],
+  "Fix Version/s": ["fixVersions", "fix_versions"],
+  "Severity": ["severity"],
+  "Report department": ["report_department", "reportDepartment", "department"],
+  "Root Cause": ["root_cause", "rootCause"],
+  "How to fix": ["how_to_fix", "howToFix", "fix_plan"],
+  "Action": ["action", "actions"],
+  "Frequency": ["frequency"],
+  "FailRunTime": ["fail_runtime", "failRunTime"]
+}

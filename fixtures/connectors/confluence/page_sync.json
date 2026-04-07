@@ -6,14 +6,24 @@
       "id": "CONF-201",
       "space": "SSDENG",
       "title": "Telemetry Architecture",
-      "version": "7",
+      "version": {
+        "number": 7,
+        "when": "2026-04-06T08:30:00Z"
+      },
+      "body": {
+        "storage": {
+          "value": "<h1>Overview</h1><p>Telemetry ingest pipeline.</p><p>Supports dashboard exports.</p>"
+        }
+      },
       "attachments": [
         {
           "name": "telemetry-diagram.png",
-          "media_type": "image/png"
+          "media_type": "image/png",
+          "_links": {
+            "download": "/download/attachments/201/telemetry-diagram.png"
+          }
         }
       ]
     }
   ]
 }
-

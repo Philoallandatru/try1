@@ -5,12 +5,28 @@
     {
       "key": "SSD-102",
       "project": "SSD",
-      "summary": "Incremental telemetry sync update",
+      "summary": "[DV][FwVersion990] LNDF(224)获取NAND写入量异常",
+      "type": "FW Bug",
+      "labels": ["GetLogPage"],
+      "priority": "Medium",
+      "component": "FW",
+      "affects_versions": ["FwVersion990"],
+      "resolution": "Resolved",
+      "status": "In Progress",
+      "fix_versions": ["FwVersion1100"],
+      "severity": "Major",
+      "report_department": "DV",
+      "root_cause": "DFh log的total NAND write没有加上TLC write",
+      "how_to_fix": "针对DFh的write count进行修正",
+      "description": "Log page LNDF(224) reported unexpected NAND write value during DV validation.",
       "updated_at": "2026-04-05T09:30:00Z",
       "comments": [
-        "Only changed issues should be ingested in this sync window."
+        {
+          "author": {"displayName": "dv_owner"},
+          "created": "2026-04-05T09:10:00Z",
+          "body": "确认问题出在DFh log累计逻辑，修复后需要对TLC workload复测"
+        }
       ]
     }
   ]
 }
-

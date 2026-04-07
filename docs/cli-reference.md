@@ -24,6 +24,12 @@ python scripts/platform_cli.py module-check
 python scripts/platform_cli.py eval
 python scripts/platform_cli.py gate
 python scripts/platform_cli.py ops-health
+python scripts/platform_cli.py ops-health --snapshot-dir .tmp/snapshot
+python scripts/platform_cli.py ops-health --snapshot-dir .tmp/snapshot --reference-time-iso 2026-04-06T09:10:00Z
+python scripts/platform_cli.py sync-health jira fixtures/connectors/jira/incremental_sync.json --snapshot-dir .tmp/snapshot --reference-time-iso 2026-04-06T09:10:00Z
+python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/incremental_sync.json --reference-time-iso 2026-04-06T09:10:00Z
+python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN
+python scripts/platform_cli.py multi-sync-health --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot
 ```
 
 ### Ingestion
@@ -41,6 +47,8 @@ python scripts/platform_cli.py ingest pdf fixtures/corpus/pdf/sample.pdf
 ```bash
 python scripts/platform_cli.py connector jira fixtures/connectors/jira/full_sync.json
 python scripts/platform_cli.py connector confluence fixtures/connectors/confluence/page_sync.json
+python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $TOKEN
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $TOKEN
 ```
 
 ### Retrieval and Citation
@@ -48,6 +56,21 @@ python scripts/platform_cli.py connector confluence fixtures/connectors/confluen
 ```bash
 python scripts/platform_cli.py search "flush command"
 python scripts/platform_cli.py citation "flush command"
+```
+
+### Jira Analysis
+
+```bash
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --output-md .tmp/jira-report.md
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/full_sync.json --updated-on-date 2026-04-05
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-at-iso 2026-04-05T09:30:00Z
+python scripts/platform_cli.py jira-report --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --prompt-template "Summarize {issue_count} issue(s): {summaries}"
+python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?"
+python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --output-answer-md .tmp/jira-spec-answer.md
+python scripts/platform_cli.py jira-spec-qa --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --jira-issue-id SSD-102 --spec-document-id nvme-spec-v1 --question "Does this issue relate to the spec?"
+python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --output-md .tmp/jira-batch-spec-report.md
 ```
 
 ### Portal
@@ -60,4 +83,38 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 
 - All commands currently operate on local fixtures and local contracts.
 - The CLI is intended to be stable enough to be wrapped as future reusable skills.
+- `ops-health` can now read either fixture-backed status or a real local snapshot manifest/page index via `--snapshot-dir`.
+- `sync-health` provides a sequential ops path: connector payload -> snapshot refresh -> ops health.
+- `multi-sync-health` provides a sequential dual-source path: Jira refresh -> Confluence refresh -> aggregated ops health.
+- `multi-sync-health` supports both fixture-backed and live dual-source operation, with source-prefixed live configuration flags.
+- `multi-sync-health` also supports a JSON profile file so source configuration can be versioned outside the command line.
+- `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, and renders an optional prompt template.
+- `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer, and can write that answer to `--output-answer-md`.
+- `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA and can write a combined Markdown report to `--output-md`.
 
+## Skill-Ready CLIs
+
+### Offline Document Normalizer
+
+```bash
+python scripts/ingest/normalize_cli.py markdown fixtures/corpus/markdown/sample.md
+python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf
+python scripts/ingest/normalize_cli.py jira-sync fixtures/connectors/jira/full_sync.json
+python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json
+```
+
+### Grounded Retrieval Toolkit
+
+```bash
+python scripts/retrieval/toolkit_cli.py index --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py search "flush command" --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py citation "flush command" --corpus fixtures/retrieval/pageindex_corpus.json
+```
+
+### Snapshot Persistence
+
+```bash
+python scripts/retrieval/snapshot_cli.py create --snapshot-dir .tmp/snapshot --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/snapshot_cli.py show --snapshot-dir .tmp/snapshot
+python scripts/retrieval/snapshot_cli.py refresh --snapshot-dir .tmp/snapshot --sync-payload fixtures/connectors/jira/incremental_sync.json --source-name jira
+```
