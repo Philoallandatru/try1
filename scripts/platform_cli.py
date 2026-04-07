@@ -16,6 +16,7 @@ from scripts.gates.check_repo_shape import main as repo_check_main
 from services.eval.real_pdf_validation import validate_real_pdfs
 from scripts.gates.run_phase1_gate import evaluate_phase1_gate
 from services.analysis.jira_issue_analysis import build_jira_batch_spec_report, build_jira_spec_question_payload, build_jira_time_report
+from services.analysis.llm_backends import build_llm_backend
 from services.eval.harness import evaluate_dataset
 from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
@@ -75,6 +76,38 @@ def _add_jira_source_args(command_parser: argparse.ArgumentParser) -> None:
     command_parser.add_argument("--jira-page-size", type=int, default=50)
     command_parser.add_argument("--jira-jql", default="order by updated asc")
     command_parser.add_argument("--jira-insecure", action="store_true")
+
+
+def _add_llm_backend_args(command_parser: argparse.ArgumentParser) -> None:
+    command_parser.add_argument(
+        "--llm-backend",
+        choices=["none", "mock", "ollama", "openai-compatible"],
+        default="none",
+    )
+    command_parser.add_argument("--llm-model")
+    command_parser.add_argument("--llm-base-url")
+    command_parser.add_argument("--llm-api-key")
+    command_parser.add_argument("--llm-timeout-seconds", type=int, default=120)
+    command_parser.add_argument("--llm-mock-response")
+    command_parser.add_argument(
+        "--llm-prompt-mode",
+        choices=["strict", "balanced", "exploratory"],
+        default="strict",
+    )
+
+
+def _build_llm_backend_from_args(parser: argparse.ArgumentParser, args: argparse.Namespace):
+    try:
+        return build_llm_backend(
+            backend=args.llm_backend,
+            model=args.llm_model,
+            base_url=args.llm_base_url,
+            api_key=args.llm_api_key,
+            mock_response=args.llm_mock_response,
+            timeout_seconds=args.llm_timeout_seconds,
+        )
+    except ValueError as error:
+        parser.error(str(error))
 
 
 def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[dict]:
@@ -237,6 +270,8 @@ def main() -> int:
     jira_report_parser.add_argument("--updated-at-iso")
     jira_report_parser.add_argument("--prompt-template")
     jira_report_parser.add_argument("--output-md")
+    jira_report_parser.add_argument("--output-answer-md")
+    _add_llm_backend_args(jira_report_parser)
 
     jira_spec_qa_parser = subparsers.add_parser("jira-spec-qa")
     _add_jira_source_args(jira_spec_qa_parser)
@@ -247,6 +282,7 @@ def main() -> int:
     jira_spec_qa_parser.add_argument("--prompt-template")
     jira_spec_qa_parser.add_argument("--output-answer-md")
     jira_spec_qa_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    _add_llm_backend_args(jira_spec_qa_parser)
 
     jira_batch_spec_report_parser = subparsers.add_parser("jira-batch-spec-report")
     _add_jira_source_args(jira_batch_spec_report_parser)
@@ -259,6 +295,7 @@ def main() -> int:
     jira_batch_spec_report_parser.add_argument("--question-template", default="Analyze Jira {jira_issue_id} against the selected spec.")
     jira_batch_spec_report_parser.add_argument("--output-md")
     jira_batch_spec_report_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    _add_llm_backend_args(jira_batch_spec_report_parser)
 
     args = parser.parse_args()
 
@@ -377,12 +414,21 @@ def main() -> int:
             updated_on_date=args.updated_on_date,
             updated_at_iso=args.updated_at_iso,
             prompt_template=args.prompt_template,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=_build_llm_backend_from_args(parser, args),
         )
         if args.output_md:
             output_path = Path(args.output_md)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(report["markdown"], encoding="utf-8")
             report["output_md"] = str(output_path)
+        if args.output_answer_md:
+            if "answer" not in report:
+                parser.error("--output-answer-md requires --llm-backend to be set")
+            output_path = Path(args.output_answer_md)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(report["answer"]["text"], encoding="utf-8")
+            report["output_answer_md"] = str(output_path)
         return _print_json(report)
     if args.command == "jira-spec-qa":
         jira_documents = _load_jira_documents_from_args(parser, args)
@@ -405,6 +451,8 @@ def main() -> int:
             question=args.question,
             allowed_policies=set(args.policies),
             prompt_template=args.prompt_template,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=_build_llm_backend_from_args(parser, args),
         )
         if args.output_answer_md:
             output_path = Path(args.output_answer_md)
@@ -430,6 +478,8 @@ def main() -> int:
             updated_to_iso=args.updated_to_iso,
             updated_on_date=args.updated_on_date,
             updated_at_iso=args.updated_at_iso,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=_build_llm_backend_from_args(parser, args),
         )
         if args.output_md:
             output_path = Path(args.output_md)

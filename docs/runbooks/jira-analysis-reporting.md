@@ -12,10 +12,11 @@ This workflow supports the current Jira analysis stage:
 - generate Markdown Jira reports
 - build Jira-plus-selected-spec QA payloads
 - generate deterministic extractive answers from retrieved Jira and spec evidence
+- optionally call a local LLM backend for final answer text
 - write reviewable Markdown artifacts for handoff
 
-This runbook does not cover external LLM execution. The current answer backend is
-deterministic and evidence-only.
+The default answer backend is deterministic and evidence-only. Local LLM execution
+is opt-in through `--llm-backend`.
 
 ## Preconditions
 
@@ -40,6 +41,30 @@ Expected result:
 - JSON output includes `markdown`, `prompt`, `issue_ids`, and `time_filter`.
 - The Markdown report is written to `.tmp/jira-report.md`.
 - Only Jira issues updated inside the inclusive ISO window are included.
+
+## Generate A Jira Report Summary With A Local Model
+
+Use the LLM answer as a summary layer, not as a replacement for the raw Markdown
+report:
+
+```powershell
+python scripts/platform_cli.py jira-report `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --updated-from-iso 2026-04-05T09:00:00Z `
+  --updated-to-iso 2026-04-05T10:00:00Z `
+  --llm-backend ollama `
+  --llm-model qwen2.5:7b `
+  --llm-prompt-mode strict `
+  --output-md .tmp/jira-report.md `
+  --output-answer-md .tmp/jira-report-answer.md
+```
+
+Expected result:
+
+- `markdown` and `.tmp/jira-report.md` preserve the raw Jira issue report.
+- `answer.mode` is `local-llm`.
+- `.tmp/jira-report-answer.md` contains the local-model summary.
+- The prompt requires `Executive summary`, `Issue table`, and `Follow-up actions`.
 
 ## Generate A Date Or Exact-Timestamp Report
 
@@ -80,6 +105,55 @@ Expected result:
   query terms match both sources.
 - The Markdown answer is written to `.tmp/jira-spec-answer.md`.
 
+## Generate Jira-Plus-Spec QA With A Local Model
+
+Use Ollama when a local Ollama server is running:
+
+```powershell
+python scripts/platform_cli.py jira-spec-qa `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --jira-issue-id SSD-102 `
+  --spec-corpus fixtures/retrieval/pageindex_corpus.json `
+  --spec-document-id nvme-spec-v1 `
+  --question "Does this issue relate to NVMe flush command evidence?" `
+  --llm-backend ollama `
+  --llm-model qwen2.5:7b `
+  --llm-base-url http://localhost:11434 `
+  --llm-prompt-mode strict `
+  --output-answer-md .tmp/jira-spec-answer-llm.md
+```
+
+Use an OpenAI-compatible local server, such as LM Studio, vLLM, or llama.cpp
+server:
+
+```powershell
+python scripts/platform_cli.py jira-spec-qa `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --jira-issue-id SSD-102 `
+  --spec-corpus fixtures/retrieval/pageindex_corpus.json `
+  --spec-document-id nvme-spec-v1 `
+  --question "Does this issue relate to NVMe flush command evidence?" `
+  --llm-backend openai-compatible `
+  --llm-model local-model `
+  --llm-base-url http://localhost:1234/v1
+```
+
+Expected result:
+
+- `answer.mode` is `local-llm`.
+- `answer.backend` is `ollama` or `openai-compatible`.
+- `retrieval.citations` and `ai_prompt` remain present for audit.
+- The LLM answer must be reviewed against the citations before sharing.
+
+Prompt mode options for Jira reports and Jira-plus-spec QA:
+
+- `strict`: default; requires direct evidence and tells the model to say evidence
+  is insufficient rather than infer protocol compliance from similar topics.
+- `balanced`: allows cautious engineering inference, but requires the answer to
+  separate direct evidence from inference and call out missing evidence.
+- `exploratory`: allows hypotheses for follow-up triage, but requires hypotheses
+  to be labeled and blocks final compliance claims.
+
 ## Generate A Batch Jira-Plus-Spec Report
 
 ```powershell
@@ -97,7 +171,9 @@ Expected result:
 
 - The report first summarizes all Jira issues selected by the time filter.
 - Each selected issue gets an individual Jira-plus-spec QA section.
-- Each QA section contains deterministic evidence and extractive answer text.
+- Each QA section contains deterministic evidence and answer text. By default the
+  answer is extractive; with `--llm-backend`, the answer comes from the selected
+  local model backend.
 
 ## Live Jira Source
 
@@ -123,7 +199,7 @@ For a single Jira report:
 python scripts/platform_cli.py jira-report `
   --jira-path fixtures/connectors/jira/incremental_sync.json `
   --updated-on-date 2026-04-05 `
-  --prompt-template "Summarize these Jira issues for firmware triage:{issue_summaries}"
+  --prompt-template "Summarize these Jira issues for firmware triage:{summaries}"
 ```
 
 For batch Jira-plus-spec QA, customize the per-issue question:
@@ -156,3 +232,5 @@ python -m compileall docs scripts services tests
   behavior from network or credential issues.
 - If a Markdown output file is missing, verify the `--output-md` or
   `--output-answer-md` path and parent directory permissions.
+- If a local model overstates the conclusion, retry with
+  `--llm-prompt-mode strict` and inspect `ai_prompt` plus `retrieval.citations`.

@@ -29,9 +29,13 @@ MODULE_REQUIRED_TOKENS = {
     ],
     "docs/modules/jira-analysis-reporting.md": [
         "services/analysis/jira_issue_analysis.py",
+        "services/analysis/llm_backends.py",
         "scripts/platform_cli.py jira-report",
+        "scripts/platform_cli.py jira-report --llm-backend",
         "scripts/platform_cli.py jira-spec-qa",
         "scripts/platform_cli.py jira-batch-spec-report",
+        "--llm-backend none|ollama|openai-compatible",
+        "--llm-prompt-mode",
         "tests.analysis.test_jira_issue_analysis",
     ],
 }

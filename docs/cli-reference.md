@@ -67,10 +67,15 @@ python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/
 python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-at-iso 2026-04-05T09:30:00Z
 python scripts/platform_cli.py jira-report --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z
 python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --prompt-template "Summarize {issue_count} issue(s): {summaries}"
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-on-date 2026-04-05 --llm-backend ollama --llm-model qwen2.5:7b --llm-prompt-mode strict --output-answer-md .tmp/jira-report-answer.md
 python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?"
 python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --output-answer-md .tmp/jira-spec-answer.md
+python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --llm-backend ollama --llm-model qwen2.5:7b --llm-base-url http://localhost:11434
+python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --llm-backend ollama --llm-model qwen2.5:7b --llm-prompt-mode strict
+python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --llm-backend openai-compatible --llm-model local-model --llm-base-url http://localhost:1234/v1
 python scripts/platform_cli.py jira-spec-qa --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --jira-issue-id SSD-102 --spec-document-id nvme-spec-v1 --question "Does this issue relate to the spec?"
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --output-md .tmp/jira-batch-spec-report.md
+python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
 ```
 
 ### Portal
@@ -88,9 +93,10 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - `multi-sync-health` provides a sequential dual-source path: Jira refresh -> Confluence refresh -> aggregated ops health.
 - `multi-sync-health` supports both fixture-backed and live dual-source operation, with source-prefixed live configuration flags.
 - `multi-sync-health` also supports a JSON profile file so source configuration can be versioned outside the command line.
-- `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, and renders an optional prompt template.
-- `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer, and can write that answer to `--output-answer-md`.
-- `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA and can write a combined Markdown report to `--output-md`.
+- `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, can optionally call a local LLM backend through `--llm-backend`, can write that answer to `--output-answer-md`, and renders an optional prompt template.
+- `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer by default, can optionally call a local LLM backend through `--llm-backend`, and can write the selected answer to `--output-answer-md`.
+- `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA, supports the same optional local LLM backend flags, and can write a combined Markdown report to `--output-md`.
+- `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 
 ## Skill-Ready CLIs
 
