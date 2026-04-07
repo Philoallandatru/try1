@@ -10,6 +10,12 @@ import ssl
 
 from services.connectors.jira.field_aliases import load_jira_field_aliases
 from services.ingest.normalizer import normalize_markdown_text
+from services.ingest.visual_assets import (
+    append_visual_asset_to_document,
+    build_visual_asset_markdown,
+    image_asset_from_attachment,
+    is_image_media_type,
+)
 
 
 def _build_auth_header(
@@ -131,10 +137,19 @@ def _comment_to_markdown(comment: object) -> str:
     return _markdown_escape(prefix)
 
 
-def _attachment_to_markdown(attachment: dict) -> str:
+def _attachment_to_markdown(attachment: dict, *, document_id: str | None = None, source_uri: str | None = None) -> str:
     name = attachment.get("filename") or attachment.get("name") or "attachment"
     mime_type = attachment.get("mimeType") or attachment.get("media_type") or "application/octet-stream"
     content = attachment.get("content") or attachment.get("downloadLink") or ""
+    if document_id and source_uri and is_image_media_type(mime_type):
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="jira",
+            document_id=document_id,
+            source_uri=source_uri,
+            section="Attachments",
+        )
+        return build_visual_asset_markdown(asset)
     suffix = f" ({mime_type})"
     if content:
         return f"- [{name}]({content}){suffix}"
@@ -144,6 +159,7 @@ def _attachment_to_markdown(attachment: dict) -> str:
 def _issue_to_markdown(
     issue: dict,
     *,
+    source_uri: str,
     field_name_map: dict[str, str] | None = None,
     field_aliases: dict[str, list[str]] | None = None,
 ) -> str:
@@ -176,7 +192,14 @@ def _issue_to_markdown(
         lines.extend(f"- {comment}" for comment in comments)
     if attachments:
         lines.extend(["", "## Attachments"])
-        lines.extend(_attachment_to_markdown(attachment) for attachment in attachments)
+        lines.extend(
+            _attachment_to_markdown(
+                attachment,
+                document_id=issue.get("key", "JIRA"),
+                source_uri=source_uri,
+            )
+            for attachment in attachments
+        )
     return "\n".join(lines)
 
 
@@ -197,7 +220,12 @@ def _issue_to_document(
     comment_items = comments_payload.get("comments", issue.get("comments", []))
     attachments = fields.get("attachment", issue.get("attachments", []))
     issue_fields = _collect_issue_fields(issue, field_name_map, field_aliases)
-    markdown = _issue_to_markdown(issue, field_name_map=field_name_map, field_aliases=field_aliases)
+    markdown = _issue_to_markdown(
+        issue,
+        source_uri=source_uri,
+        field_name_map=field_name_map,
+        field_aliases=field_aliases,
+    )
 
     document = normalize_markdown_text(
         markdown,
@@ -216,13 +244,27 @@ def _issue_to_document(
     document["markdown"] = markdown
     document["comments"] = [_coerce_jira_text(comment.get("body") if isinstance(comment, dict) else comment) for comment in comment_items]
     document["attachments"] = attachments
+    document["visual_assets"] = []
     document["metadata"] = {
         "project": project.get("key") or issue.get("project"),
         "incremental": incremental,
         "comment_count": len([comment for comment in document["comments"] if comment]),
         "attachment_count": len(attachments),
+        "visual_asset_count": 0,
         "issue_fields": issue_fields,
     }
+    for attachment in attachments:
+        mime_type = attachment.get("mimeType") or attachment.get("media_type")
+        if not is_image_media_type(mime_type):
+            continue
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="jira",
+            document_id=issue["key"],
+            source_uri=source_uri,
+            section="Attachments",
+        )
+        append_visual_asset_to_document(document, asset)
     return document
 
 

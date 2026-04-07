@@ -88,6 +88,7 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 
 - All commands currently operate on local fixtures and local contracts.
 - The CLI is intended to be stable enough to be wrapped as future reusable skills.
+- Ingestion now merges image references into canonical Markdown when Jira attachments, Confluence inline/attachment images, or MinerU PDF image blocks include image metadata. Provided `ocr_text`, `vision_caption`, and `alt_text` fields are indexed as image evidence; automatic OCR/vision extraction is not yet enabled.
 - `ops-health` can now read either fixture-backed status or a real local snapshot manifest/page index via `--snapshot-dir`.
 - `sync-health` provides a sequential ops path: connector payload -> snapshot refresh -> ops health.
 - `multi-sync-health` provides a sequential dual-source path: Jira refresh -> Confluence refresh -> aggregated ops health.

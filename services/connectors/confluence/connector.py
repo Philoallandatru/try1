@@ -10,9 +10,17 @@ import re
 import ssl
 
 from services.ingest.normalizer import normalize_markdown_text
+from services.ingest.visual_assets import (
+    append_visual_asset_to_document,
+    build_visual_asset_markdown,
+    image_asset_from_attachment,
+    is_image_media_type,
+)
 
 
 TAG_PATTERN = re.compile(r"<[^>]+>")
+CONFLUENCE_IMAGE_PATTERN = re.compile(r"<ac:image\b[^>]*>.*?</ac:image>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_FILENAME_PATTERN = re.compile(r'ri:filename="(?P<filename>[^"]+)"', re.IGNORECASE)
 
 
 def _build_auth_header(
@@ -46,8 +54,41 @@ def _strip_tags(text: str) -> str:
     return unescape(TAG_PATTERN.sub("", text)).strip()
 
 
-def _storage_html_to_markdown(storage_value: str) -> str:
+def _attachment_name(attachment: dict) -> str:
+    return attachment.get("title") or attachment.get("name") or attachment.get("filename") or "attachment"
+
+
+def _storage_html_to_markdown(
+    storage_value: str,
+    *,
+    document_id: str | None = None,
+    source_uri: str | None = None,
+    attachments: list[dict] | None = None,
+) -> str:
     markdown = storage_value
+    attachment_map = {_attachment_name(attachment): attachment for attachment in attachments or []}
+
+    def replace_image(match: re.Match[str]) -> str:
+        if not document_id or not source_uri:
+            return ""
+        filename_match = CONFLUENCE_FILENAME_PATTERN.search(match.group(0))
+        if not filename_match:
+            return ""
+        filename = filename_match.group("filename")
+        attachment = attachment_map.get(filename, {"name": filename, "media_type": "image/unknown"})
+        media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")
+        if media_type and not is_image_media_type(media_type):
+            return ""
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="confluence",
+            document_id=document_id,
+            source_uri=source_uri,
+            section="Inline Image",
+        )
+        return f"\n{build_visual_asset_markdown(asset)}\n"
+
+    markdown = CONFLUENCE_IMAGE_PATTERN.sub(replace_image, markdown)
     markdown = re.sub(
         r"<h([1-6])[^>]*>(.*?)</h\1>",
         lambda match: f"\n{'#' * int(match.group(1))} {_strip_tags(match.group(2))}\n",
@@ -72,10 +113,25 @@ def _storage_html_to_markdown(storage_value: str) -> str:
     return markdown.strip()
 
 
-def _attachment_to_markdown(attachment: dict) -> str:
+def _attachment_to_markdown(
+    attachment: dict,
+    *,
+    document_id: str | None = None,
+    source_uri: str | None = None,
+    section: str | None = None,
+) -> str:
     title = attachment.get("title") or attachment.get("name") or "attachment"
     media_type = attachment.get("metadata", {}).get("mediaType") or attachment.get("media_type") or "application/octet-stream"
     download = attachment.get("_links", {}).get("download")
+    if document_id and source_uri and is_image_media_type(media_type):
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="confluence",
+            document_id=document_id,
+            source_uri=source_uri,
+            section=section or "Attachments",
+        )
+        return build_visual_asset_markdown(asset)
     if download:
         return f"- [{title}]({download}) ({media_type})"
     return f"- {title} ({media_type})"
@@ -101,12 +157,31 @@ def _normalize_attachment_list(page: dict) -> list[dict]:
 
 def _page_to_markdown(page: dict) -> str:
     body = page.get("body", {}).get("storage", {}).get("value", "")
-    content = _storage_html_to_markdown(body) or "No body."
+    content = _storage_html_to_markdown(
+        body,
+        document_id=page.get("id"),
+        source_uri=page.get("source_uri"),
+        attachments=page.get("attachments", []),
+    ) or "No body."
     lines = [f"# {page.get('title', 'Untitled Confluence Page')}", "", content]
     attachments = page.get("attachments", [])
     if attachments:
-        lines.extend(["", "## Attachments"])
-        lines.extend(_attachment_to_markdown(attachment) for attachment in attachments)
+        non_inline_attachments = [
+            attachment
+            for attachment in attachments
+            if _attachment_name(attachment) not in content
+        ]
+        if non_inline_attachments:
+            lines.extend(["", "## Attachments"])
+            lines.extend(
+                _attachment_to_markdown(
+                    attachment,
+                    document_id=page.get("id"),
+                    source_uri=page.get("source_uri"),
+                    section="Attachments",
+                )
+                for attachment in non_inline_attachments
+            )
     return "\n".join(lines)
 
 
@@ -122,7 +197,7 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         ingested_at = version_payload.get("when") or ingested_at
     else:
         version_value = str(version_value)
-    markdown = _page_to_markdown({**page, "attachments": attachments})
+    markdown = _page_to_markdown({**page, "attachments": attachments, "source_uri": source_uri})
 
     document = normalize_markdown_text(
         markdown,
@@ -140,11 +215,27 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
     )
     document["markdown"] = markdown
     document["attachments"] = attachments
+    document["visual_assets"] = []
     document["metadata"] = {
         "space": space_key,
         "incremental": incremental,
         "attachment_count": len(attachments),
+        "visual_asset_count": 0,
     }
+    for attachment in attachments:
+        media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")
+        if not is_image_media_type(media_type):
+            continue
+        if _attachment_name(attachment) not in markdown:
+            continue
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="confluence",
+            document_id=page["id"],
+            source_uri=source_uri,
+            section="Inline Image" if "### Image" in markdown else "Attachments",
+        )
+        append_visual_asset_to_document(document, asset)
     return document
 
 

@@ -42,17 +42,21 @@ Rules:
 Target modules:
 
 - `services/ingest/adapters/pdf/*`
+- `services/ingest/visual_assets.py`
 
 Required changes:
 
 - integrate MinerU or the chosen offline parser
 - preserve page, clause, table, figure, and language metadata
+- extract image assets from Jira, Confluence, and PDF sources into readable Markdown evidence blocks
+- add production OCR and optional local vision captioning for image content
 - keep fidelity checks intact
 
 Rules:
 
 - parser swap must not weaken citation fidelity
 - parser output must still fit the canonical schema
+- image-generated text must be marked as OCR or vision caption metadata, not original source text
 
 ### 3. Add Persistent Storage and Real Indexing
 
@@ -113,10 +117,11 @@ Rules:
 ## Recommended Rollout Order
 
 1. Live Jira and Confluence connectors
-2. Production PDF parser path
-3. Persistent document and page index storage
-4. Hosted portal service
-5. Identity-aware ACL
+2. Production visual asset extraction for Jira, Confluence, and PDF images
+3. Production PDF parser path
+4. Persistent document and page index storage
+5. Hosted portal service
+6. Identity-aware ACL
 
 ## Non-Negotiable Safeguards
 
@@ -124,4 +129,3 @@ Rules:
 - Keep rollout gate green throughout each integration step.
 - Preserve the canonical schema and citation contract.
 - Add live integration tests without deleting local deterministic checks.
-

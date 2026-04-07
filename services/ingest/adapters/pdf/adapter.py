@@ -19,6 +19,11 @@ from services.ingest.normalizer import (
     finalize_document,
     register_page,
 )
+from services.ingest.visual_assets import (
+    append_visual_asset_to_document,
+    build_visual_asset_markdown,
+    image_asset_from_pdf_block,
+)
 
 
 SECTION_PATTERN = re.compile(r"^(?P<clause>\d+(?:\.\d+)*)\s+(?P<title>.+)$")
@@ -241,17 +246,33 @@ def _parse_mineru_middle_json(source: Path, middle_json: dict, parser_name: str)
         parser=parser_name,
     )
     pdf_info = middle_json.get("pdf_info", [])
+    payload["visual_assets"] = []
+    payload["metadata"] = {"visual_asset_count": 0}
 
     for fallback_page_number, page in enumerate(pdf_info, start=1):
         page_number = int(page.get("page_idx", fallback_page_number - 1)) + 1
         register_page(payload, page_number)
         page_blocks = page.get("para_blocks", []) or page.get("preproc_blocks", [])
         for page_block in page_blocks:
+            block_type = page_block.get("type", "")
+            if block_type in {"image", "figure"}:
+                asset = image_asset_from_pdf_block(
+                    page_block,
+                    document_id=source.stem,
+                    source_uri=str(source).replace("\\", "/"),
+                    page=page_number,
+                )
+                append_visual_asset_to_document(
+                    payload,
+                    asset,
+                    build_visual_asset_markdown(asset),
+                )
+                continue
+
             text = _collect_mineru_span_text(page_block)
             if not text:
                 continue
 
-            block_type = page_block.get("type", "")
             block_level = page_block.get("level")
             normalized_lines = [line.strip() for line in text.splitlines() if line.strip()]
             normalized_text = " ".join(normalized_lines)
