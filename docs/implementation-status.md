@@ -51,6 +51,9 @@ The repository currently covers the full planned Task 1 to Task 15 skeleton for 
 - Live step AB: Jira analysis/reporting workflow is documented as a gated module contract
 - Live step AC: Jira report filtering supports explicit windows, calendar dates, and exact ISO timestamps
 - Live step AD: batch Jira-plus-spec reports run QA for each time-filtered issue and can write combined Markdown
+- Live step AE: Jira-plus-spec QA supports opt-in local LLM backends while preserving extractive default behavior
+- Live step AF: Jira-plus-spec QA exposes strict, balanced, and exploratory prompt modes for local LLM answers
+- Live step AG: Jira time reports support opt-in local LLM summaries with separate raw report and answer exports
 
 ## Validation Status
 
@@ -104,7 +107,7 @@ Current validation entrypoints:
 - persisted source contract validation through `multi-sync-health` CLI and profile snapshot output
 - persisted page-index search compatibility for JSON-restored snapshots
 - Jira issue analysis helpers for markdown reports, window/date/timestamp time filters, prompt templates, and spec-backed question payloads
-- unified CLI commands for fixture-backed and live Jira report, Markdown report export, Jira-plus-spec QA payload generation, extractive answer export, and batch Jira-plus-spec reports
+- unified CLI commands for fixture-backed and live Jira report, Markdown report export, optional local-LLM Jira report summary export, Jira-plus-spec QA payload generation, extractive/local-LLM answer export, and batch Jira-plus-spec reports
 - gated Jira analysis/reporting module contract
 - profile-backed source manifests for multi-source ops runs
 - ops profile schema contract and runtime validation
@@ -123,12 +126,14 @@ Current validation entrypoints:
 - `docs/confluence-page-mapping.md` now defines the normalized Confluence page contract, including body, attachment, space, and version handling.
 - `tests/ops/test_platform_cli.py` validates that `multi-sync-health` persists Jira issue fields and Confluence page mapping content into the shared snapshot for both direct CLI arguments and profile-driven runs.
 - `services/retrieval/search/hybrid_search.py` accepts persisted page-index `tokens` lists in addition to in-memory token sets.
-- `services/analysis/jira_issue_analysis.py` builds deterministic Jira reports and Jira-plus-spec question payloads before any real LLM call is introduced.
+- `services/analysis/jira_issue_analysis.py` builds deterministic Jira reports and Jira-plus-spec question payloads; `services/analysis/llm_backends.py` adds explicit opt-in local LLM answer generation.
 - `scripts/platform_cli.py jira-report` and `scripts/platform_cli.py jira-spec-qa` expose the Jira analysis workflow through the unified CLI for fixture-backed and live Jira Server sources.
 - `scripts/platform_cli.py jira-report --output-md ...` writes the generated Jira report Markdown to disk while preserving JSON output.
-- `scripts/platform_cli.py jira-spec-qa --output-answer-md ...` writes the generated extractive QA answer to disk while preserving JSON output.
+- `scripts/platform_cli.py jira-spec-qa --output-answer-md ...` writes the generated extractive or local-LLM QA answer to disk while preserving JSON output.
 - `docs/modules/jira-analysis-reporting.md` defines the Jira report and Jira-plus-spec QA module contract and is enforced by `scripts/gates/check_module_contracts.py`.
 - `scripts/platform_cli.py jira-report` supports `--updated-from-iso/--updated-to-iso`, `--updated-on-date`, and `--updated-at-iso`.
 - `scripts/platform_cli.py jira-batch-spec-report` runs Jira-plus-spec QA for each issue selected by the Jira time filter.
+- `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-backend none|mock|ollama|openai-compatible`, defaulting to `none`.
+- `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-prompt-mode strict|balanced|exploratory`, defaulting to `strict`.
 - `tests/ops/test_platform_cli_live_orchestration.py` validates the live dual-source orchestration path without introducing network dependencies.
 - `agent.md` now defines a bounded self-loop entry rule for `continue` and `继续`, with explicit stop conditions and per-iteration validation expectations.

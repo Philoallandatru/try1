@@ -7,6 +7,7 @@ from services.analysis.jira_issue_analysis import (
     build_jira_time_report,
     summarize_jira_issue_markdown,
 )
+from services.analysis.llm_backends import MockLLMBackend
 from services.connectors.jira.connector import load_jira_sync
 from services.retrieval.indexing.page_index import load_documents
 
@@ -53,6 +54,9 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertIn("SSD-102", cited_documents)
         self.assertIn("nvme-spec-v1", cited_documents)
         self.assertIn("Answer the Jira question using only the retrieved Jira and spec evidence.", payload["ai_prompt"])
+        self.assertIn("If the evidence does not directly support a conclusion", payload["ai_prompt"])
+        self.assertIn("## Jira Issue Summary", payload["ai_prompt"])
+        self.assertIn("Root Cause", payload["ai_prompt"])
         self.assertIn("SSD-102", payload["ai_prompt"])
         self.assertIn("nvme-spec-v1", payload["ai_prompt"])
         self.assertEqual(payload["answer"]["mode"], "extractive")
@@ -73,6 +77,39 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertIn("Q=Check NAND write against spec evidence", payload["ai_prompt"])
         self.assertIn("SSD-102", payload["ai_prompt"])
 
+    def test_jira_spec_question_payload_supports_prompt_modes(self) -> None:
+        balanced_payload = build_jira_spec_question_payload(
+            jira_document=self.jira_document,
+            spec_documents=self.spec_documents,
+            question="Check NAND write against spec evidence",
+            allowed_policies={"team:ssd"},
+            prompt_mode="balanced",
+        )
+        exploratory_payload = build_jira_spec_question_payload(
+            jira_document=self.jira_document,
+            spec_documents=self.spec_documents,
+            question="Check NAND write against spec evidence",
+            allowed_policies={"team:ssd"},
+            prompt_mode="exploratory",
+        )
+
+        self.assertIn("Separate direct evidence from reasonable inference", balanced_payload["ai_prompt"])
+        self.assertIn("Label hypotheses explicitly", exploratory_payload["ai_prompt"])
+
+    def test_jira_spec_question_payload_can_use_local_llm_backend(self) -> None:
+        payload = build_jira_spec_question_payload(
+            jira_document=self.jira_document,
+            spec_documents=self.spec_documents,
+            question="Check NAND write against spec evidence",
+            allowed_policies={"team:ssd"},
+            llm_backend=MockLLMBackend(response_text="Mock local analysis"),
+        )
+
+        self.assertEqual(payload["answer"]["mode"], "local-llm")
+        self.assertEqual(payload["answer"]["backend"], "mock")
+        self.assertEqual(payload["answer"]["text"], "Mock local analysis")
+        self.assertEqual(payload["answer"]["citation_count"], payload["retrieval"]["result_count"])
+
     def test_jira_time_report_filters_by_updated_window_and_renders_custom_prompt(self) -> None:
         report = build_jira_time_report(
             self.jira_documents,
@@ -87,6 +124,23 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertIn("REPORT 2026-04-05T09:00:00Z..2026-04-05T10:00:00Z COUNT=1", report["prompt"])
         self.assertIn("- Issue: SSD-102", report["markdown"])
         self.assertNotIn("- Issue: SSD-101", report["markdown"])
+
+    def test_jira_time_report_can_use_local_llm_backend(self) -> None:
+        report = build_jira_time_report(
+            self.jira_documents,
+            updated_from_iso="2026-04-05T09:00:00Z",
+            updated_to_iso="2026-04-05T10:00:00Z",
+            llm_backend=MockLLMBackend(response_text="Mock Jira report summary"),
+            prompt_mode="strict",
+        )
+
+        self.assertEqual(report["answer"]["mode"], "local-llm")
+        self.assertEqual(report["answer"]["backend"], "mock")
+        self.assertEqual(report["answer"]["text"], "Mock Jira report summary")
+        self.assertEqual(report["answer"]["issue_count"], 1)
+        self.assertIn("Mode: strict Jira report summarization.", report["prompt"])
+        self.assertIn("If evidence is missing", report["prompt"])
+        self.assertIn("Do not say no follow-up is needed", report["prompt"])
 
     def test_jira_time_report_filters_by_calendar_date(self) -> None:
         report = build_jira_time_report(
@@ -122,6 +176,20 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertEqual(report["issues"][0]["jira_issue_id"], "SSD-102")
         self.assertTrue(report["issues"][0]["retrieval"]["has_spec_evidence"])
         self.assertEqual(report["has_spec_evidence_count"], 1)
+
+    def test_jira_batch_spec_report_can_use_local_llm_backend(self) -> None:
+        report = build_jira_batch_spec_report(
+            jira_documents=self.jira_documents,
+            spec_documents=self.spec_documents,
+            question_template="Analyze Jira {jira_issue_id} against the selected spec.",
+            allowed_policies={"team:ssd"},
+            updated_from_iso="2026-04-05T09:00:00Z",
+            updated_to_iso="2026-04-05T10:00:00Z",
+            llm_backend=MockLLMBackend(response_text="Batch mock analysis"),
+        )
+
+        self.assertEqual(report["issues"][0]["answer"]["mode"], "local-llm")
+        self.assertEqual(report["issues"][0]["answer"]["text"], "Batch mock analysis")
 
 
 if __name__ == "__main__":

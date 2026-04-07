@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timezone
 
+from services.analysis.llm_backends import LLMBackend
 from services.retrieval.citations.assembler import assemble_citation
 from services.retrieval.indexing.page_index import build_page_index
 from services.retrieval.search.hybrid_search import search_page_index
+
+PROMPT_MODES = {"strict", "balanced", "exploratory"}
 
 
 def _parse_iso(value: str | None) -> datetime | None:
@@ -123,6 +126,8 @@ def build_jira_time_report(
     updated_on_date: str | None = None,
     updated_at_iso: str | None = None,
     prompt_template: str | None = None,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
 ) -> dict:
     updated_from_iso, updated_to_iso, time_filter = _resolve_time_filter(
         updated_from_iso=updated_from_iso,
@@ -136,19 +141,37 @@ def build_jira_time_report(
         updated_to_iso=updated_to_iso,
     )
     summaries = [summarize_jira_issue_markdown(document) for document in filtered]
-    default_prompt = "Summarize {issue_count} Jira issue(s) for time filter {time_filter}.\n\n{summaries}"
-    prompt = (prompt_template or default_prompt).format(
-        issue_count=len(filtered),
-        time_filter=time_filter,
-        summaries="\n\n---\n\n".join(summaries),
-    )
-    return {
+    summary_text = "\n\n---\n\n".join(summaries)
+    if prompt_template:
+        prompt = prompt_template.format(
+            issue_count=len(filtered),
+            time_filter=time_filter,
+            summaries=summary_text,
+            prompt_mode=prompt_mode,
+        )
+    elif llm_backend:
+        prompt = _default_report_prompt(
+            issue_count=len(filtered),
+            time_filter=time_filter,
+            summaries=summary_text,
+            prompt_mode=prompt_mode,
+        )
+    else:
+        prompt = "Summarize {issue_count} Jira issue(s) for time filter {time_filter}.\n\n{summaries}".format(
+            issue_count=len(filtered),
+            time_filter=time_filter,
+            summaries=summary_text,
+        )
+    report = {
         "time_filter": time_filter,
         "issue_count": len(filtered),
         "issue_ids": [document["document_id"] for document in filtered],
-        "markdown": "\n\n---\n\n".join(summaries),
+        "markdown": summary_text,
         "prompt": prompt,
     }
+    if llm_backend:
+        report["answer"] = _build_report_llm_answer(prompt, llm_backend, len(filtered))
+    return report
 
 
 def _build_extractive_answer(question: str, citations: list[dict]) -> dict:
@@ -184,6 +207,123 @@ def _build_extractive_answer(question: str, citations: list[dict]) -> dict:
     }
 
 
+def _build_llm_answer(prompt: str, llm_backend: LLMBackend, citations: list[dict]) -> dict:
+    return {
+        "mode": "local-llm",
+        "backend": llm_backend.name,
+        "text": llm_backend.generate(prompt).strip(),
+        "citation_count": len(citations),
+    }
+
+
+def _build_report_llm_answer(prompt: str, llm_backend: LLMBackend, issue_count: int) -> dict:
+    return {
+        "mode": "local-llm",
+        "backend": llm_backend.name,
+        "text": llm_backend.generate(prompt).strip(),
+        "issue_count": issue_count,
+    }
+
+
+def _default_report_prompt(
+    *,
+    issue_count: int,
+    time_filter: str,
+    summaries: str,
+    prompt_mode: str,
+) -> str:
+    if prompt_mode not in PROMPT_MODES:
+        raise ValueError(f"Unsupported prompt mode: {prompt_mode}")
+
+    mode_instructions = {
+        "strict": [
+            "Mode: strict Jira report summarization.",
+            "If evidence is missing, state the gap instead of guessing impact or root cause.",
+            "Do not infer release risk beyond the Jira fields and comments shown below.",
+            "Do not say no follow-up is needed when the Jira text mentions validation, retest, or unresolved status.",
+        ],
+        "balanced": [
+            "Mode: balanced Jira report summarization.",
+            "Separate direct Jira facts from engineering interpretation.",
+            "Call out uncertainty where fields or comments are incomplete.",
+        ],
+        "exploratory": [
+            "Mode: exploratory Jira report triage.",
+            "Label hypotheses explicitly and keep them separate from known Jira facts.",
+            "Use hypotheses only to propose follow-up checks.",
+        ],
+    }[prompt_mode]
+
+    return "\n".join(
+        [
+            "You are an SSD firmware triage reporter.",
+            "Summarize the Jira issues using only the Jira issue summaries below.",
+            *mode_instructions,
+            "",
+            "Output format:",
+            "1. Executive summary: 2-4 bullets.",
+            "2. Issue table: issue, priority, status, root cause, fix, evidence gap.",
+            "3. Follow-up actions: only actions explicitly supported by the Jira text; preserve retest or validation needs.",
+            "",
+            f"Time filter: {time_filter}",
+            f"Issue count: {issue_count}",
+            "",
+            "## Jira Issue Summaries",
+            summaries or "No Jira issues matched the selected filter.",
+        ]
+    ).strip()
+
+
+def _default_qa_prompt(
+    *,
+    question: str,
+    summary_markdown: str,
+    evidence_text: str,
+    prompt_mode: str,
+) -> str:
+    if prompt_mode not in PROMPT_MODES:
+        raise ValueError(f"Unsupported prompt mode: {prompt_mode}")
+
+    mode_instructions = {
+        "strict": [
+            "Mode: strict evidence review.",
+            "If the evidence does not directly support a conclusion, say the evidence is insufficient.",
+            "Do not infer protocol compliance or alignment from topic similarity alone.",
+        ],
+        "balanced": [
+            "Mode: balanced engineering review.",
+            "Separate direct evidence from reasonable inference.",
+            "Call out uncertainty and the missing evidence needed to strengthen the conclusion.",
+        ],
+        "exploratory": [
+            "Mode: exploratory triage.",
+            "Label hypotheses explicitly and do not present them as established facts.",
+            "Use hypotheses only to suggest follow-up checks, not to claim final spec compliance.",
+        ],
+    }[prompt_mode]
+
+    return "\n".join(
+        [
+            "You are an SSD firmware/spec triage assistant.",
+            "Answer the Jira question using only the retrieved Jira and spec evidence.",
+            *mode_instructions,
+            "",
+            "Output format:",
+            "1. Conclusion: one sentence.",
+            "2. Evidence: cite document IDs and versions only from the evidence below.",
+            "3. Gaps: list missing evidence or say `None`.",
+            "",
+            f"Question: {question}",
+            "",
+            "## Jira Issue Summary",
+            summary_markdown,
+            "",
+            "## Retrieved Evidence",
+            evidence_text or "No retrieved evidence.",
+        ]
+    ).strip()
+
+
 def build_jira_spec_question_payload(
     *,
     jira_document: dict,
@@ -192,6 +332,8 @@ def build_jira_spec_question_payload(
     allowed_policies: set[str],
     top_k: int = 5,
     prompt_template: str | None = None,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
 ) -> dict:
     documents = [jira_document, *spec_documents]
     results = search_page_index(build_page_index(documents), question, allowed_policies, top_k=top_k)
@@ -204,20 +346,21 @@ def build_jira_spec_question_payload(
         evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     evidence_text = "\n".join(evidence_lines)
     summary_markdown = summarize_jira_issue_markdown(jira_document)
-    default_prompt = "\n".join(
-        [
-            "Answer the Jira question using only the retrieved Jira and spec evidence.",
-            "Question: {question}",
-            "Evidence:",
-            "{evidence}",
-        ]
-    ).strip()
-    prompt = (prompt_template or default_prompt).format(
-        question=question,
-        jira_issue_id=jira_document["document_id"],
-        summary_markdown=summary_markdown,
-        evidence=evidence_text,
-    )
+    if prompt_template:
+        prompt = prompt_template.format(
+            question=question,
+            jira_issue_id=jira_document["document_id"],
+            summary_markdown=summary_markdown,
+            evidence=evidence_text,
+            prompt_mode=prompt_mode,
+        )
+    else:
+        prompt = _default_qa_prompt(
+            question=question,
+            summary_markdown=summary_markdown,
+            evidence_text=evidence_text,
+            prompt_mode=prompt_mode,
+        )
 
     return {
         "question": question,
@@ -230,7 +373,11 @@ def build_jira_spec_question_payload(
             "has_spec_evidence": bool(spec_citations),
         },
         "ai_prompt": prompt,
-        "answer": _build_extractive_answer(question, citations),
+        "answer": (
+            _build_llm_answer(prompt, llm_backend, citations)
+            if llm_backend
+            else _build_extractive_answer(question, citations)
+        ),
     }
 
 
@@ -245,6 +392,8 @@ def build_jira_batch_spec_report(
     updated_on_date: str | None = None,
     updated_at_iso: str | None = None,
     prompt_template: str | None = None,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
 ) -> dict:
     time_report = build_jira_time_report(
         jira_documents,
@@ -271,6 +420,8 @@ def build_jira_batch_spec_report(
                 spec_documents=spec_documents,
                 question=question,
                 allowed_policies=allowed_policies,
+                prompt_mode=prompt_mode,
+                llm_backend=llm_backend,
             )
         )
 

@@ -74,6 +74,36 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("- Issue: SSD-102", written_markdown)
             self.assertIn("## Issue Fields", written_markdown)
 
+    def test_cli_jira_report_can_use_mock_local_llm_backend(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_answer_md = Path(temp_dir) / "jira-report-answer.md"
+            result = self._run(
+                "jira-report",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--updated-from-iso",
+                "2026-04-05T09:00:00Z",
+                "--updated-to-iso",
+                "2026-04-05T10:00:00Z",
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock Jira report summary",
+                "--llm-prompt-mode",
+                "strict",
+                "--output-answer-md",
+                str(output_answer_md),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["answer"]["mode"], "local-llm")
+            self.assertEqual(payload["answer"]["backend"], "mock")
+            self.assertEqual(payload["answer"]["text"], "Mock Jira report summary")
+            self.assertEqual(payload["answer"]["issue_count"], 1)
+            self.assertEqual(payload["output_answer_md"], str(output_answer_md))
+            self.assertIn("Mode: strict Jira report summarization.", payload["prompt"])
+            self.assertEqual(output_answer_md.read_text(encoding="utf-8"), "Mock Jira report summary")
+
     def test_cli_jira_report_filters_by_calendar_date(self) -> None:
         result = self._run(
             "jira-report",
@@ -137,6 +167,33 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("SSD-102", written_answer)
             self.assertIn("nvme-spec-v1", written_answer)
 
+    def test_cli_jira_spec_qa_can_use_mock_local_llm_backend(self) -> None:
+        result = self._run(
+            "jira-spec-qa",
+            "--jira-path",
+            "fixtures/connectors/jira/incremental_sync.json",
+            "--jira-issue-id",
+            "SSD-102",
+            "--spec-corpus",
+            "fixtures/retrieval/pageindex_corpus.json",
+            "--spec-document-id",
+            "nvme-spec-v1",
+            "--question",
+            "Does the NAND TLC write issue relate to NVMe flush command evidence?",
+            "--llm-backend",
+            "mock",
+            "--llm-mock-response",
+            "Mock local model answer",
+            "--llm-prompt-mode",
+            "balanced",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["answer"]["mode"], "local-llm")
+        self.assertEqual(payload["answer"]["backend"], "mock")
+        self.assertEqual(payload["answer"]["text"], "Mock local model answer")
+        self.assertIn("Separate direct evidence from reasonable inference", payload["ai_prompt"])
+
     def test_cli_jira_batch_spec_report_filters_and_writes_markdown(self) -> None:
         with TemporaryDirectory() as temp_dir:
             output_md = Path(temp_dir) / "batch-report.md"
@@ -168,6 +225,35 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("- Issue: SSD-102", written_report)
             self.assertIn("Analyze Jira SSD-102 against the selected spec.", written_report)
             self.assertIn("nvme-spec-v1", written_report)
+
+    def test_cli_jira_batch_spec_report_can_use_mock_local_llm_backend(self) -> None:
+        result = self._run(
+            "jira-batch-spec-report",
+            "--jira-path",
+            "fixtures/connectors/jira/incremental_sync.json",
+            "--updated-from-iso",
+            "2026-04-05T09:00:00Z",
+            "--updated-to-iso",
+            "2026-04-05T10:00:00Z",
+            "--spec-corpus",
+            "fixtures/retrieval/pageindex_corpus.json",
+            "--spec-document-id",
+            "nvme-spec-v1",
+            "--question-template",
+            "Analyze Jira {jira_issue_id} against the selected spec.",
+            "--llm-backend",
+            "mock",
+            "--llm-mock-response",
+            "Batch mock local answer",
+            "--llm-prompt-mode",
+            "exploratory",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["issues"][0]["answer"]["mode"], "local-llm")
+        self.assertEqual(payload["issues"][0]["answer"]["backend"], "mock")
+        self.assertEqual(payload["issues"][0]["answer"]["text"], "Batch mock local answer")
+        self.assertIn("Label hypotheses explicitly", payload["issues"][0]["ai_prompt"])
 
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")
