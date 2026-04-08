@@ -103,13 +103,13 @@ def parse_pptx(path: str | Path) -> dict:
         for idx, slide_file in enumerate(slide_files, start=1):
             root = ET.fromstring(archive.read(slide_file))
             texts = [node.text for node in root.findall(".//a:t", NS) if node.text]
-            slides.append({"id": f"slide-{idx}", "name": slide_file.rsplit("/", 1)[-1]})
+            slides.append({"id": f"slide-{idx}", "name": slide_file.rsplit("/", 1)[-1], "page": idx})
             if texts:
-                content_blocks.append({"id": f"block-{idx}", "text": " ".join(texts)})
+                content_blocks.append({"id": f"block-{idx}", "text": " ".join(texts), "page": idx})
 
     payload["structure"]["slides"] = slides
+    payload["structure"]["pages"] = [{"page": idx} for idx, _slide in enumerate(slides, start=1)]
     payload["content_blocks"] = content_blocks
     if content_blocks:
         payload["title"] = content_blocks[0]["text"]
     return payload
-

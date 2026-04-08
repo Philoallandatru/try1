@@ -55,6 +55,7 @@ The repository currently covers the full planned Task 1 to Task 15 skeleton for 
 - Live step AF: Jira-plus-spec QA exposes strict, balanced, and exploratory prompt modes for local LLM answers
 - Live step AG: Jira time reports support opt-in local LLM summaries with separate raw report and answer exports
 - Live step AH: Jira, Confluence, and MinerU PDF ingestion merge image references plus provided OCR/caption metadata into readable and indexable Markdown evidence blocks
+- Live step AI: skill-ready normalization CLI can export readable Markdown and PageIndex JSON for Jira sync, Confluence sync, PPTX, PDF, and other normalized document sources
 
 ## Validation Status
 
@@ -111,6 +112,7 @@ Current validation entrypoints:
 - Jira issue analysis helpers for markdown reports, window/date/timestamp time filters, prompt templates, and spec-backed question payloads
 - unified CLI commands for fixture-backed and live Jira report, Markdown report export, optional local-LLM Jira report summary export, Jira-plus-spec QA payload generation, extractive/local-LLM answer export, and batch Jira-plus-spec reports
 - visual asset normalization for merging Jira image attachments, Confluence inline/attachment images, and MinerU PDF image blocks into canonical Markdown content
+- Markdown export utilities for turning canonical documents into readable Markdown and PageIndex JSON through `scripts/ingest/normalize_cli.py --output-md --output-page-index`
 - gated Jira analysis/reporting module contract
 - profile-backed source manifests for multi-source ops runs
 - ops profile schema contract and runtime validation
@@ -131,6 +133,7 @@ Current validation entrypoints:
 - `services/retrieval/search/hybrid_search.py` accepts persisted page-index `tokens` lists in addition to in-memory token sets.
 - `services/analysis/jira_issue_analysis.py` builds deterministic Jira reports and Jira-plus-spec question payloads; `services/analysis/llm_backends.py` adds explicit opt-in local LLM answer generation.
 - `services/ingest/visual_assets.py` renders image evidence blocks for Markdown ingestion and indexing. It currently consumes image references plus provided `ocr_text`, `vision_caption`, and `alt_text` metadata; automatic download/OCR/vision extraction remains a production gap.
+- `services/ingest/markdown_export.py` turns canonical documents into readable Markdown when a source does not already provide Markdown, and `scripts/ingest/normalize_cli.py --output-page-index` writes the PageIndex derived from the same normalized documents.
 - `scripts/platform_cli.py jira-report` and `scripts/platform_cli.py jira-spec-qa` expose the Jira analysis workflow through the unified CLI for fixture-backed and live Jira Server sources.
 - `scripts/platform_cli.py jira-report --output-md ...` writes the generated Jira report Markdown to disk while preserving JSON output.
 - `scripts/platform_cli.py jira-spec-qa --output-answer-md ...` writes the generated extractive or local-LLM QA answer to disk while preserving JSON output.

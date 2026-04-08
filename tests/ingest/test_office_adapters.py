@@ -22,8 +22,9 @@ class OfficeAdapterTest(unittest.TestCase):
         self.assertEqual(payload["source_type"], "pptx")
         self.assertGreaterEqual(len(payload["structure"]["slides"]), 2)
         self.assertGreaterEqual(len(payload["content_blocks"]), 2)
+        self.assertEqual(payload["structure"]["pages"][0]["page"], 1)
+        self.assertEqual(payload["content_blocks"][0]["page"], 1)
 
 
 if __name__ == "__main__":
     unittest.main()
-
