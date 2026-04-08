@@ -144,6 +144,33 @@ class PdfExtractionTest(unittest.TestCase):
         self.assertEqual(payload["content_blocks"][0]["page"], 5)
         self.assertEqual(payload["structure"]["sections"][0]["page"], 5)
 
+    def test_mineru_middle_json_parser_merges_image_blocks_into_content(self) -> None:
+        payload = _parse_mineru_middle_json(
+            Path("fixtures/corpus/pdf/sample.pdf"),
+            {
+                "pdf_info": [
+                    {
+                        "page_idx": 1,
+                        "para_blocks": [
+                            {
+                                "type": "image",
+                                "img_path": "images/figure-1.png",
+                                "caption": "Controller failure state diagram",
+                                "ocr_text": "host write queue timeout",
+                            }
+                        ],
+                    }
+                ]
+            },
+            "mineru",
+        )
+
+        self.assertEqual(payload["structure"]["pages"], [{"page": 2}])
+        self.assertEqual(payload["metadata"]["visual_asset_count"], 1)
+        self.assertEqual(payload["visual_assets"][0]["page"], 2)
+        self.assertIn("Controller failure state diagram", payload["content_blocks"][0]["text"])
+        self.assertIn("host write queue timeout", payload["content_blocks"][0]["text"])
+
 
 if __name__ == "__main__":
     unittest.main()
