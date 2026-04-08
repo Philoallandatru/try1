@@ -18,7 +18,23 @@ Jira / Confluence / PPTX / PDF
 
 Use Python 3.12 or newer.
 
-On Windows PowerShell:
+Preferred setup on Windows PowerShell uses `uv`:
+
+```powershell
+python --version
+python -m pip install --upgrade uv
+uv venv --python 3.12
+.\.venv\Scripts\Activate.ps1
+uv pip install -e .
+```
+
+For development-only dependencies:
+
+```powershell
+uv pip install -e ".[dev]"
+```
+
+If `uv` is not available, use the standard `venv` and `pip` workflow:
 
 ```powershell
 python --version
@@ -28,13 +44,7 @@ python -m pip install --upgrade pip
 python -m pip install -e .
 ```
 
-The current repository keeps dependencies minimal. `pypdf` is declared as the required runtime dependency for the built-in PDF fallback parser and is installed by `python -m pip install -e .`.
-
-For development-only dependencies:
-
-```powershell
-python -m pip install -e ".[dev]"
-```
+The current repository keeps dependencies minimal. `pypdf` is declared as the required runtime dependency for the built-in PDF fallback parser and is installed by `uv pip install -e .` or `python -m pip install -e .`.
 
 Editable install package discovery is explicit. Only `apps*` and `services*` are installable Python packages. Directories such as `packages`, `scripts`, `docs`, `fixtures`, `ops`, `eval`, `skills`, and `tests` are repository assets, not runtime packages.
 
@@ -44,19 +54,35 @@ Editable install package discovery is explicit. Only `apps*` and `services*` are
 
 MinerU is optional. If installed, the PDF adapter will try MinerU first for richer PDF parsing and then fall back to `pypdf` when `preferred_parser=auto`.
 
-If MinerU is installed in a separate Python environment, point the adapter at that interpreter:
+Recommended local setup is to keep MinerU outside the base project environment because it pulls a heavier document parsing stack:
 
 ```powershell
-$env:MINERU_PYTHON_EXE = "C:\path\to\mineru-python.exe"
+uv venv .venv-mineru --python 3.12
+.\.venv-mineru\Scripts\Activate.ps1
+uv pip install -U "mineru[all]"
+mineru --help
+```
+
+Then point the adapter at that interpreter:
+
+```powershell
+$env:MINERU_PYTHON_EXE = "$PWD\.venv-mineru\Scripts\python.exe"
+```
+
+You can also install MinerU in the active project environment when you are doing dedicated PDF parser work:
+
+```powershell
+uv pip install -U "mineru[all]"
 ```
 
 ### Local LLM
 
-Local LLM support is optional and only used when `--llm-backend` is set.
+Local LLM support is optional and only used when `--llm-backend` is set. Ollama is a system application, not a Python package, so do not add it to `pyproject.toml`.
 
 For Ollama:
 
 ```powershell
+ollama --version
 ollama list
 ollama pull qwen2.5:1.5b
 ```
@@ -85,6 +111,23 @@ python scripts/platform_cli.py jira-spec-qa `
   --llm-backend openai-compatible `
   --llm-model local-model `
   --llm-base-url http://localhost:1234/v1
+```
+
+### PageIndex
+
+The repository's default PageIndex path does not require an external package. The normalizer builds a repository-local PageIndex JSON artifact from canonical documents:
+
+```powershell
+python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf `
+  --output-md .tmp/pdf.md `
+  --output-page-index .tmp/pdf-page-index.json
+```
+
+Only install the external PageIndex Python SDK if the task explicitly needs PageIndex.ai cloud processing or its API client:
+
+```powershell
+uv pip install -U pageindex
+$env:PAGEINDEX_API_KEY = "<api-key>"
 ```
 
 ## Source Configuration

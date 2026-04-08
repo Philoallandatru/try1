@@ -1,5 +1,7 @@
 # CLI Reference
 
+For a Chinese guide with command purpose, parameter tables, and end-to-end examples, see [platform-cli-guide.zh.md](platform-cli-guide.zh.md).
+
 ## Unified CLI
 
 Primary entrypoint:
