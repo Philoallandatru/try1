@@ -194,7 +194,39 @@ Refresh rules:
 
 Do not add database abstractions here yet.
 
-## 9. Recommended Validation Entry Points
+## 9. Jira Issue Type Routing
+
+When adding Jira analysis or sync/export behavior, preserve deterministic routing based on Jira `issuetype`.
+
+Store these fields under Jira document metadata:
+
+- `issue_type_raw`: original Jira issue type such as `FW Bug`, `DAS/PRD`, or `Release`
+- `issue_family`: stable coarse family for downstream routing
+- `issue_route`: specific default analysis route
+
+Default issue families:
+
+- `defect`: `FW Bug`, `HW Bug`, `Test Bug`, `Misc Bug`
+- `requirement`: `DAS/PRD`, `MRD`
+- `requirement_change`: `Requirement Change`
+- `change_control`: `Component Change`
+- `delivery`: `Epic`, `Story`, `Task`
+- `release`: `Release`
+- `unknown`: any unmapped issue type
+
+Routing rules:
+
+- daily Jira reports may include all issue families
+- root-cause analysis must only consume `issue_family == "defect"`
+- PRD/MRD analysis must only consume `issue_family == "requirement"`
+- change-impact analysis should consume `requirement_change` and `change_control`
+- delivery and release summaries must not be forced through bug RCA prompts
+
+Keep Jira Markdown generation loose. Render available title, metadata, issue fields, description, comments, and attachments. Bug-only fields such as `Root Cause`, `How to fix`, and `Action` are optional and must not be required for PRD/MRD, release, or delivery issues.
+
+The planned implementation details live in `docs/jira-issue-type-routing-plan.md`.
+
+## 10. Recommended Validation Entry Points
 
 ### Contracts and Gates
 
@@ -226,7 +258,7 @@ Do not add database abstractions here yet.
 - `python -m unittest discover -s tests -t . -p "test_*.py" -v`
 - `python -m compileall skills docs scripts services tests`
 
-## 10. Handoff Template
+## 11. Handoff Template
 
 For substantial work, summarize in this order:
 

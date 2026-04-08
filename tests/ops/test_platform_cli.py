@@ -361,6 +361,78 @@ class PlatformCliTest(unittest.TestCase):
             self.assertEqual(payload["ops_health"]["backup_restore"]["restore"]["status"], "validated")
             self._assert_source_contracts_persisted(temp_dir)
 
+    def test_cli_sync_export_writes_incoming_markdown_and_page_index(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md = Path(temp_dir) / "sync-export.md"
+            output_page_index = Path(temp_dir) / "sync-export-page-index.json"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/incremental_sync.json",
+                "--output-md",
+                str(output_md),
+                "--output-page-index",
+                str(output_page_index),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["export_scope"], "incoming")
+            self.assertEqual(payload["document_count"], 2)
+            self.assertEqual(payload["output_md"], str(output_md))
+            self.assertEqual(payload["output_page_index"], str(output_page_index))
+            self.assertEqual([document["document_id"] for document in payload["documents"]], ["SSD-102", "CONF-202"])
+
+            written_markdown = output_md.read_text(encoding="utf-8")
+            self.assertIn("SSD-102", written_markdown)
+            self.assertIn("## Issue Type", written_markdown)
+            self.assertIn("- **Family**: defect", written_markdown)
+            self.assertIn("Latency Budget Update", written_markdown)
+
+            written_index = json.loads(output_page_index.read_text(encoding="utf-8"))["entries"]
+            indexed_documents = {entry["document_id"] for entry in written_index}
+            self.assertEqual(indexed_documents, {"SSD-102", "CONF-202"})
+
+            manifest = json.loads((Path(temp_dir) / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["sources"]["jira"]["cursor"], "jira-incr-002")
+            self.assertEqual(manifest["sources"]["confluence"]["cursor"], "conf-incr-003")
+
+    def test_cli_sync_export_can_export_snapshot_scope(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md = Path(temp_dir) / "snapshot-export.md"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/incremental_sync.json",
+                "--export-scope",
+                "snapshot",
+                "--output-md",
+                str(output_md),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["export_scope"], "snapshot")
+            self.assertGreater(payload["document_count"], 2)
+            exported_documents = {document["document_id"] for document in payload["documents"]}
+            self.assertIn("SSD-102", exported_documents)
+            self.assertIn("CONF-202", exported_documents)
+            self.assertIn("nvme-spec-v1", exported_documents)
+            written_markdown = output_md.read_text(encoding="utf-8")
+            self.assertIn("SSD-102", written_markdown)
+            self.assertIn("Latency Budget Update", written_markdown)
+            self.assertIn("NVMe Flush Command", written_markdown)
+
     def test_cli_multi_sync_health_validates_live_jira_base_url(self) -> None:
         result = self._run(
             "multi-sync-health",

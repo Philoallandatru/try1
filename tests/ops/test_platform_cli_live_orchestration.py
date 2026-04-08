@@ -40,8 +40,7 @@ class PlatformCliLiveOrchestrationTest(unittest.TestCase):
             "documents": [jira_document],
         }
 
-    def test_multi_sync_health_supports_live_dual_source_orchestration(self) -> None:
-        jira_payload = self._live_jira_payload()
+    def _live_confluence_payload(self) -> dict:
         confluence_document = normalize_markdown_text(
             "# Live Confluence Sync\n\nLatency budget updated.",
             document_id="CONF-701",
@@ -55,11 +54,15 @@ class PlatformCliLiveOrchestrationTest(unittest.TestCase):
             parser="confluence-markdown-normalizer",
             acl_policy="team:ssd",
         )
-        confluence_payload = {
+        return {
             "sync_type": "incremental",
             "cursor": "conf-live-007",
             "documents": [confluence_document],
         }
+
+    def test_multi_sync_health_supports_live_dual_source_orchestration(self) -> None:
+        jira_payload = self._live_jira_payload()
+        confluence_payload = self._live_confluence_payload()
 
         with TemporaryDirectory() as temp_dir:
             stdout = StringIO()
@@ -97,6 +100,78 @@ class PlatformCliLiveOrchestrationTest(unittest.TestCase):
         self.assertEqual(source_types, {"jira", "confluence"})
         self.assertEqual(payload["ops_health"]["backup_restore"]["backup"]["status"], "healthy")
         self.assertEqual(payload["ops_health"]["backup_restore"]["restore"]["status"], "validated")
+
+    def test_sync_export_live_uses_manifest_cursor_when_cli_cursor_is_omitted(self) -> None:
+        seen_cursors = []
+
+        def fake_jira_sync(**kwargs) -> dict:
+            seen_cursors.append(("jira", kwargs.get("cursor")))
+            return self._live_jira_payload()
+
+        def fake_confluence_sync(**kwargs) -> dict:
+            seen_cursors.append(("confluence", kwargs.get("cursor")))
+            return self._live_confluence_payload()
+
+        with TemporaryDirectory() as temp_dir:
+            first_stdout = StringIO()
+            first_argv = [
+                "platform_cli.py",
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-live",
+                "--jira-base-url",
+                "https://jira.example.com",
+                "--jira-token",
+                "secret",
+                "--jira-cursor",
+                "jira-explicit-001",
+                "--confluence-live",
+                "--confluence-base-url",
+                "https://confluence.example.com",
+                "--confluence-token",
+                "secret",
+                "--confluence-cursor",
+                "conf-explicit-001",
+            ]
+            second_stdout = StringIO()
+            second_argv = [
+                "platform_cli.py",
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-live",
+                "--jira-base-url",
+                "https://jira.example.com",
+                "--jira-token",
+                "secret",
+                "--confluence-live",
+                "--confluence-base-url",
+                "https://confluence.example.com",
+                "--confluence-token",
+                "secret",
+            ]
+
+            with patch("services.ops.orchestration.fetch_jira_server_sync", side_effect=fake_jira_sync), patch(
+                "services.ops.orchestration.fetch_confluence_page_sync",
+                side_effect=fake_confluence_sync,
+            ):
+                with patch("sys.argv", first_argv), redirect_stdout(first_stdout):
+                    first_exit_code = platform_cli.main()
+                with patch("sys.argv", second_argv), redirect_stdout(second_stdout):
+                    second_exit_code = platform_cli.main()
+
+        self.assertEqual(first_exit_code, 0)
+        self.assertEqual(second_exit_code, 0)
+        self.assertEqual(
+            seen_cursors,
+            [
+                ("jira", "jira-explicit-001"),
+                ("confluence", "conf-explicit-001"),
+                ("jira", "jira-live-003"),
+                ("confluence", "conf-live-007"),
+            ],
+        )
 
     def test_jira_report_validates_live_base_url(self) -> None:
         argv = [

@@ -1,0 +1,111 @@
+{
+  "sync_type": "full",
+  "cursor": "jira-routing-001",
+  "issues": [
+    {
+      "key": "SSD-201",
+      "project": "SSD",
+      "summary": "Firmware defect",
+      "type": "FW Bug",
+      "description": "Firmware defect requiring RCA.",
+      "updated_at": "2026-04-06T01:00:00Z",
+      "root_cause": "Queue setup regression"
+    },
+    {
+      "key": "SSD-202",
+      "project": "SSD",
+      "summary": "Hardware defect",
+      "type": "HW Bug",
+      "description": "Hardware platform issue.",
+      "updated_at": "2026-04-06T02:00:00Z"
+    },
+    {
+      "key": "SSD-203",
+      "project": "SSD",
+      "summary": "Test script defect",
+      "type": "Test Bug",
+      "description": "Test script incorrectly reports failure.",
+      "updated_at": "2026-04-06T03:00:00Z"
+    },
+    {
+      "key": "SSD-204",
+      "project": "SSD",
+      "summary": "Miscellaneous defect",
+      "type": "Misc Bug",
+      "description": "General issue without specific subsystem.",
+      "updated_at": "2026-04-06T04:00:00Z"
+    },
+    {
+      "key": "SSD-205",
+      "project": "SSD",
+      "summary": "DAS PRD update",
+      "type": "DAS/PRD",
+      "description": "Product requirement for telemetry capture.",
+      "updated_at": "2026-04-06T05:00:00Z"
+    },
+    {
+      "key": "SSD-206",
+      "project": "SSD",
+      "summary": "Market requirements",
+      "type": "MRD",
+      "description": "Market requirement for launch segment.",
+      "updated_at": "2026-04-06T06:00:00Z"
+    },
+    {
+      "key": "SSD-207",
+      "project": "SSD",
+      "summary": "Requirement delta",
+      "type": "Requirement Change",
+      "description": "Change request for an approved requirement.",
+      "updated_at": "2026-04-06T07:00:00Z"
+    },
+    {
+      "key": "SSD-208",
+      "project": "SSD",
+      "summary": "Component update",
+      "type": "Component Change",
+      "description": "Component-level implementation change.",
+      "updated_at": "2026-04-06T08:00:00Z"
+    },
+    {
+      "key": "SSD-209",
+      "project": "SSD",
+      "summary": "Planning epic",
+      "type": "Epic",
+      "description": "Planning container.",
+      "updated_at": "2026-04-06T09:00:00Z"
+    },
+    {
+      "key": "SSD-210",
+      "project": "SSD",
+      "summary": "Implementation story",
+      "type": "Story",
+      "description": "Story text may mention requirements but remains delivery work by default.",
+      "updated_at": "2026-04-06T10:00:00Z"
+    },
+    {
+      "key": "SSD-211",
+      "project": "SSD",
+      "summary": "Execution task",
+      "type": "Task",
+      "description": "Implementation task.",
+      "updated_at": "2026-04-06T11:00:00Z"
+    },
+    {
+      "key": "SSD-212",
+      "project": "SSD",
+      "summary": "Release tracker",
+      "type": "Release",
+      "description": "Release checklist and scope.",
+      "updated_at": "2026-04-06T12:00:00Z"
+    },
+    {
+      "key": "SSD-213",
+      "project": "SSD",
+      "summary": "Unknown workflow item",
+      "type": "Investigation",
+      "description": "Unmapped Jira type.",
+      "updated_at": "2026-04-06T13:00:00Z"
+    }
+  ]
+}

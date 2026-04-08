@@ -1,0 +1,56 @@
+{
+  "default": {
+    "issue_family": "unknown",
+    "issue_route": "generic_jira_summary"
+  },
+  "profiles": {
+    "FW Bug": {
+      "issue_family": "defect",
+      "issue_route": "fw_bug_rca"
+    },
+    "HW Bug": {
+      "issue_family": "defect",
+      "issue_route": "hw_bug_rca"
+    },
+    "Test Bug": {
+      "issue_family": "defect",
+      "issue_route": "test_bug_rca"
+    },
+    "Misc Bug": {
+      "issue_family": "defect",
+      "issue_route": "misc_bug_rca"
+    },
+    "DAS/PRD": {
+      "issue_family": "requirement",
+      "issue_route": "prd_review"
+    },
+    "MRD": {
+      "issue_family": "requirement",
+      "issue_route": "mrd_review"
+    },
+    "Requirement Change": {
+      "issue_family": "requirement_change",
+      "issue_route": "requirement_change_impact"
+    },
+    "Component Change": {
+      "issue_family": "change_control",
+      "issue_route": "component_change_impact"
+    },
+    "Epic": {
+      "issue_family": "delivery",
+      "issue_route": "delivery_summary"
+    },
+    "Story": {
+      "issue_family": "delivery",
+      "issue_route": "story_summary"
+    },
+    "Task": {
+      "issue_family": "delivery",
+      "issue_route": "task_summary"
+    },
+    "Release": {
+      "issue_family": "release",
+      "issue_route": "release_summary"
+    }
+  }
+}

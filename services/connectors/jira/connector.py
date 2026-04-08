@@ -9,6 +9,7 @@ import re
 import ssl
 
 from services.connectors.jira.field_aliases import load_jira_field_aliases
+from services.connectors.jira.issue_type_profiles import load_jira_issue_type_profiles, route_jira_issue_type
 from services.ingest.normalizer import normalize_markdown_text
 from services.ingest.visual_assets import (
     append_visual_asset_to_document,
@@ -122,6 +123,20 @@ def _collect_issue_fields(
     return collected
 
 
+def _resolve_issue_type(issue: dict) -> str:
+    fields = issue.get("fields", {})
+    for value in (
+        fields.get("issuetype"),
+        fields.get("type"),
+        issue.get("issuetype"),
+        issue.get("type"),
+    ):
+        issue_type = _coerce_issue_field_value(value)
+        if issue_type:
+            return issue_type
+    return ""
+
+
 def _comment_to_markdown(comment: object) -> str:
     if not isinstance(comment, dict):
         return _markdown_escape(_coerce_jira_text(comment))
@@ -162,6 +177,7 @@ def _issue_to_markdown(
     source_uri: str,
     field_name_map: dict[str, str] | None = None,
     field_aliases: dict[str, list[str]] | None = None,
+    issue_type_profile: dict[str, str] | None = None,
 ) -> str:
     fields = issue.get("fields", {})
     summary = fields.get("summary") or issue.get("summary") or issue.get("key") or "Untitled Jira Issue"
@@ -177,6 +193,16 @@ def _issue_to_markdown(
     attachments = fields.get("attachment", issue.get("attachments", []))
 
     lines = [f"# {issue.get('key', 'JIRA')} {summary}"]
+    if issue_type_profile:
+        lines.extend(
+            [
+                "",
+                "## Issue Type",
+                f"- **Type**: {_markdown_escape(issue_type_profile['issue_type_raw'])}",
+                f"- **Family**: {_markdown_escape(issue_type_profile['issue_family'])}",
+                f"- **Route**: {_markdown_escape(issue_type_profile['issue_route'])}",
+            ]
+        )
     if issue_fields:
         lines.extend(["", "## Issue Fields"])
         lines.extend(f"- **{label}**: {_markdown_escape(value)}" for label, value in issue_fields.items())
@@ -211,6 +237,7 @@ def _issue_to_document(
     acl_policy: str,
     field_name_map: dict[str, str] | None = None,
     field_aliases: dict[str, list[str]] | None = None,
+    issue_type_profiles: dict | None = None,
 ) -> dict:
     fields = issue.get("fields", {})
     project = fields.get("project", {})
@@ -220,11 +247,13 @@ def _issue_to_document(
     comment_items = comments_payload.get("comments", issue.get("comments", []))
     attachments = fields.get("attachment", issue.get("attachments", []))
     issue_fields = _collect_issue_fields(issue, field_name_map, field_aliases)
+    issue_type_profile = route_jira_issue_type(_resolve_issue_type(issue), issue_type_profiles)
     markdown = _issue_to_markdown(
         issue,
         source_uri=source_uri,
         field_name_map=field_name_map,
         field_aliases=field_aliases,
+        issue_type_profile=issue_type_profile,
     )
 
     document = normalize_markdown_text(
@@ -252,6 +281,7 @@ def _issue_to_document(
         "attachment_count": len(attachments),
         "visual_asset_count": 0,
         "issue_fields": issue_fields,
+        **issue_type_profile,
     }
     for attachment in attachments:
         mime_type = attachment.get("mimeType") or attachment.get("media_type")
@@ -272,6 +302,7 @@ def load_jira_sync(path: str | Path) -> dict:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     field_name_map = payload.get("names")
     field_aliases = load_jira_field_aliases()
+    issue_type_profiles = load_jira_issue_type_profiles()
     documents = [
         _issue_to_document(
             issue,
@@ -280,6 +311,7 @@ def load_jira_sync(path: str | Path) -> dict:
             acl_policy="team:ssd",
             field_name_map=field_name_map,
             field_aliases=field_aliases,
+            issue_type_profiles=issue_type_profiles,
         )
         for issue in payload["issues"]
     ]
@@ -317,6 +349,7 @@ def fetch_jira_server_sync(
     start_at = 0
     total = None
     field_aliases = load_jira_field_aliases()
+    issue_type_profiles = load_jira_issue_type_profiles()
     while total is None or start_at < total:
         query = urlencode(
             {
@@ -347,6 +380,7 @@ def fetch_jira_server_sync(
                     acl_policy=acl_policy,
                     field_name_map=field_name_map,
                     field_aliases=field_aliases,
+                    issue_type_profiles=issue_type_profiles,
                 )
             )
         start_at += len(issues)

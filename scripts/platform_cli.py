@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 import sys
@@ -21,15 +22,25 @@ from services.eval.harness import evaluate_dataset
 from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
+from services.ingest.markdown_export import documents_to_markdown
 from services.ops.health import build_ops_health
-from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_health
+from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
 from services.retrieval.toolkit import build_retrieval_index, citation_for_documents, load_document_snapshot, search_documents
+from services.retrieval.indexing.page_index import build_page_index
 
 
 def _print_json(payload: dict | list) -> int:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
+
+
+def _json_default(value: object) -> object:
+    if isinstance(value, set):
+        return sorted(value)
+    if isinstance(value, Counter):
+        return dict(value)
+    raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
 
 
 def _load_index(corpus: str | Path) -> list[dict]:
@@ -297,6 +308,39 @@ def main() -> int:
     jira_batch_spec_report_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
     _add_llm_backend_args(jira_batch_spec_report_parser)
 
+    sync_export_parser = subparsers.add_parser("sync-export")
+    sync_export_parser.add_argument("--snapshot-dir")
+    sync_export_parser.add_argument("--profile")
+    sync_export_parser.add_argument("--corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    sync_export_parser.add_argument("--freshness-budget-minutes", type=int, default=30)
+    sync_export_parser.add_argument("--reference-time-iso")
+    sync_export_parser.add_argument("--export-scope", choices=["incoming", "snapshot"], default="incoming")
+    sync_export_parser.add_argument("--output-md")
+    sync_export_parser.add_argument("--output-page-index")
+    sync_export_parser.add_argument("--jira-path")
+    sync_export_parser.add_argument("--jira-live", action="store_true")
+    sync_export_parser.add_argument("--jira-base-url")
+    sync_export_parser.add_argument("--jira-username")
+    sync_export_parser.add_argument("--jira-password")
+    sync_export_parser.add_argument("--jira-token")
+    sync_export_parser.add_argument("--jira-auth-mode", default="auto")
+    sync_export_parser.add_argument("--jira-cursor")
+    sync_export_parser.add_argument("--jira-page-size", type=int, default=50)
+    sync_export_parser.add_argument("--jira-jql", default="order by updated asc")
+    sync_export_parser.add_argument("--jira-insecure", action="store_true")
+    sync_export_parser.add_argument("--confluence-path")
+    sync_export_parser.add_argument("--confluence-live", action="store_true")
+    sync_export_parser.add_argument("--confluence-base-url")
+    sync_export_parser.add_argument("--confluence-username")
+    sync_export_parser.add_argument("--confluence-password")
+    sync_export_parser.add_argument("--confluence-token")
+    sync_export_parser.add_argument("--confluence-auth-mode", default="auto")
+    sync_export_parser.add_argument("--confluence-cursor")
+    sync_export_parser.add_argument("--confluence-page-size", type=int, default=25)
+    sync_export_parser.add_argument("--confluence-cql")
+    sync_export_parser.add_argument("--confluence-space-key")
+    sync_export_parser.add_argument("--confluence-insecure", action="store_true")
+
     args = parser.parse_args()
 
     if args.command == "adr-check":
@@ -488,6 +532,49 @@ def main() -> int:
             sections.extend(report["answer"]["text"] for report in payload["issues"])
             output_path.write_text("\n\n---\n\n".join(section for section in sections if section), encoding="utf-8")
             payload["output_md"] = str(output_path)
+        return _print_json(payload)
+    if args.command == "sync-export":
+        if args.profile:
+            profile_errors = validate_multi_sync_profile(load_json_file(args.profile))
+            if profile_errors:
+                parser.error("; ".join(profile_errors))
+        profile = build_multi_sync_profile(args)
+        if not profile["snapshot_dir"]:
+            parser.error("snapshot dir is required via --snapshot-dir or --profile")
+        jira_config, confluence_config = profile["sources"]
+        _validate_prefixed_live_args(
+            parser,
+            live=jira_config["live"],
+            base_url=jira_config.get("base_url"),
+            page_size=jira_config["page_size"],
+            source_name="jira",
+        )
+        _validate_prefixed_live_args(
+            parser,
+            live=confluence_config["live"],
+            base_url=confluence_config.get("base_url"),
+            page_size=confluence_config["page_size"],
+            source_name="confluence",
+        )
+        if not jira_config["live"] and not jira_config.get("path"):
+            parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
+        if not confluence_config["live"] and not confluence_config.get("path"):
+            parser.error("Confluence source is required via --confluence-path, --confluence-live, or --profile")
+        payload = run_sync_export(profile, export_scope=args.export_scope)
+        payload["profile"] = args.profile
+        if args.output_md:
+            output_path = Path(args.output_md)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(documents_to_markdown(payload["documents"]), encoding="utf-8")
+            payload["output_md"] = str(output_path)
+        if args.output_page_index:
+            output_path = Path(args.output_page_index)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(
+                json.dumps({"entries": build_page_index(payload["documents"])}, indent=2, ensure_ascii=False, default=_json_default),
+                encoding="utf-8",
+            )
+            payload["output_page_index"] = str(output_path)
         return _print_json(payload)
     return 1
 
