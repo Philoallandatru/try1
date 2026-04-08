@@ -3,6 +3,24 @@ name = "ssd-knowledge-platform"
 version = "0.1.0"
 description = "Internal SSD knowledge platform foundation for trusted retrieval and grounded Q&A."
 requires-python = ">=3.12"
+dependencies = [
+  "pypdf>=4.0",
+]
+
+[tool.setuptools.packages.find]
+include = [
+  "apps*",
+  "services*",
+]
+exclude = [
+  "docs*",
+  "eval*",
+  "fixtures*",
+  "ops*",
+  "scripts*",
+  "skills*",
+  "tests*",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -12,4 +30,3 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-

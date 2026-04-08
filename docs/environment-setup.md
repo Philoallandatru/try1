@@ -26,10 +26,17 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e .
-python -m pip install pypdf
 ```
 
-The current repository keeps most dependencies minimal. `pypdf` is required for the built-in PDF fallback parser.
+The current repository keeps dependencies minimal. `pypdf` is declared as the required runtime dependency for the built-in PDF fallback parser and is installed by `python -m pip install -e .`.
+
+For development-only dependencies:
+
+```powershell
+python -m pip install -e ".[dev]"
+```
+
+Editable install package discovery is explicit. Only `apps*` and `services*` are installable Python packages. Directories such as `packages`, `scripts`, `docs`, `fixtures`, `ops`, `eval`, `skills`, and `tests` are repository assets, not runtime packages.
 
 ## Optional Components
 
