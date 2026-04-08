@@ -110,6 +110,15 @@ python scripts/ingest/normalize_cli.py jira-sync fixtures/connectors/jira/full_s
 python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json
 ```
 
+Write readable Markdown and a PageIndex from normalized sources:
+
+```bash
+python scripts/ingest/normalize_cli.py jira-sync fixtures/connectors/jira/full_sync.json --output-md .tmp/jira.md --output-page-index .tmp/jira-page-index.json
+python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json --output-md .tmp/confluence.md --output-page-index .tmp/confluence-page-index.json
+python scripts/ingest/normalize_cli.py pptx fixtures/corpus/office/sample.pptx --output-md .tmp/pptx.md --output-page-index .tmp/pptx-page-index.json
+python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf --output-md .tmp/pdf.md --output-page-index .tmp/pdf-page-index.json
+```
+
 ### Grounded Retrieval Toolkit
 
 ```bash
