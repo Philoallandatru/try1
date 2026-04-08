@@ -155,6 +155,20 @@ def _normalize_attachment_list(page: dict) -> list[dict]:
     return normalized
 
 
+def _page_sync_cursor(page: dict, fallback: str = "fixture") -> str:
+    version_payload = page.get("version", {})
+    if isinstance(version_payload, dict):
+        for key in ("when", "createdAt"):
+            value = version_payload.get(key)
+            if value:
+                return str(value)
+    for key in ("lastmodified", "lastModified", "updated", "updated_at"):
+        value = page.get(key)
+        if value:
+            return str(value)
+    return fallback
+
+
 def _page_to_markdown(page: dict) -> str:
     body = page.get("body", {}).get("storage", {}).get("value", "")
     content = _storage_html_to_markdown(
@@ -191,10 +205,9 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
     space_key = space_value.get("key") if isinstance(space_value, dict) else space_value
     version_payload = page.get("version", {})
     version_value = page.get("version") or "fixture"
-    ingested_at = "fixture"
+    ingested_at = _page_sync_cursor(page)
     if isinstance(version_payload, dict):
         version_value = str(version_payload.get("number") or version_value)
-        ingested_at = version_payload.get("when") or ingested_at
     else:
         version_value = str(version_value)
     markdown = _page_to_markdown({**page, "attachments": attachments, "source_uri": source_uri})
@@ -221,6 +234,7 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         "incremental": incremental,
         "attachment_count": len(attachments),
         "visual_asset_count": 0,
+        "sync_cursor": ingested_at,
     }
     for attachment in attachments:
         media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")
@@ -322,7 +336,7 @@ def fetch_confluence_page_sync(
 
     next_cursor = cursor
     if documents:
-        next_cursor = max(document["version"] for document in documents)
+        next_cursor = max(document["metadata"]["sync_cursor"] for document in documents)
 
     return {
         "sync_type": "incremental" if cursor else "full",

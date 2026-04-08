@@ -176,3 +176,68 @@ def run_multi_sync_health(profile: dict) -> dict:
         "sources": refresh_reports,
         "ops_health": health_report,
     }
+
+
+def _resolve_source_cursor(manifest: dict, config: dict) -> str | None:
+    if config.get("cursor"):
+        return config["cursor"]
+    if not config.get("live"):
+        return None
+    source_manifest = manifest.get("sources", {}).get(config["source_name"], {})
+    return source_manifest.get("cursor")
+
+
+def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
+    snapshot_dir = profile["snapshot_dir"]
+    ensure_snapshot(snapshot_dir, profile["corpus"])
+    loaded_snapshot = load_snapshot(snapshot_dir)
+    incoming_documents = []
+    refresh_reports = []
+
+    for config in profile["sources"]:
+        sync_payload = load_source_payload(
+            kind=config["kind"],
+            path=config["path"],
+            live=config["live"],
+            base_url=config.get("base_url"),
+            username=config.get("username"),
+            password=config.get("password"),
+            token=config.get("token"),
+            auth_mode=config.get("auth_mode", "auto"),
+            cursor=_resolve_source_cursor(loaded_snapshot["manifest"], config),
+            page_size=config.get("page_size", 50),
+            jql=config.get("jql", "order by updated asc"),
+            cql=config.get("cql"),
+            space_key=config.get("space_key"),
+            insecure=config.get("insecure", False),
+        )
+        incoming_documents.extend(sync_payload.get("documents", []))
+        refresh_reports.append(
+            {
+                "source_name": config["source_name"],
+                "sync": {
+                    "sync_type": sync_payload.get("sync_type"),
+                    "cursor": sync_payload.get("cursor"),
+                    "document_count": len(sync_payload.get("documents", [])),
+                },
+                "refresh": refresh_snapshot(
+                    snapshot_dir,
+                    sync_payload=sync_payload,
+                    source_name=config["source_name"],
+                ),
+            }
+        )
+        loaded_snapshot = load_snapshot(snapshot_dir)
+
+    if export_scope == "snapshot":
+        export_documents = loaded_snapshot["documents"].get("documents", [])
+    else:
+        export_documents = incoming_documents
+
+    return {
+        "snapshot_dir": str(Path(snapshot_dir)),
+        "export_scope": export_scope,
+        "sources": refresh_reports,
+        "document_count": len(export_documents),
+        "documents": export_documents,
+    }

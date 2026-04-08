@@ -82,10 +82,12 @@ class LiveConnectorTest(unittest.TestCase):
             payload = fetch_confluence_page_sync(base_url="https://confluence.example.com", token="secret")
 
         self.assertEqual(payload["sync_type"], "full")
+        self.assertEqual(payload["cursor"], "2026-04-06T10:00:00Z")
         self.assertEqual(payload["documents"][0]["document_id"], "CONF-501")
         self.assertEqual(payload["documents"][0]["source_type"], "confluence")
         self.assertIn("attachments", payload["documents"][0])
         self.assertEqual(payload["documents"][0]["metadata"]["space"], "SSDENG")
+        self.assertEqual(payload["documents"][0]["metadata"]["sync_cursor"], "2026-04-06T10:00:00Z")
         self.assertEqual(payload["documents"][0]["version"], "9")
         self.assertIn("# Flush Architecture", payload["documents"][0]["markdown"])
         self.assertIn("## Attachments", payload["documents"][0]["markdown"])
