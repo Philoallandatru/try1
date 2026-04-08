@@ -23,6 +23,7 @@ This repository currently contains a Phase 1 foundation implementation for conve
 - [todo.md](todo.md)
 - [docs/architecture-overview.md](docs/architecture-overview.md)
 - [docs/environment-setup.md](docs/environment-setup.md)
+- [docs/platform-cli-guide.zh.md](docs/platform-cli-guide.zh.md)
 - [docs/implementation-status.md](docs/implementation-status.md)
 - [docs/cli-reference.md](docs/cli-reference.md)
 
@@ -65,7 +66,16 @@ Optional local components:
 
 ## Quick Start
 
-Create a local Python environment:
+Create a local Python environment with `uv`:
+
+```powershell
+python -m pip install --upgrade uv
+uv venv --python 3.12
+.\.venv\Scripts\Activate.ps1
+uv pip install -e .
+```
+
+Or use the standard `venv` and `pip` workflow:
 
 ```powershell
 python -m venv .venv
