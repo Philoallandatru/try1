@@ -57,7 +57,11 @@ python scripts/platform_cli.py connector confluence --live --base-url https://co
 
 ```bash
 python scripts/platform_cli.py search "flush command"
+python scripts/platform_cli.py search "flush command" --page-index .tmp/page-index.json
+python scripts/platform_cli.py search "flush command" --snapshot-dir .tmp/snapshot
 python scripts/platform_cli.py citation "flush command"
+python scripts/platform_cli.py citation "flush command" --page-index .tmp/page-index.json
+python scripts/platform_cli.py citation "flush command" --snapshot-dir .tmp/snapshot
 ```
 
 ### Jira Analysis
@@ -80,6 +84,16 @@ python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/conne
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
 ```
 
+### Generic Retrieval Consumption
+
+```bash
+python scripts/platform_cli.py retrieval-consume --source-kind jira-sync --source-path fixtures/connectors/jira/incremental_sync.json --question "Which issue mentions medium priority?"
+python scripts/platform_cli.py retrieval-consume --source-kind confluence-sync --source-path fixtures/connectors/confluence/page_sync.json --question "Which page mentions telemetry architecture?" --llm-backend mock --llm-mock-response "Mock confluence answer"
+python scripts/platform_cli.py retrieval-consume --source-kind pptx --source-path fixtures/corpus/office/sample.pptx --question "Which slide mentions latency targets?"
+python scripts/platform_cli.py retrieval-consume --source-kind pdf --source-path fixtures/corpus/pdf/sample.pdf --question "What document covers flush semantics?"
+python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --question "What document covers flush semantics?"
+```
+
 ### Portal
 
 ```bash
@@ -99,6 +113,7 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, can optionally call a local LLM backend through `--llm-backend`, can write that answer to `--output-answer-md`, and renders an optional prompt template.
 - `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer by default, can optionally call a local LLM backend through `--llm-backend`, and can write the selected answer to `--output-answer-md`.
 - `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA, supports the same optional local LLM backend flags, and can write a combined Markdown report to `--output-md`.
+- `retrieval-consume` is the source-generic retrieval-consumption CLI for Jira fixture payloads, Confluence fixture payloads, and direct file-backed Markdown/Office/PDF inputs. It assembles citation-backed prompts and can optionally call a local LLM backend.
 - `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 
 ## Skill-Ready CLIs
@@ -125,9 +140,16 @@ python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf --outp
 
 ```bash
 python scripts/retrieval/toolkit_cli.py index --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py index --corpus fixtures/retrieval/pageindex_corpus.json --output-page-index .tmp/page-index.json
 python scripts/retrieval/toolkit_cli.py search "flush command" --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py search "flush command" --page-index .tmp/page-index.json
+python scripts/retrieval/toolkit_cli.py search "flush command" --snapshot-dir .tmp/snapshot
 python scripts/retrieval/toolkit_cli.py citation "flush command" --corpus fixtures/retrieval/pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py citation "flush command" --page-index .tmp/page-index.json
+python scripts/retrieval/toolkit_cli.py citation "flush command" --snapshot-dir .tmp/snapshot
 ```
+
+PageIndex artifacts use the canonical JSON shape `{"entries": [...]}`. `--corpus` rebuilds PageIndex from canonical documents; `--page-index` consumes an exported PageIndex artifact directly; `--snapshot-dir` reuses snapshot-managed `page_index.json`.
 
 ### Snapshot Persistence
 

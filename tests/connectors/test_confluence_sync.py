@@ -31,6 +31,18 @@ class ConfluenceSyncTest(unittest.TestCase):
         self.assertIn("- Reduced queue wait", payload["documents"][0]["markdown"])
         self.assertIn("- Added retry guard", payload["documents"][0]["markdown"])
 
+    def test_confluence_documents_preserve_direct_canonical_sections_and_blocks(self) -> None:
+        payload = load_confluence_sync(Path("fixtures/connectors/confluence/incremental_sync.json"))
+        document = payload["documents"][0]
+
+        headings = [section["heading"] for section in document["structure"]["sections"]]
+        self.assertIn("Changes", headings)
+        self.assertIn("Attachments", headings)
+
+        block_texts = [block["text"] for block in document["content_blocks"]]
+        self.assertIn("Reduced queue wait", block_texts)
+        self.assertIn("Added retry guard", block_texts)
+
 
 if __name__ == "__main__":
     unittest.main()

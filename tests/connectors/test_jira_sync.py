@@ -28,6 +28,20 @@ class JiraSyncTest(unittest.TestCase):
         )
         self.assertIn("## How To Fix", payload["documents"][0]["markdown"])
 
+    def test_jira_documents_preserve_direct_canonical_sections_and_blocks(self) -> None:
+        payload = load_jira_sync(Path("fixtures/connectors/jira/incremental_sync.json"))
+        document = payload["documents"][0]
+
+        headings = [section["heading"] for section in document["structure"]["sections"]]
+        self.assertIn("Issue Type", headings)
+        self.assertIn("Issue Fields", headings)
+        self.assertIn("Description", headings)
+        self.assertIn("Comments", headings)
+
+        block_texts = [block["text"] for block in document["content_blocks"]]
+        self.assertIn("Log page LNDF(224) reported unexpected NAND write value during DV validation.", block_texts)
+        self.assertIn("确认问题出在DFh log累计逻辑，修复后需要对TLC workload复测", block_texts)
+
     def test_jira_issue_type_routing_maps_known_types(self) -> None:
         payload = load_jira_sync(Path("fixtures/connectors/jira/issue_type_routing.json"))
         routes = {

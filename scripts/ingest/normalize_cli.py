@@ -15,7 +15,7 @@ from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
 from services.ingest.markdown_export import documents_to_markdown, ensure_document_markdown
-from services.retrieval.indexing.page_index import build_page_index
+from services.retrieval.indexing.page_index import build_page_index, page_index_artifact
 
 
 def _print_json(payload: dict | list) -> int:
@@ -46,7 +46,7 @@ def _write_outputs(payload: dict, *, output_md: str | None, output_page_index: s
         output_path = Path(output_page_index)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps(build_page_index(documents), indent=2, ensure_ascii=False, default=_json_default),
+            json.dumps(page_index_artifact(build_page_index(documents)), indent=2, ensure_ascii=False, default=_json_default),
             encoding="utf-8",
         )
         payload["output_page_index"] = str(output_path)
