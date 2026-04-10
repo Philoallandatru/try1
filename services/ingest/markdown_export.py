@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
+import re
+
 
 def _block_text(block: dict) -> str:
     return str(block.get("text", "")).strip()
@@ -57,3 +60,29 @@ def ensure_document_markdown(document: dict) -> dict:
 
 def documents_to_markdown(documents: list[dict]) -> str:
     return "\n\n---\n\n".join(document_to_markdown(document) for document in documents)
+
+
+_PATH_SAFE_PATTERN = re.compile(r'[<>:"/\\|?*]+')
+
+
+def _safe_path_segment(value: str | None) -> str:
+    text = str(value or "unknown").strip()
+    text = _PATH_SAFE_PATTERN.sub("-", text)
+    return text.strip(". ") or "unknown"
+
+
+def write_documents_markdown_tree(documents: list[dict], output_dir: str | Path) -> list[str]:
+    root = Path(output_dir)
+    written_paths: list[str] = []
+    for document in documents:
+        target = (
+            root
+            / _safe_path_segment(document.get("source_type"))
+            / _safe_path_segment(document.get("document_id"))
+            / _safe_path_segment(document.get("version"))
+            / "document.md"
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(document_to_markdown(document), encoding="utf-8")
+        written_paths.append(str(target))
+    return written_paths

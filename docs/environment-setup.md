@@ -169,6 +169,45 @@ python scripts/platform_cli.py connector confluence `
   --token $env:CONF_TOKEN
 ```
 
+### Live Retrieval Consumption
+
+If you want to test the real website flow directly through the source-generic consumption seam, use `retrieval-consume` with a live source kind.
+
+Live Jira:
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind jira-live `
+  --base-url https://jira.example.com `
+  --token $env:JIRA_TOKEN `
+  --question "What changed in the latest SSD issue?"
+```
+
+Live Confluence:
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind confluence-live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --space-key SSD `
+  --question "What changed in the latency budget page?"
+```
+
+If you want the answer written to Markdown:
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind confluence-live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --space-key SSD `
+  --question "What changed in the latency budget page?" `
+  --llm-backend ollama `
+  --llm-model qwen2.5:1.5b `
+  --output-answer-md .tmp\live-confluence-answer.md
+```
+
 ## Markdown And PageIndex Export
 
 Use the skill-ready normalizer CLI when the goal is to generate readable Markdown and a PageIndex artifact from source documents:

@@ -40,6 +40,22 @@ class PlatformCliTest(unittest.TestCase):
         self.assertIn("aggregate", payload)
         self.assertIn("recall@10", payload["aggregate"])
 
+    def test_cli_connector_can_write_utf8_json_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_json = Path(temp_dir) / "jira-live.json"
+            result = self._run(
+                "connector",
+                "jira",
+                "fixtures/connectors/jira/full_sync.json",
+                "--output-json",
+                str(output_json),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_json"], str(output_json))
+            written = json.loads(output_json.read_text(encoding="utf-8"))
+            self.assertEqual(written["documents"][0]["document_id"], "SSD-101")
+
     def test_cli_citation_outputs_contract_payload(self) -> None:
         result = self._run("citation", "flush command")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -340,6 +356,26 @@ class PlatformCliTest(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertEqual(payload["retrieval"]["citations"][0]["document"], "nvme-spec-v1")
 
+    def test_cli_retrieval_consume_can_write_utf8_json_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_json = Path(temp_dir) / "consume.json"
+            result = self._run(
+                "retrieval-consume",
+                "--source-kind",
+                "confluence-sync",
+                "--source-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--question",
+                "Which page mentions telemetry architecture?",
+                "--output-json",
+                str(output_json),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_json"], str(output_json))
+            written = json.loads(output_json.read_text(encoding="utf-8"))
+            self.assertEqual(written["retrieval"]["citations"][0]["document"], "CONF-201")
+
     def test_cli_jira_batch_spec_report_filters_and_writes_markdown(self) -> None:
         with TemporaryDirectory() as temp_dir:
             output_md = Path(temp_dir) / "batch-report.md"
@@ -569,6 +605,28 @@ class PlatformCliTest(unittest.TestCase):
             manifest = json.loads((Path(temp_dir) / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["sources"]["jira"]["cursor"], "jira-incr-002")
             self.assertEqual(manifest["sources"]["confluence"]["cursor"], "conf-incr-003")
+
+    def test_cli_sync_export_can_write_markdown_tree(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md_dir = Path(temp_dir) / "documents"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/incremental_sync.json",
+                "--output-md-dir",
+                str(output_md_dir),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_md_dir"], str(output_md_dir))
+            matches = list(output_md_dir.rglob("document.md"))
+            self.assertEqual(len(matches), 2)
 
     def test_cli_sync_export_can_export_snapshot_scope(self) -> None:
         with TemporaryDirectory() as temp_dir:

@@ -60,6 +60,24 @@ class SkillReadyCliTest(unittest.TestCase):
                         {expected_source_type},
                     )
 
+    def test_normalize_cli_can_write_markdown_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "docs"
+            result = self._run(
+                "scripts/ingest/normalize_cli.py",
+                "confluence-sync",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--output-md-dir",
+                str(output_dir),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_md_dir"], str(output_dir))
+            matches = list(output_dir.rglob("document.md"))
+            self.assertEqual(len(matches), 1)
+            self.assertIn("Telemetry Architecture", matches[0].read_text(encoding="utf-8"))
+
     def test_retrieval_toolkit_search_outputs_results(self) -> None:
         result = self._run(
             "scripts/retrieval/toolkit_cli.py",

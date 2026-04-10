@@ -25,7 +25,7 @@ from services.eval.harness import evaluate_dataset
 from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
-from services.ingest.markdown_export import documents_to_markdown
+from services.ingest.markdown_export import documents_to_markdown, write_documents_markdown_tree
 from services.ops.health import build_ops_health
 from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
@@ -45,6 +45,13 @@ from services.retrieval.indexing.page_index import build_page_index
 def _print_json(payload: dict | list) -> int:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
+
+
+def _write_json_output(path: str | Path, payload: dict | list) -> str:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return str(output_path)
 
 
 def _json_default(value: object) -> object:
@@ -302,6 +309,7 @@ def main() -> int:
     connector_parser.add_argument("--cql")
     connector_parser.add_argument("--space-key")
     connector_parser.add_argument("--insecure", action="store_true")
+    connector_parser.add_argument("--output-json")
 
     sync_health_parser = subparsers.add_parser("sync-health")
     sync_health_parser.add_argument("kind", choices=["jira", "confluence"])
@@ -424,6 +432,7 @@ def main() -> int:
     retrieval_consume_parser.add_argument("--question", required=True)
     retrieval_consume_parser.add_argument("--prompt-template")
     retrieval_consume_parser.add_argument("--output-answer-md")
+    retrieval_consume_parser.add_argument("--output-json")
     retrieval_consume_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
     retrieval_consume_parser.add_argument("--top-k", type=int, default=5)
     _add_llm_backend_args(retrieval_consume_parser)
@@ -436,6 +445,7 @@ def main() -> int:
     sync_export_parser.add_argument("--reference-time-iso")
     sync_export_parser.add_argument("--export-scope", choices=["incoming", "snapshot"], default="incoming")
     sync_export_parser.add_argument("--output-md")
+    sync_export_parser.add_argument("--output-md-dir")
     sync_export_parser.add_argument("--output-page-index")
     sync_export_parser.add_argument("--jira-path")
     sync_export_parser.add_argument("--jira-live", action="store_true")
@@ -507,7 +517,10 @@ def main() -> int:
         _validate_live_connector_args(parser, args)
         if not args.live and not args.path:
             parser.error("connector path is required unless --live is set")
-        return _print_json(_load_connector_payload(args))
+        payload = _load_connector_payload(args)
+        if args.output_json:
+            payload["output_json"] = _write_json_output(args.output_json, payload)
+        return _print_json(payload)
     if args.command == "sync-health":
         _validate_live_connector_args(parser, args)
         if not args.live and not args.path:
@@ -683,6 +696,8 @@ def main() -> int:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(payload["answer"]["text"], encoding="utf-8")
             payload["output_answer_md"] = str(output_path)
+        if args.output_json:
+            payload["output_json"] = _write_json_output(args.output_json, payload)
         return _print_json(payload)
     if args.command == "sync-export":
         if args.profile:
@@ -718,6 +733,11 @@ def main() -> int:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(documents_to_markdown(payload["documents"]), encoding="utf-8")
             payload["output_md"] = str(output_path)
+        if args.output_md_dir:
+            output_root = Path(args.output_md_dir)
+            output_root.mkdir(parents=True, exist_ok=True)
+            write_documents_markdown_tree(payload["documents"], output_root)
+            payload["output_md_dir"] = str(output_root)
         if args.output_page_index:
             output_path = Path(args.output_page_index)
             output_path.parent.mkdir(parents=True, exist_ok=True)

@@ -515,15 +515,26 @@ python scripts/platform_cli.py jira-batch-spec-report `
 
 ### `retrieval-consume`
 
-用途：统一的 source-generic retrieval-consumption 入口。直接读取 Jira/Confluence fixture，或 Markdown/Office/PDF 文件，执行检索、组装 citation-backed prompt，并可选调用本地 LLM。
+用途：统一的 source-generic retrieval-consumption 入口。可直接读取 Jira/Confluence fixture、live Jira/live Confluence、Markdown/Office/PDF 文件，或 snapshot 目录中的 `documents.json`，执行检索、组装 citation-backed prompt，并可选调用本地 LLM。
 
 参数：
 
 | 参数 | 必填 | 说明 |
 | --- | --- | --- |
 | `--snapshot-dir` | 与 `--source-kind/--source-path` 二选一 | snapshot 目录，直接复用其中的 `documents.json`。 |
-| `--source-kind` | 与 `--snapshot-dir` 二选一 | `jira-sync`、`confluence-sync`、`markdown`、`docx`、`xlsx`、`pptx`、`pdf`。 |
-| `--source-path` | 与 `--snapshot-dir` 二选一 | 输入文件或 fixture 路径。 |
+| `--source-kind` | 与 `--snapshot-dir` 二选一 | `jira-sync`、`confluence-sync`、`jira-live`、`confluence-live`、`markdown`、`docx`、`xlsx`、`pptx`、`pdf`。 |
+| `--source-path` | fixture/file 模式需要 | 输入文件或 fixture 路径。 |
+| `--base-url` | live 模式需要 | Jira 或 Confluence 根地址。 |
+| `--username` | live Basic auth 可选 | 用户名。 |
+| `--password` | live Basic auth 可选 | 密码。 |
+| `--token` | live token auth 常用 | API token 或 PAT。 |
+| `--auth-mode` | 否 | `auto`、`basic`、`bearer`。 |
+| `--cursor` | 否 | 增量游标。 |
+| `--page-size` | 否 | 每页拉取数量。 |
+| `--jql` | Jira live 使用 | Jira JQL。 |
+| `--cql` | Confluence live 使用 | Confluence CQL。 |
+| `--space-key` | Confluence live 使用 | Confluence 空间 key。 |
+| `--insecure` | 否 | 跳过 SSL 校验。 |
 | `--question` | 是 | 问题文本。 |
 | `--prompt-template` | 否 | 自定义 prompt 模板。 |
 | `--output-answer-md` | 否 | 写出答案 Markdown。 |
@@ -553,6 +564,23 @@ python scripts/platform_cli.py retrieval-consume `
 python scripts/platform_cli.py retrieval-consume `
   --snapshot-dir .tmp\snapshot `
   --question "What document covers flush semantics?"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind jira-live `
+  --base-url https://jira.example.com `
+  --token $env:JIRA_TOKEN `
+  --question "What changed in the latest SSD issue?"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind confluence-live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --space-key SSD `
+  --question "What changed in the latency budget page?"
 ```
 
 ## Skill-ready normalizer CLI

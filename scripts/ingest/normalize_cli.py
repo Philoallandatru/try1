@@ -14,7 +14,7 @@ from services.connectors.jira.connector import load_jira_sync
 from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
-from services.ingest.markdown_export import documents_to_markdown, ensure_document_markdown
+from services.ingest.markdown_export import documents_to_markdown, ensure_document_markdown, write_documents_markdown_tree
 from services.retrieval.indexing.page_index import build_page_index, page_index_artifact
 
 
@@ -29,7 +29,7 @@ def _documents_from_payload(payload: dict) -> list[dict]:
     return [ensure_document_markdown(payload)]
 
 
-def _write_outputs(payload: dict, *, output_md: str | None, output_page_index: str | None) -> dict:
+def _write_outputs(payload: dict, *, output_md: str | None, output_md_dir: str | None, output_page_index: str | None) -> dict:
     documents = _documents_from_payload(payload)
     if "documents" in payload:
         payload["documents"] = documents
@@ -41,6 +41,12 @@ def _write_outputs(payload: dict, *, output_md: str | None, output_page_index: s
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(documents_to_markdown(documents), encoding="utf-8")
         payload["output_md"] = str(output_path)
+
+    if output_md_dir:
+        output_root = Path(output_md_dir)
+        output_root.mkdir(parents=True, exist_ok=True)
+        write_documents_markdown_tree(documents, output_root)
+        payload["output_md_dir"] = str(output_root)
 
     if output_page_index:
         output_path = Path(output_page_index)
@@ -68,23 +74,24 @@ def main() -> int:
     )
     parser.add_argument("path")
     parser.add_argument("--output-md")
+    parser.add_argument("--output-md-dir")
     parser.add_argument("--output-page-index")
     args = parser.parse_args()
 
     if args.kind == "markdown":
-        return _print_json(_write_outputs(parse_markdown(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(parse_markdown(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "docx":
-        return _print_json(_write_outputs(parse_docx(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(parse_docx(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "xlsx":
-        return _print_json(_write_outputs(parse_xlsx(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(parse_xlsx(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "pptx":
-        return _print_json(_write_outputs(parse_pptx(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(parse_pptx(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "pdf":
-        return _print_json(_write_outputs(extract_pdf_structure(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(extract_pdf_structure(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "jira-sync":
-        return _print_json(_write_outputs(load_jira_sync(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(load_jira_sync(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     if args.kind == "confluence-sync":
-        return _print_json(_write_outputs(load_confluence_sync(args.path), output_md=args.output_md, output_page_index=args.output_page_index))
+        return _print_json(_write_outputs(load_confluence_sync(args.path), output_md=args.output_md, output_md_dir=args.output_md_dir, output_page_index=args.output_page_index))
     return 1
 
 
