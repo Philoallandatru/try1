@@ -153,7 +153,8 @@ $env:JIRA_TOKEN = "<token>"
 python scripts/platform_cli.py connector jira `
   --live `
   --base-url https://jira.example.com `
-  --token $env:JIRA_TOKEN
+  --token $env:JIRA_TOKEN `
+  --output-json .tmp\jira-live.json
 ```
 
 ### Live Confluence
@@ -166,7 +167,8 @@ $env:CONF_TOKEN = "<token>"
 python scripts/platform_cli.py connector confluence `
   --live `
   --base-url https://confluence.example.com `
-  --token $env:CONF_TOKEN
+  --token $env:CONF_TOKEN `
+  --output-json .tmp\confluence-live.json
 ```
 
 ### Live Retrieval Consumption
@@ -180,7 +182,8 @@ python scripts/platform_cli.py retrieval-consume `
   --source-kind jira-live `
   --base-url https://jira.example.com `
   --token $env:JIRA_TOKEN `
-  --question "What changed in the latest SSD issue?"
+  --question "What changed in the latest SSD issue?" `
+  --output-json .tmp\jira-live-consume.json
 ```
 
 Live Confluence:
@@ -191,7 +194,8 @@ python scripts/platform_cli.py retrieval-consume `
   --base-url https://confluence.example.com `
   --token $env:CONF_TOKEN `
   --space-key SSD `
-  --question "What changed in the latency budget page?"
+  --question "What changed in the latency budget page?" `
+  --output-json .tmp\confluence-live-consume.json
 ```
 
 If you want the answer written to Markdown:
@@ -228,6 +232,14 @@ python scripts/ingest/normalize_cli.py pptx fixtures/corpus/office/sample.pptx `
 python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf `
   --output-md .tmp/pdf.md `
   --output-page-index .tmp/pdf-page-index.json
+```
+
+If you want one Markdown file per canonical document instead of one concatenated Markdown output:
+
+```powershell
+python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json `
+  --output-md-dir .tmp\docs `
+  --output-page-index .tmp\confluence-page-index.json
 ```
 
 The generated Markdown is human-readable. The generated PageIndex is derived from the same canonical document payload, so retrieval and citation use the same source representation.

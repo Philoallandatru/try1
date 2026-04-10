@@ -171,6 +171,8 @@ Current validation entrypoints:
 - `services/retrieval/search/hybrid_search.py` accepts persisted page-index `tokens` lists in addition to in-memory token sets.
 - `services/analysis/retrieval_consumption.py` now provides a source-generic retrieval -> prompt assembly -> local LLM consumption seam, and Jira spec QA now reuses it internally while preserving existing output contracts.
 - `scripts/platform_cli.py retrieval-consume` now exposes the source-generic retrieval-consumption seam for Jira/Confluence fixture payloads and file-backed Markdown/Office/PDF sources.
+- `connector` and `retrieval-consume` now support explicit UTF-8 `--output-json` file output for real-site testing without relying on shell redirection encoding.
+- `normalize_cli` and `sync-export` now support `--output-md-dir` so multi-document Markdown export can be written as one file per document instead of one concatenated file.
 - `scripts/platform_cli.py search`, `citation`, and `retrieval-consume` now support snapshot reuse directly, and `scripts/retrieval/toolkit_cli.py` search/citation now support snapshot-backed page index reuse.
 - `services/analysis/jira_profiles.py` now holds Jira report and Jira-spec extractive profile logic so `jira_issue_analysis.py` stays closer to orchestration than prompt implementation.
 - `services/connectors/jira/connector.py` now builds canonical sections and content blocks directly from Jira payload fields instead of deriving them from Markdown re-parsing.

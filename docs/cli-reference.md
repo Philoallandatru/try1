@@ -49,6 +49,7 @@ python scripts/platform_cli.py ingest pdf fixtures/corpus/pdf/sample.pdf
 ```bash
 python scripts/platform_cli.py connector jira fixtures/connectors/jira/full_sync.json
 python scripts/platform_cli.py connector confluence fixtures/connectors/confluence/page_sync.json
+python scripts/platform_cli.py connector jira fixtures/connectors/jira/full_sync.json --output-json .tmp/jira.json
 python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $TOKEN
 python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $TOKEN
 ```
@@ -94,6 +95,7 @@ python scripts/platform_cli.py retrieval-consume --source-kind confluence-live -
 python scripts/platform_cli.py retrieval-consume --source-kind pptx --source-path fixtures/corpus/office/sample.pptx --question "Which slide mentions latency targets?"
 python scripts/platform_cli.py retrieval-consume --source-kind pdf --source-path fixtures/corpus/pdf/sample.pdf --question "What document covers flush semantics?"
 python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --question "What document covers flush semantics?"
+python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --question "What document covers flush semantics?" --output-json .tmp/consume.json
 ```
 
 ### Portal
@@ -136,6 +138,7 @@ python scripts/ingest/normalize_cli.py jira-sync fixtures/connectors/jira/full_s
 python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json --output-md .tmp/confluence.md --output-page-index .tmp/confluence-page-index.json
 python scripts/ingest/normalize_cli.py pptx fixtures/corpus/office/sample.pptx --output-md .tmp/pptx.md --output-page-index .tmp/pptx-page-index.json
 python scripts/ingest/normalize_cli.py pdf fixtures/corpus/pdf/sample.pdf --output-md .tmp/pdf.md --output-page-index .tmp/pdf-page-index.json
+python scripts/ingest/normalize_cli.py confluence-sync fixtures/connectors/confluence/page_sync.json --output-md-dir .tmp/docs
 ```
 
 ### Grounded Retrieval Toolkit
