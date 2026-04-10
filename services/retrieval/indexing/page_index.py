@@ -72,6 +72,17 @@ def build_page_index(documents: Iterable[dict]) -> list[dict]:
     return entries
 
 
+def page_index_artifact(entries: Iterable[dict]) -> dict:
+    return {"entries": list(entries)}
+
+
+def load_page_index(path: str | Path) -> list[dict]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or not isinstance(payload.get("entries"), list):
+        raise ValueError("PageIndex artifact must be a JSON object with an 'entries' list.")
+    return payload["entries"]
+
+
 def load_documents(path: str | Path) -> list[dict]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     return payload["documents"]

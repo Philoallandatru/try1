@@ -2,7 +2,19 @@
 
 ## Summary
 
-The repository currently covers the full planned Task 1 to Task 15 skeleton for Phase 1 with a minimal runnable implementation.
+The repository currently covers the full older Task 1 to Task 15 skeleton for Phase 1 with a minimal runnable implementation.
+
+The active near-term roadmap has been narrowed to Markdown + PageIndex + local LLM consumption for Jira, Confluence, PPTX, and PDF. See `docs/replan-markdown-pageindex-local-llm.md`.
+
+The current foundation is now largely in place against that narrower roadmap:
+
+- Jira now builds canonical sections and content blocks directly from payload fields while preserving the existing readable Markdown projection.
+- Confluence now builds canonical sections and content blocks directly from storage payloads while preserving the existing readable Markdown projection.
+- PPTX and PDF are closer to the target because their adapters build canonical-like documents directly before Markdown/PageIndex export.
+- PageIndex artifact shape has been standardized to `{"entries": [...]}` for the skill-ready normalizer, sync-export, snapshots, and retrieval toolkit artifact loading.
+- `scripts/retrieval/toolkit_cli.py` and `scripts/platform_cli.py` search/citation can now consume exported PageIndex artifacts directly via `--page-index`; corpus-oriented document loading remains the default.
+- `scripts/platform_cli.py` and `scripts/retrieval/toolkit_cli.py` can now also reuse snapshot-managed `page_index.json` via `--snapshot-dir`, and `retrieval-consume` can reuse snapshot-managed `documents.json`.
+- Local LLM consumption now has a source-generic retrieval-consumption seam plus a generic CLI surface; the remaining work is mainly profile cleanup and fidelity expansion.
 
 ## Completed
 
@@ -83,11 +95,12 @@ Current validation entrypoints:
 
 ## Remaining Gaps to Production
 
+- Expand fidelity for richer Jira and Confluence source shapes beyond the current fixture-backed paths.
+- Continue simplifying Jira profile/orchestration boundaries now that the generic seam exists.
+- Add snapshot-based index reuse to reduce unnecessary rebuilds.
 - Replace minimal offline PDF parsing with the target production parser stack.
 - Add production OCR and local vision caption backends for image assets; current visual asset support indexes image references and provided OCR/caption metadata.
-- Upgrade the portal from static assets to a hosted internal service.
-- Add persistent storage and real indexing backends.
-- Add real authentication and request-scoped ACL identity handling.
+- Defer hosted portal, persistent storage, real indexing backends, and request-scoped ACL identity handling until the current foundation chain is stable.
 
 ## Reusable Components
 
@@ -113,11 +126,36 @@ Current validation entrypoints:
 - unified CLI commands for fixture-backed and live Jira report, Markdown report export, optional local-LLM Jira report summary export, Jira-plus-spec QA payload generation, extractive/local-LLM answer export, and batch Jira-plus-spec reports
 - visual asset normalization for merging Jira image attachments, Confluence inline/attachment images, and MinerU PDF image blocks into canonical Markdown content
 - Markdown export utilities for turning canonical documents into readable Markdown and PageIndex JSON through `scripts/ingest/normalize_cli.py --output-md --output-page-index`
+- source-generic retrieval-consumption helper for assembling citation-backed prompts and optional local LLM answers across Jira, Confluence, PPTX, and PDF fixture paths
+- direct Jira payload-to-canonical normalization path with preserved readable Markdown projection
+- direct Confluence payload-to-canonical normalization path with preserved readable Markdown projection
 - gated Jira analysis/reporting module contract
 - profile-backed source manifests for multi-source ops runs
 - ops profile schema contract and runtime validation
 - eval harness
 - rollout gate runner
+
+## Current Roadmap Status
+
+### P0
+
+- Done: persist foundation-first roadmap.
+- Done: standardize skill-ready PageIndex artifact shape as `{"entries": [...]}`.
+- Done: add direct PageIndex artifact input for `scripts/retrieval/toolkit_cli.py` and platform search/citation.
+- Done: add four-source Markdown/PageIndex export tests.
+- Done: document Jira/Confluence Markdown-first canonicalization as implementation debt in the connector docs.
+
+### P1
+
+- Done for current fixture-backed paths: add richer Jira and Confluence direct payload-to-canonical builders.
+- Add source-generic local LLM retrieval-consumption service.
+- Refactor Jira-specific analysis onto the generic consumption seam.
+
+### P2
+
+- Add index reuse and contextual chunking.
+- Decide the PageIndex vs embedding/chunk index relationship.
+- Add clustering and summarization as derived enrichment only.
 
 ## Operational Notes
 
@@ -131,6 +169,14 @@ Current validation entrypoints:
 - `docs/confluence-page-mapping.md` now defines the normalized Confluence page contract, including body, attachment, space, and version handling.
 - `tests/ops/test_platform_cli.py` validates that `multi-sync-health` persists Jira issue fields and Confluence page mapping content into the shared snapshot for both direct CLI arguments and profile-driven runs.
 - `services/retrieval/search/hybrid_search.py` accepts persisted page-index `tokens` lists in addition to in-memory token sets.
+- `services/analysis/retrieval_consumption.py` now provides a source-generic retrieval -> prompt assembly -> local LLM consumption seam, and Jira spec QA now reuses it internally while preserving existing output contracts.
+- `scripts/platform_cli.py retrieval-consume` now exposes the source-generic retrieval-consumption seam for Jira/Confluence fixture payloads and file-backed Markdown/Office/PDF sources.
+- `connector` and `retrieval-consume` now support explicit UTF-8 `--output-json` file output for real-site testing without relying on shell redirection encoding.
+- `normalize_cli` and `sync-export` now support `--output-md-dir` so multi-document Markdown export can be written as one file per document instead of one concatenated file.
+- `scripts/platform_cli.py search`, `citation`, and `retrieval-consume` now support snapshot reuse directly, and `scripts/retrieval/toolkit_cli.py` search/citation now support snapshot-backed page index reuse.
+- `services/analysis/jira_profiles.py` now holds Jira report and Jira-spec extractive profile logic so `jira_issue_analysis.py` stays closer to orchestration than prompt implementation.
+- `services/connectors/jira/connector.py` now builds canonical sections and content blocks directly from Jira payload fields instead of deriving them from Markdown re-parsing.
+- `services/connectors/confluence/connector.py` now builds canonical sections and content blocks directly from Confluence storage payloads instead of deriving them from Markdown re-parsing.
 - `services/analysis/jira_issue_analysis.py` builds deterministic Jira reports and Jira-plus-spec question payloads; `services/analysis/llm_backends.py` adds explicit opt-in local LLM answer generation.
 - `services/ingest/visual_assets.py` renders image evidence blocks for Markdown ingestion and indexing. It currently consumes image references plus provided `ocr_text`, `vision_caption`, and `alt_text` metadata; automatic download/OCR/vision extraction remains a production gap.
 - `services/ingest/markdown_export.py` turns canonical documents into readable Markdown when a source does not already provide Markdown, and `scripts/ingest/normalize_cli.py --output-page-index` writes the PageIndex derived from the same normalized documents.
@@ -142,5 +188,6 @@ Current validation entrypoints:
 - `scripts/platform_cli.py jira-batch-spec-report` runs Jira-plus-spec QA for each issue selected by the Jira time filter.
 - `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-backend none|mock|ollama|openai-compatible`, defaulting to `none`.
 - `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-prompt-mode strict|balanced|exploratory`, defaulting to `strict`.
+- `jira-batch-spec-report` now forwards `--prompt-template` into each per-issue QA payload instead of treating it as a report-summary template.
 - `tests/ops/test_platform_cli_live_orchestration.py` validates the live dual-source orchestration path without introducing network dependencies.
 - `agent.md` now defines a bounded self-loop entry rule for `continue` and `继续`, with explicit stop conditions and per-iteration validation expectations.

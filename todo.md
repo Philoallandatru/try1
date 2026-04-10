@@ -1,435 +1,238 @@
-# SSD Knowledge Platform Execution TODO
+# SSD Knowledge Platform Foundation TODO
 
-## 使用方式
+## Current Execution Rule
 
-本文件按 4 个阶段组织执行工作，并把原始 15 个任务映射到各阶段中。阅读顺序应为：
+Use this file as the active near-term roadmap. The current milestone is deliberately narrower than the older broad Phase 1 plan:
 
-1. 先看阶段目标与完成标准
-2. 再看每个阶段的输入、输出、验证与阻塞项
-3. 最后下钻到映射任务执行具体 packet
+- Primary target: Markdown + PageIndex + local LLM.
+- Priority sources: Jira, Confluence, PPTX, PDF.
+- Critical path: conversion foundation, PageIndex artifact contract, source-agnostic retrieval, local LLM consumption.
+- Deferred: portal, ops hardening, rollout gates, hosted services, identity-aware ACL, clustering, summarization.
 
-每个阶段都使用统一模板：
+Do not weaken existing ACL, citation, provenance, or PageIndex-first retrieval constraints.
 
-- Goal
-- Mapped Tasks
-- Inputs
-- Outputs
-- Validation
-- Parallelism
-- Blockers
-- Commit Boundaries
-
-建议每个阶段执行完成后，再额外补充：
-
-- Acceptance Checklist
-- Deliverable Template
-- Handoff Notes
-
----
-
-## 阶段 1：Contract and Foundation
+## Phase A: Conversion Foundation
 
 ### Goal
 
-固化产品、仓库、schema、ACL 四个基础合同，建立后续实现必须遵守的边界、验证与 gate。
-
-### Mapped Tasks
-
-- Task 1 Freeze Phase 1 Product Contract
-- Task 2 Bootstrap Repository Skeleton
-- Task 3 Define Canonical Schema and Terminology Contract
-- Task 4 Define ACL Propagation Contract
+Make Jira, Confluence, PPTX, and PDF all produce canonical document + readable Markdown + PageIndex from one canonical document.
 
 ### Inputs
 
-- Phase 1 scope and non-goals
-- Source authority model
-- Quality thresholds
-- Planned monorepo shape
+- `spec.md`
+- `docs/replan-markdown-pageindex-local-llm.md`
+- `docs/api-contracts.md`
+- Jira and Confluence connector fixtures
+- PPTX and PDF corpus fixtures
+- Existing canonical normalization helpers and adapters
 
 ### Outputs
 
-- ADR contract set
-- Repository skeleton
-- Canonical schema contract
-- Terminology contract
-- ACL propagation contract
-- 对应 tests 和 validation scripts
+- Four-source conversion support matrix.
+- Tests for source -> canonical document.
+- Tests for canonical document -> Markdown.
+- Tests for canonical document -> PageIndex.
 
 ### Validation
 
-- ADR tests and contract checker pass
-- Repo shape tests and smoke gate pass
-- Schema fixture tests pass
-- ACL contract tests pass
-
-### Parallelism
-
-- Task 2 can start after Task 1 begins stabilizing.
-- Task 3 and Task 4 can run in parallel after Task 1.
+- Run focused tests for ingestion and connector PageIndex behavior.
+- Each source has at least one happy-path and one failure-path validation.
 
 ### Blockers
 
-- 产品范围未冻结
-- 权威性模型未定
-- schema 与 ACL 边界不清晰
+- Jira and Confluence currently rely on payload -> Markdown -> `normalize_markdown_text(...)`; this is accepted as temporary behavior but not the target architecture.
 
-### Commit Boundaries
+### Exit Criteria
 
-- `docs(adr): freeze phase-1 kb retrieval contract`
-- `chore(repo): bootstrap monorepo skeleton`
-- `feat(schema): define canonical knowledge document model`
-- `feat(security): add acl model and enforcement contracts`
+- All four priority sources can produce readable Markdown and PageIndex without weakening provenance, ACL, citation, or structure metadata.
 
-### Completion Criteria
-
-- ADR、repo shape、schema、ACL 四组测试和脚本校验均通过。
-
-### Acceptance Checklist
-
-- Scope、authority、schema、ACL 四类合同均已冻结。
-- 所有合同都有对应 test 或 gate。
-- 目录骨架与 contract boundary 对齐。
-- 后续阶段需要的输入名称、位置、边界已清晰。
-
-### Deliverable Template
-
-- Contracts created or updated
-- Validation scripts added
-- Test suites added
-- Evidence locations recorded
-- Next-stage prerequisites listed
-
----
-
-## 阶段 2：Ingestion Backbone
+## Phase B: PageIndex Artifact Contract
 
 ### Goal
 
-打通所有 Phase 1 必需数据源的 ingestion path，并统一进入 normalized document schema，同时保留结构与语言保真。
-
-### Mapped Tasks
-
-- Task 5 Markdown and Office Preprocessing
-- Task 6 PDF Structural Extraction and Fidelity Checks
-- Task 7 Jira Connector
-- Task 8 Confluence Connector
+Make PageIndex a first-class artifact with one shape and one loader.
 
 ### Inputs
 
-- Canonical schema contract
-- ACL propagation contract
-- Terminology contract
-- Fixture strategy for corpus and connectors
+- `services/retrieval/indexing/page_index.py`
+- `scripts/ingest/normalize_cli.py`
+- `scripts/platform_cli.py sync-export`
+- `services/retrieval/persistence/snapshot_store.py`
 
 ### Outputs
 
-- Markdown adapter
-- Office adapters for `docx`、`xlsx`、`pptx`
-- PDF structural extraction path
-- PDF fidelity checks
-- Jira connector
-- Confluence connector
-- Source-family fixtures and tests
+- Canonical artifact shape: `{"entries": [...]}`
+- Consistent PageIndex exports from normalize CLI, sync-export, and snapshot persistence.
+- Retrieval loader for PageIndex artifact input.
 
 ### Validation
 
-- Markdown adapter tests pass
-- Office adapter tests pass
-- PDF extraction tests pass
-- PDF fidelity tests pass
-- Jira full sync and incremental sync tests pass
-- Confluence page sync, attachment metadata, and incremental sync tests pass
-
-### Parallelism
-
-- Task 5 and Task 6 can run in parallel after schema and ACL contracts stabilize.
-- Task 7 and Task 8 can run in parallel after connector contracts stabilize.
+- Tests prove all PageIndex writers emit `{"entries": [...]}`.
+- Tests prove retrieval can consume exported PageIndex directly.
 
 ### Blockers
 
-- Schema fields for provenance, structure, ACL, language not frozen
-- PDF parser route not chosen
-- Connector metadata and version marker contracts not defined
+- `normalize_cli.py --output-page-index` currently writes a bare list while snapshot and sync-export write `{"entries": [...]}`.
+- Retrieval toolkit currently prefers document corpus input and rebuilds PageIndex.
 
-### Commit Boundaries
+### Exit Criteria
 
-- `feat(ingest): add markdown and office preprocessing pipeline`
-- `feat(ingest): add pdf structural extraction pipeline`
-- `feat(connectors): add jira ingestion connector`
-- `feat(connectors): add confluence ingestion connector`
+- PageIndex artifacts are stable runtime inputs and no longer only derived intermediate outputs.
 
-### Completion Criteria
-
-- 所有 source family 至少有 happy-path 和 failure-path fixture。
-- PDF fidelity、connector incremental sync 均被验证。
-
-### Acceptance Checklist
-
-- `md`、`pdf`、`docx`、`xlsx`、`pptx`、Jira、Confluence 全部有 ingestion path。
-- 摄取结果可进入统一 normalized schema。
-- PDF 与 Office 的结构对象没有被扁平化丢失。
-- Connector 支持版本或增量同步语义。
-
-### Deliverable Template
-
-- Adapters or connectors implemented
-- Fixture corpus added
-- Happy-path evidence recorded
-- Failure-path evidence recorded
-- Reusable normalization interfaces noted
-
----
-
-## 阶段 3：Retrieval and Evaluation Core
+## Phase C: Unified Retrieval Surface
 
 ### Goal
 
-构建 ACL-safe、authority-aware、citation-complete 的检索基础，并通过 gold-set 和指标门槛把质量固化为 release gate。
-
-### Mapped Tasks
-
-- Task 9 PageIndex-first Hybrid Retrieval
-- Task 10 Citation Assembly and Source Inspection
-- Task 11 Evaluation Harness and Gold-Set Runner
+Provide source-agnostic search, citation, and source inspection for Jira, Confluence, PPTX, and PDF.
 
 ### Inputs
 
-- Normalized corpus from ingestion layer
-- Authority model
-- ACL contract
-- Citation requirements
-- Evaluation threshold definitions
+- Canonical documents.
+- PageIndex artifacts.
+- Existing hybrid search and citation assembly.
 
 ### Outputs
 
-- PageIndex-first indexing
-- Hybrid retrieval
-- ACL pre-rerank filtering
-- Authority-aware ranking
-- Citation assembly layer
-- Source inspection contract
-- Gold-set dataset
-- Eval service helpers
-- Recall and regression runner
+- Retrieval API/CLI supports both document corpus compatibility and direct PageIndex input.
+- Source inspection payloads remain evidence-bearing and ACL-safe.
 
 ### Validation
 
-- Hybrid search tests pass
-- ACL-filtered retrieval tests pass
-- Citation contract tests pass
-- Eval metric and degraded-config tests pass
-- Eval runner succeeds on `eval/gold_queries.yaml`
-
-### Parallelism
-
-- Citation assembly can start once retrieval result shape stabilizes.
-- Eval harness should evolve close to retrieval work to catch regressions early.
+- Search and citation tests cover all four priority source types.
+- ACL pre-ranking filtering remains covered.
+- Ranking default remains `canonical > supporting > contextual`.
 
 ### Blockers
 
-- Ingestion outputs not yet stable
-- Citation payload shape unresolved
-- Cross-language retrieval assumptions untested
+- Direct PageIndex artifact input must be settled first.
 
-### Commit Boundaries
+### Exit Criteria
 
-- `feat(retrieval): add pageindex hybrid indexing and search`
-- `feat(retrieval): add citation assembly and source inspection`
-- `feat(eval): add retrieval gold-set and regression harness`
+- One retrieval path can search/cite/inspect across all four source types.
 
-### Completion Criteria
-
-- hybrid retrieval、ACL filter、citation contract、eval runner 全部通过。
-- 关键指标达到既定门槛。
-
-### Acceptance Checklist
-
-- ACL pre-rerank filtering 已落实。
-- 权威排序默认遵循 `canonical > supporting > contextual`。
-- Citation payload 字段完整。
-- Gold set 与门槛脚本都可执行。
-- 至少一个 degraded-config failure case 已被验证。
-
-### Deliverable Template
-
-- Index and search artifacts
-- Citation contract artifacts
-- Eval datasets and runners
-- Metric snapshots
-- Skillization candidates promoted to backlog
-
----
-
-## 阶段 4：Operator Surface and Operationalization
+## Phase D: Local LLM Consumption
 
 ### Goal
 
-提供内部操作入口、运维可观测性、上线门禁和 deferred module 合同，为 pilot 与后续 skill 化、智能模块演进建立交付边界。
-
-### Mapped Tasks
-
-- Task 12 Internal Operations Portal MVP
-- Task 13 Observability, Freshness Checks, and Runbooks
-- Task 14 Rollout Gate Automation
-- Task 15 Deferred Module Contracts
+Add a source-generic retrieval -> prompt assembly -> local LLM answer seam.
 
 ### Inputs
 
-- Stable retrieval and citation contracts
-- Eval outputs and thresholds
-- Ingestion freshness requirements
-- Operational recovery expectations
+- Retrieval results.
+- Citation payloads.
+- Evidence spans.
+- `services/analysis/llm_backends.py`
 
 ### Outputs
 
-- Internal operations portal MVP
-- Ingestion status and corpus inventory views
-- Search and citation inspection flow
-- Observability signals
-- Freshness checks
-- Backup and restore runbooks
-- Rollout gate automation
-- Deferred module contract docs
+- Generic local LLM retrieval-consumption service.
+- Jira-specific analysis implemented as a profile on the generic seam.
+- Extractive fallback remains default when no LLM backend is selected.
 
 ### Validation
 
-- Portal smoke tests pass
-- Search and citation drilldown E2E passes
-- Ops tests for freshness and backup-restore pass
-- Phase 1 rollout gate tests pass
-- Module contract completeness tests pass
-
-### Parallelism
-
-- Portal work should start only when retrieval and citation contracts are stable enough.
-- Task 15 can proceed after Task 2 and Task 14 and does not block pilot by default.
+- Mock LLM tests for Jira, Confluence, PPTX, and PDF.
+- Tests prove local LLM prompts include retrieved evidence only.
 
 ### Blockers
 
-- Retrieval output churn
-- Missing ops evidence sources
-- Gate automation missing eval or security evidence
+- Current local LLM paths are Jira-specific plus a PDF validation harness.
 
-### Commit Boundaries
+### Exit Criteria
 
-- `feat(portal): add internal operations portal mvp`
-- `feat(ops): add observability, freshness, and pilot runbooks`
-- `docs(release): add phase-1 rollout gate`
-- `docs(modules): define deferred intelligence module contracts`
+- One local LLM path can consume retrieved evidence across all four priority sources.
 
-### Completion Criteria
+## Phase E: Index Optimization
 
-- portal smoke/E2E 通过。
-- backup/restore、freshness、rollout gate 通过。
-- deferred modules 文档完整。
+### Goal
 
-### Acceptance Checklist
+Reduce redundant index rebuilds and define the PageIndex/chunk/embedding relationship.
 
-- Operator 可以完成 ingestion status、inventory、search、citation inspection 关键流程。
-- Observability、freshness、backup/restore 均有 runbook 与验证路径。
-- Rollout gate 能阻止 degraded build。
-- Deferred module docs 仅定义接口，不偷跑实现。
+### Inputs
 
-### Deliverable Template
+- Stable canonical document contract.
+- Stable PageIndex artifact contract.
+- Stable retrieval surface.
 
-- Portal features shipped
-- Ops and runbook artifacts
-- Gate automation artifacts
-- Deferred contracts added
-- Pilot readiness summary recorded
+### Outputs
 
----
+- Snapshot/cache-based index reuse plan.
+- Contextual chunking plan.
+- Decision record for PageIndex vs embedding/chunk index responsibilities.
 
-## Task Map: 原始 15 个任务
+### Validation
 
-### 阶段 1
+- Regression tests prove optimization does not change ACL filtering, authority ranking, or citation payloads.
 
-1. Freeze Phase 1 Product Contract
-2. Bootstrap Repository Skeleton
-3. Define Canonical Schema and Terminology Contract
-4. Define ACL Propagation Contract
+### Blockers
 
-### 阶段 2
+- Do not optimize before PageIndex artifact shape and direct retrieval input are stable.
 
-5. Implement Markdown and Office Preprocessing
-6. Implement PDF Structural Extraction and Fidelity Checks
-7. Implement Jira Connector
-8. Implement Confluence Connector
+### Exit Criteria
 
-### 阶段 3
+- Index reuse and chunking can be added without changing canonical truth or citation semantics.
 
-9. Implement PageIndex-First Hybrid Retrieval
-10. Implement Citation Assembly and Source Inspection
-11. Implement Evaluation Harness and Gold-Set Runner
+## Phase F: Enrichment
 
-### 阶段 4
+### Goal
 
-12. Implement Internal Operations Portal MVP
-13. Add Observability, Freshness Checks, and Operational Runbooks
-14. Add Rollout Gate Automation
-15. Define Deferred Module Contracts
+Add clustering and summarization only after the foundation is stable.
 
----
+### Inputs
 
-## Appendix A: Skillization Backlog
+- Stable retrieval surface.
+- Stable local LLM consumption seam.
+- Optional optimized chunk/index artifacts.
 
-第一批优先抽象为可复用能力的项目：
+### Outputs
 
-- schema contract validator
-- ACL contract validator
-- document normalization toolkit
-- PDF fidelity checker
-- retrieval eval skill
-- rollout gate skill
+- Topic clusters.
+- Document summaries.
+- Cluster summaries.
 
-Skill 化要求：
+### Validation
 
-- 优先输出稳定接口、清晰输入输出、与具体 Phase 1 业务解耦
-- 能独立运行或被 CI/agent 调用
-- 不直接绑定 SSD 团队专属发布策略
+- Enrichment artifacts cite source evidence.
+- Enrichment artifacts do not overwrite canonical documents, Markdown projections, or PageIndex entries.
 
----
+### Blockers
 
-## Appendix B: Critical Path Snapshot
+- Foundation chain must be complete first.
 
-主路径：
+### Exit Criteria
 
-Task 1 -> Task 3 -> Task 5/6 -> Task 7/8 -> Task 9 -> Task 10 -> Task 11 -> Task 12 -> Task 13 -> Task 14
+- Clustering and summarization exist only as derived enrichment.
 
-补充说明：
+## Prioritized Roadmap
 
-- Task 2 可在 Task 1 后尽早并行。
-- Task 15 后置，不阻塞 pilot。
-- 任何并行都不能破坏合同先行、验证先行的原则。
+### P0: Now
 
----
+1. Done: persist this foundation-first roadmap.
+2. Done: standardize PageIndex artifact shape as `{"entries": [...]}` for skill-ready export and retrieval paths.
+3. Done: add direct PageIndex artifact input for `scripts/retrieval/toolkit_cli.py` and platform search/citation.
+4. Done: add four-source Markdown and PageIndex export tests.
+5. Done: document Jira/Confluence Markdown-first canonicalization as temporary technical debt in source-specific docs.
 
-## Appendix C: Stage Handoff Template
+### P1: Foundation Closeout
 
-每个阶段结束时，建议按以下模板写 handoff，供下一个 agent 直接接手：
+1. Done for current fixture-backed paths: replace Jira and Confluence Markdown-first canonicalization with direct payload-to-canonical builders.
+2. Done: add a source-generic local LLM retrieval-consumption service.
+3. In progress: refactor Jira analysis commands into profiles over the generic seam. Jira spec QA and batch spec QA now reuse the generic seam internally, `retrieval-consume` exposes the generic CLI surface, and Jira profile helpers are separated from orchestration code.
+4. Done: add mock-backed local LLM tests for Confluence, PPTX, and PDF.
+5. Remaining in this lane: fidelity expansion for richer Jira/Confluence source shapes and final small cleanup of Jira orchestration/profile boundaries.
 
-### Handoff Summary
+### P2: Later
 
-- Stage completed
-- Completion status
-- Commits or change sets
-- Evidence references
+1. Add snapshot/cache-based index reuse.
+2. Add contextual chunking.
+3. Define embedding/chunk index relationship to PageIndex.
+4. Add clustering and summarization as citation-backed enrichment artifacts.
+5. Revisit portal, ops hardening, and rollout gate expansion.
 
-### Ready Inputs for Next Stage
+## Handoff Notes
 
-- Stable contracts
-- Stable fixtures or datasets
-- Stable script entrypoints
-
-### Remaining Risks
-
-- Known gaps
-- Pending validations
-- External dependencies
-
-### Recommended Immediate Next Step
-
-- Next task to start
-- First validation to write
-- First reusable boundary to preserve
+- Canonical document remains truth.
+- Markdown remains readable projection.
+- PageIndex remains retrieval projection.
+- Local LLM consumes retrieved evidence only.
+- Clustering and summarization are post-foundation enrichment.

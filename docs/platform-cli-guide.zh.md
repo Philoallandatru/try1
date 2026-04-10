@@ -349,13 +349,17 @@ python scripts/platform_cli.py multi-sync-health `
 | 参数 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `query` | 是 | 无 | 检索文本。 |
-| `--corpus` | 否 | `fixtures/retrieval/pageindex_corpus.json` | corpus 路径。 |
+| `--corpus` | 否 | `fixtures/retrieval/pageindex_corpus.json` | corpus 路径，会从 canonical documents 重建 PageIndex。 |
+| `--page-index` | 否 | 无 | PageIndex artifact 路径，直接消费 `{"entries": [...]}`。 |
+| `--snapshot-dir` | 否 | 无 | snapshot 目录，直接复用其中的 `page_index.json`。 |
 | `--policies` | 否 | `team:ssd public` | 允许的 ACL policies。 |
 
 案例：
 
 ```powershell
 python scripts/platform_cli.py search "flush command"
+python scripts/platform_cli.py search "flush command" --page-index .tmp\page-index.json
+python scripts/platform_cli.py search "flush command" --snapshot-dir .tmp\snapshot
 python scripts/platform_cli.py search "flush command" --policies team:ssd public
 ```
 
@@ -368,13 +372,17 @@ python scripts/platform_cli.py search "flush command" --policies team:ssd public
 | 参数 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `query` | 是 | 无 | 检索文本。 |
-| `--corpus` | 否 | `fixtures/retrieval/pageindex_corpus.json` | corpus 路径。 |
+| `--corpus` | 否 | `fixtures/retrieval/pageindex_corpus.json` | corpus 路径，会从 canonical documents 重建 PageIndex。 |
+| `--page-index` | 否 | 无 | PageIndex artifact 路径，直接消费 `{"entries": [...]}`。 |
+| `--snapshot-dir` | 否 | 无 | snapshot 目录，直接复用其中的 `page_index.json`。 |
 | `--policies` | 否 | `team:ssd public` | 允许的 ACL policies。 |
 
 案例：
 
 ```powershell
 python scripts/platform_cli.py citation "flush command"
+python scripts/platform_cli.py citation "flush command" --page-index .tmp\page-index.json
+python scripts/platform_cli.py citation "flush command" --snapshot-dir .tmp\snapshot
 ```
 
 ### `jira-report`
@@ -505,6 +513,76 @@ python scripts/platform_cli.py jira-batch-spec-report `
   --output-md .tmp\jira-batch-spec-report.md
 ```
 
+### `retrieval-consume`
+
+用途：统一的 source-generic retrieval-consumption 入口。可直接读取 Jira/Confluence fixture、live Jira/live Confluence、Markdown/Office/PDF 文件，或 snapshot 目录中的 `documents.json`，执行检索、组装 citation-backed prompt，并可选调用本地 LLM。
+
+参数：
+
+| 参数 | 必填 | 说明 |
+| --- | --- | --- |
+| `--snapshot-dir` | 与 `--source-kind/--source-path` 二选一 | snapshot 目录，直接复用其中的 `documents.json`。 |
+| `--source-kind` | 与 `--snapshot-dir` 二选一 | `jira-sync`、`confluence-sync`、`jira-live`、`confluence-live`、`markdown`、`docx`、`xlsx`、`pptx`、`pdf`。 |
+| `--source-path` | fixture/file 模式需要 | 输入文件或 fixture 路径。 |
+| `--base-url` | live 模式需要 | Jira 或 Confluence 根地址。 |
+| `--username` | live Basic auth 可选 | 用户名。 |
+| `--password` | live Basic auth 可选 | 密码。 |
+| `--token` | live token auth 常用 | API token 或 PAT。 |
+| `--auth-mode` | 否 | `auto`、`basic`、`bearer`。 |
+| `--cursor` | 否 | 增量游标。 |
+| `--page-size` | 否 | 每页拉取数量。 |
+| `--jql` | Jira live 使用 | Jira JQL。 |
+| `--cql` | Confluence live 使用 | Confluence CQL。 |
+| `--space-key` | Confluence live 使用 | Confluence 空间 key。 |
+| `--insecure` | 否 | 跳过 SSL 校验。 |
+| `--question` | 是 | 问题文本。 |
+| `--prompt-template` | 否 | 自定义 prompt 模板。 |
+| `--output-answer-md` | 否 | 写出答案 Markdown。 |
+| `--policies` | 否 | ACL policies。 |
+| `--top-k` | 否 | 检索返回条数，默认 `5`。 |
+| LLM 参数 | 否 | 与 `jira-report` 相同。 |
+
+案例：
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind confluence-sync `
+  --source-path fixtures\connectors\confluence\page_sync.json `
+  --question "Which page mentions telemetry architecture?" `
+  --llm-backend mock `
+  --llm-mock-response "Mock confluence answer"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind pdf `
+  --source-path fixtures\corpus\pdf\sample.pdf `
+  --question "What document covers flush semantics?"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --snapshot-dir .tmp\snapshot `
+  --question "What document covers flush semantics?"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind jira-live `
+  --base-url https://jira.example.com `
+  --token $env:JIRA_TOKEN `
+  --question "What changed in the latest SSD issue?"
+```
+
+```powershell
+python scripts/platform_cli.py retrieval-consume `
+  --source-kind confluence-live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --space-key SSD `
+  --question "What changed in the latency budget page?"
+```
+
 ## Skill-ready normalizer CLI
 
 入口：
@@ -513,7 +591,7 @@ python scripts/platform_cli.py jira-batch-spec-report `
 python scripts/ingest/normalize_cli.py <kind> <path> [--output-md <path>] [--output-page-index <path>]
 ```
 
-用途：把输入源转换为标准化文档；可选写出可读 Markdown 和 PageIndex JSON。
+用途：把输入源转换为标准化文档；可选写出可读 Markdown 和 PageIndex JSON。PageIndex JSON 使用统一 artifact 形状：`{"entries": [...]}`。
 
 参数：
 
@@ -548,54 +626,64 @@ python scripts/retrieval/toolkit_cli.py <command> [args]
 
 ### `toolkit_cli.py index`
 
-用途：从 corpus 构建 retrieval index。
+用途：从 corpus 构建 retrieval index，并可选写出 PageIndex artifact。
 
 参数：
 
 | 参数 | 必填 | 说明 |
 | --- | --- | --- |
 | `--corpus` | 是 | corpus 或 snapshot 文档 JSON 路径。 |
+| `--output-page-index` | 否 | 写出 PageIndex artifact，形状为 `{"entries": [...]}`。 |
 
 案例：
 
 ```powershell
 python scripts/retrieval/toolkit_cli.py index --corpus fixtures\retrieval\pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py index --corpus fixtures\retrieval\pageindex_corpus.json --output-page-index .tmp\page-index.json
 ```
 
 ### `toolkit_cli.py search`
 
-用途：在 corpus 中检索 query。
+用途：在 corpus 中检索 query，或直接读取已导出的 PageIndex artifact。
 
 参数：
 
 | 参数 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `query` | 是 | 无 | 检索文本。 |
-| `--corpus` | 是 | 无 | corpus 路径。 |
+| `--corpus` | 与 `--page-index` 二选一 | 无 | corpus 路径，会从 canonical documents 重建 PageIndex。 |
+| `--page-index` | 与 `--corpus` 二选一 | 无 | PageIndex artifact 路径，直接消费 `{"entries": [...]}`。 |
+| `--snapshot-dir` | 与 `--corpus`、`--page-index` 三选一 | 无 | snapshot 目录，直接复用其中的 `page_index.json`。 |
 | `--policies` | 否 | `team:ssd public` | ACL policies。 |
 
 案例：
 
 ```powershell
 python scripts/retrieval/toolkit_cli.py search "flush command" --corpus fixtures\retrieval\pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py search "flush command" --page-index .tmp\page-index.json
+python scripts/retrieval/toolkit_cli.py search "flush command" --snapshot-dir .tmp\snapshot
 ```
 
 ### `toolkit_cli.py citation`
 
-用途：在 corpus 中检索 query 并生成引用输出。
+用途：在 corpus 中检索 query 并生成引用输出，或直接读取已导出的 PageIndex artifact。
 
 参数：
 
 | 参数 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `query` | 是 | 无 | 检索文本。 |
-| `--corpus` | 是 | 无 | corpus 路径。 |
+| `--corpus` | 与 `--page-index` 二选一 | 无 | corpus 路径，会从 canonical documents 重建 PageIndex。 |
+| `--page-index` | 与 `--corpus` 二选一 | 无 | PageIndex artifact 路径，直接消费 `{"entries": [...]}`。 |
+| `--snapshot-dir` | 与 `--corpus`、`--page-index` 三选一 | 无 | snapshot 目录，直接复用其中的 `page_index.json`。 |
 | `--policies` | 否 | `team:ssd public` | ACL policies。 |
 
 案例：
 
 ```powershell
 python scripts/retrieval/toolkit_cli.py citation "flush command" --corpus fixtures\retrieval\pageindex_corpus.json
+python scripts/retrieval/toolkit_cli.py citation "flush command" --page-index .tmp\page-index.json
+python scripts/retrieval/toolkit_cli.py citation "flush command" --snapshot-dir .tmp\snapshot
 ```
 
 ## Snapshot CLI

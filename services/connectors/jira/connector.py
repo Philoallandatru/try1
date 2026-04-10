@@ -10,7 +10,7 @@ import ssl
 
 from services.connectors.jira.field_aliases import load_jira_field_aliases
 from services.connectors.jira.issue_type_profiles import load_jira_issue_type_profiles, route_jira_issue_type
-from services.ingest.normalizer import normalize_markdown_text
+from services.ingest.normalizer import append_content_block, append_section, build_base_document, finalize_document
 from services.ingest.visual_assets import (
     append_visual_asset_to_document,
     build_visual_asset_markdown,
@@ -190,6 +190,8 @@ def _issue_to_markdown(
     comment_items = comments_payload.get("comments", issue.get("comments", []))
     comments = [_comment_to_markdown(comment) for comment in comment_items]
     comments = [comment for comment in comments if comment]
+    comment_bodies = [_coerce_jira_text(comment.get("body") if isinstance(comment, dict) else comment) for comment in comment_items]
+    comment_bodies = [comment for comment in comment_bodies if comment]
     attachments = fields.get("attachment", issue.get("attachments", []))
 
     lines = [f"# {issue.get('key', 'JIRA')} {summary}"]
@@ -245,8 +247,14 @@ def _issue_to_document(
     updated_at = fields.get("updated") or issue.get("updated_at") or "fixture"
     comments_payload = fields.get("comment", {})
     comment_items = comments_payload.get("comments", issue.get("comments", []))
+    comment_bodies = [_coerce_jira_text(comment.get("body") if isinstance(comment, dict) else comment) for comment in comment_items]
+    comment_bodies = [comment for comment in comment_bodies if comment]
     attachments = fields.get("attachment", issue.get("attachments", []))
     issue_fields = _collect_issue_fields(issue, field_name_map, field_aliases)
+    description = _coerce_jira_text(fields.get("description") or issue.get("description"))
+    root_cause = issue_fields.get("Root Cause", "")
+    how_to_fix = issue_fields.get("How to fix", "")
+    action = issue_fields.get("Action", "")
     issue_type_profile = route_jira_issue_type(_resolve_issue_type(issue), issue_type_profiles)
     markdown = _issue_to_markdown(
         issue,
@@ -255,9 +263,7 @@ def _issue_to_document(
         field_aliases=field_aliases,
         issue_type_profile=issue_type_profile,
     )
-
-    document = normalize_markdown_text(
-        markdown,
+    document = build_base_document(
         document_id=issue["key"],
         source_type="jira",
         authority_level="supporting",
@@ -266,12 +272,40 @@ def _issue_to_document(
         title=summary,
         source_uri=source_uri,
         ingested_at=updated_at,
-        parser="jira-markdown-normalizer",
+        parser="jira-payload-normalizer",
         acl_policy=acl_policy,
         extra_provenance={"project": project.get("key") or issue.get("project")},
     )
+    append_section(document, "Issue Type")
+    if issue_type_profile:
+        append_content_block(document, issue_type_profile["issue_type_raw"], section_heading="Issue Type")
+        append_content_block(document, issue_type_profile["issue_family"], section_heading="Issue Type")
+        append_content_block(document, issue_type_profile["issue_route"], section_heading="Issue Type")
+
+    append_section(document, "Issue Fields")
+    for label, value in issue_fields.items():
+        append_content_block(document, value, section_heading="Issue Fields", field_label=label)
+
+    append_section(document, "Description")
+    append_content_block(document, description or "No description.", section_heading="Description")
+
+    if root_cause and root_cause.lower() != "undefine":
+        append_section(document, "Root Cause")
+        append_content_block(document, root_cause, section_heading="Root Cause")
+    if how_to_fix:
+        append_section(document, "How To Fix")
+        append_content_block(document, how_to_fix, section_heading="How To Fix")
+    if action:
+        append_section(document, "Action")
+        append_content_block(document, action, section_heading="Action")
+    if comment_bodies:
+        append_section(document, "Comments")
+        for comment_body in comment_bodies:
+            append_content_block(document, comment_body, section_heading="Comments")
+    if attachments:
+        append_section(document, "Attachments")
     document["markdown"] = markdown
-    document["comments"] = [_coerce_jira_text(comment.get("body") if isinstance(comment, dict) else comment) for comment in comment_items]
+    document["comments"] = comment_bodies
     document["attachments"] = attachments
     document["visual_assets"] = []
     document["metadata"] = {
@@ -286,6 +320,9 @@ def _issue_to_document(
     for attachment in attachments:
         mime_type = attachment.get("mimeType") or attachment.get("media_type")
         if not is_image_media_type(mime_type):
+            attachment_markdown = _attachment_to_markdown(attachment)
+            if attachment_markdown:
+                append_content_block(document, attachment_markdown, section_heading="Attachments")
             continue
         asset = image_asset_from_attachment(
             attachment,
@@ -295,7 +332,7 @@ def _issue_to_document(
             section="Attachments",
         )
         append_visual_asset_to_document(document, asset)
-    return document
+    return finalize_document(document)
 
 
 def load_jira_sync(path: str | Path) -> dict:

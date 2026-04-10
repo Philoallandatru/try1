@@ -46,6 +46,8 @@ def assemble_citation(entry: dict) -> dict:
 
 def build_source_inspection(entry: dict) -> dict:
     citation = assemble_citation(entry)
+    table = _first_table_for_page(entry)
+    figure = _first_figure_for_page(entry)
     return {
         "document_id": entry["document_id"],
         "title": entry["title"],
@@ -57,7 +59,8 @@ def build_source_inspection(entry: dict) -> dict:
         "section": citation["section"],
         "clause": citation["clause"],
         "table_id": citation["table_id"],
+        "table": table,
         "figure_id": citation["figure_id"],
+        "figure": figure,
         "content_blocks": entry.get("content_blocks", []),
     }
-

@@ -9,7 +9,7 @@ import json
 import re
 import ssl
 
-from services.ingest.normalizer import normalize_markdown_text
+from services.ingest.normalizer import append_content_block, append_section, build_base_document, finalize_document
 from services.ingest.visual_assets import (
     append_visual_asset_to_document,
     build_visual_asset_markdown,
@@ -21,6 +21,19 @@ from services.ingest.visual_assets import (
 TAG_PATTERN = re.compile(r"<[^>]+>")
 CONFLUENCE_IMAGE_PATTERN = re.compile(r"<ac:image\b[^>]*>.*?</ac:image>", re.IGNORECASE | re.DOTALL)
 CONFLUENCE_FILENAME_PATTERN = re.compile(r'ri:filename="(?P<filename>[^"]+)"', re.IGNORECASE)
+CONFLUENCE_HEADING_PATTERN = re.compile(r"<h([1-6])[^>]*>(.*?)</h\1>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_LIST_ITEM_PATTERN = re.compile(r"<li[^>]*>(.*?)</li>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_PARAGRAPH_PATTERN = re.compile(r"<p[^>]*>(.*?)</p>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_TABLE_PATTERN = re.compile(r"<table[^>]*>(.*?)</table>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_TABLE_ROW_PATTERN = re.compile(r"<tr[^>]*>(.*?)</tr>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_TABLE_CELL_PATTERN = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_BLOCK_PATTERN = re.compile(
+    r"(?P<heading><h(?P<heading_level>[1-6])[^>]*>(?P<heading_body>.*?)</h(?P=heading_level)>)|"
+    r"(?P<paragraph><p[^>]*>(?P<paragraph_body>.*?)</p>)|"
+    r"(?P<list_item><li[^>]*>(?P<list_item_body>.*?)</li>)|"
+    r"(?P<table><table[^>]*>(?P<table_body>.*?)</table>)",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def _build_auth_header(
@@ -89,28 +102,124 @@ def _storage_html_to_markdown(
         return f"\n{build_visual_asset_markdown(asset)}\n"
 
     markdown = CONFLUENCE_IMAGE_PATTERN.sub(replace_image, markdown)
-    markdown = re.sub(
-        r"<h([1-6])[^>]*>(.*?)</h\1>",
+    markdown = CONFLUENCE_TABLE_PATTERN.sub(lambda match: "\n" + _table_html_to_markdown(match.group(1)) + "\n", markdown)
+    markdown = CONFLUENCE_HEADING_PATTERN.sub(
         lambda match: f"\n{'#' * int(match.group(1))} {_strip_tags(match.group(2))}\n",
         markdown,
-        flags=re.IGNORECASE | re.DOTALL,
     )
-    markdown = re.sub(
-        r"<li[^>]*>(.*?)</li>",
+    markdown = CONFLUENCE_LIST_ITEM_PATTERN.sub(
         lambda match: f"\n- {_strip_tags(match.group(1))}",
         markdown,
-        flags=re.IGNORECASE | re.DOTALL,
     )
-    markdown = re.sub(
-        r"<p[^>]*>(.*?)</p>",
+    markdown = CONFLUENCE_PARAGRAPH_PATTERN.sub(
         lambda match: f"\n{_strip_tags(match.group(1))}\n",
         markdown,
-        flags=re.IGNORECASE | re.DOTALL,
     )
     markdown = re.sub(r"<br\s*/?>", "\n", markdown, flags=re.IGNORECASE)
     markdown = _strip_tags(markdown)
     markdown = re.sub(r"\n{3,}", "\n\n", markdown)
     return markdown.strip()
+
+
+def _table_html_to_rows(table_html: str) -> list[list[str]]:
+    rows = []
+    for row_match in CONFLUENCE_TABLE_ROW_PATTERN.finditer(table_html):
+        cells = [_strip_tags(cell_match.group(1)) for cell_match in CONFLUENCE_TABLE_CELL_PATTERN.finditer(row_match.group(1))]
+        cells = [cell for cell in cells if cell]
+        if cells:
+            rows.append(cells)
+    return rows
+
+
+def _table_html_to_markdown(table_html: str) -> str:
+    rows = _table_html_to_rows(table_html)
+    if not rows:
+        return ""
+    header = rows[0]
+    body = rows[1:]
+    lines = [
+        "| " + " | ".join(header) + " |",
+        "| " + " | ".join("---" for _ in header) + " |",
+    ]
+    for row in body:
+        padded = row + [""] * (len(header) - len(row))
+        lines.append("| " + " | ".join(padded[: len(header)]) + " |")
+    return "\n".join(lines)
+
+
+def _storage_html_to_blocks(
+    storage_value: str,
+    *,
+    document_id: str | None = None,
+    source_uri: str | None = None,
+    attachments: list[dict] | None = None,
+) -> tuple[list[dict], list[dict], list[dict]]:
+    normalized_html = storage_value
+    attachment_map = {_attachment_name(attachment): attachment for attachment in attachments or []}
+    sections: list[dict] = []
+    blocks: list[dict] = []
+    tables: list[dict] = []
+    current_heading: str | None = None
+
+    def replace_image(match: re.Match[str]) -> str:
+        if not document_id or not source_uri:
+            return ""
+        filename_match = CONFLUENCE_FILENAME_PATTERN.search(match.group(0))
+        if not filename_match:
+            return ""
+        filename = filename_match.group("filename")
+        attachment = attachment_map.get(filename, {"name": filename, "media_type": "image/unknown"})
+        media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")
+        if media_type and not is_image_media_type(media_type):
+            return ""
+        asset = image_asset_from_attachment(
+            attachment,
+            source_type="confluence",
+            document_id=document_id,
+            source_uri=source_uri,
+            section="Inline Image",
+        )
+        return f"\n{build_visual_asset_markdown(asset)}\n"
+
+    normalized_html = CONFLUENCE_IMAGE_PATTERN.sub(replace_image, normalized_html)
+    table_index = 0
+    for match in CONFLUENCE_BLOCK_PATTERN.finditer(normalized_html):
+        if match.group("heading"):
+            heading = _strip_tags(match.group("heading_body"))
+            if not heading:
+                continue
+            current_heading = heading
+            sections.append({"heading": heading, "level": int(match.group("heading_level"))})
+            continue
+
+        if match.group("paragraph"):
+            block = _strip_tags(match.group("paragraph_body"))
+            if block:
+                blocks.append({"text": block, "section_heading": current_heading})
+            continue
+
+        if match.group("list_item"):
+            block = _strip_tags(match.group("list_item_body"))
+            if block:
+                blocks.append({"text": block, "section_heading": current_heading})
+            continue
+
+        if match.group("table"):
+            markdown_table = _table_html_to_markdown(match.group("table_body"))
+            if not markdown_table:
+                continue
+            table_index += 1
+            table = {
+                "id": f"table-{table_index}",
+                "title": f"HTML Table {table_index}",
+                "section_heading": current_heading,
+                "rows": _table_html_to_rows(match.group("table_body")),
+                "markdown": markdown_table,
+            }
+            tables.append(table)
+            blocks.append({"text": table["markdown"], "section_heading": current_heading, "block_type": "table"})
+
+    return sections, blocks, tables
 
 
 def _attachment_to_markdown(
@@ -210,10 +319,16 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         version_value = str(version_payload.get("number") or version_value)
     else:
         version_value = str(version_value)
+    storage_value = page.get("body", {}).get("storage", {}).get("value", "")
     markdown = _page_to_markdown({**page, "attachments": attachments, "source_uri": source_uri})
+    sections, blocks, tables = _storage_html_to_blocks(
+        storage_value,
+        document_id=page["id"],
+        source_uri=source_uri,
+        attachments=attachments,
+    )
 
-    document = normalize_markdown_text(
-        markdown,
+    document = build_base_document(
         document_id=page["id"],
         source_type="confluence",
         authority_level="supporting",
@@ -222,10 +337,25 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         title=page.get("title", page["id"]),
         source_uri=source_uri,
         ingested_at=ingested_at,
-        parser="confluence-markdown-normalizer",
+        parser="confluence-payload-normalizer",
         acl_policy=acl_policy,
         extra_provenance={"space": space_key},
     )
+    for section in sections:
+        append_section(document, section["heading"], level=section["level"])
+    for block in blocks:
+        append_content_block(document, block["text"], section_heading=block.get("section_heading"))
+    for table in tables:
+        document["structure"]["tables"].append(
+            {
+                "id": table["id"],
+                "title": table["title"],
+                "section_heading": table.get("section_heading"),
+                "rows": table["rows"],
+            }
+        )
+    if attachments:
+        append_section(document, "Attachments")
     document["markdown"] = markdown
     document["attachments"] = attachments
     document["visual_assets"] = []
@@ -239,6 +369,9 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
     for attachment in attachments:
         media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")
         if not is_image_media_type(media_type):
+            attachment_markdown = _attachment_to_markdown(attachment)
+            if attachment_markdown:
+                append_content_block(document, attachment_markdown, section_heading="Attachments")
             continue
         if _attachment_name(attachment) not in markdown:
             continue
@@ -250,6 +383,8 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
             section="Inline Image" if "### Image" in markdown else "Attachments",
         )
         append_visual_asset_to_document(document, asset)
+    document = finalize_document(document)
+    document["title"] = page.get("title", page["id"])
     return document
 
 

@@ -221,6 +221,58 @@ class PlatformCliLiveOrchestrationTest(unittest.TestCase):
         self.assertTrue(payload["retrieval"]["has_spec_evidence"])
         self.assertTrue(payload["ai_prompt"].startswith("LIVE SSD-401"))
 
+    def test_retrieval_consume_supports_live_jira_source(self) -> None:
+        stdout = StringIO()
+        argv = [
+            "platform_cli.py",
+            "retrieval-consume",
+            "--source-kind",
+            "jira-live",
+            "--base-url",
+            "https://jira.example.com",
+            "--token",
+            "secret",
+            "--question",
+            "Does live Jira mention flush ordering?",
+        ]
+        with patch("services.ops.orchestration.fetch_jira_server_sync", return_value=self._live_jira_payload()), patch(
+            "sys.argv",
+            argv,
+        ), redirect_stdout(stdout):
+            exit_code = platform_cli.main()
+
+        self.assertEqual(exit_code, 0)
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["retrieval"]["citations"][0]["document"], "SSD-401")
+
+    def test_retrieval_consume_supports_live_confluence_source(self) -> None:
+        stdout = StringIO()
+        argv = [
+            "platform_cli.py",
+            "retrieval-consume",
+            "--source-kind",
+            "confluence-live",
+            "--base-url",
+            "https://confluence.example.com",
+            "--token",
+            "secret",
+            "--question",
+            "What changed in the live confluence page?",
+            "--llm-backend",
+            "mock",
+            "--llm-mock-response",
+            "Mock live confluence answer",
+        ]
+        with patch("services.ops.orchestration.fetch_confluence_page_sync", return_value=self._live_confluence_payload()), patch(
+            "sys.argv",
+            argv,
+        ), redirect_stdout(stdout):
+            exit_code = platform_cli.main()
+
+        self.assertEqual(exit_code, 0)
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["answer"]["text"], "Mock live confluence answer")
+
 
 if __name__ == "__main__":
     unittest.main()

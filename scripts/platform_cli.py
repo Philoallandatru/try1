@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 from pathlib import Path
 import sys
@@ -18,21 +20,38 @@ from services.eval.real_pdf_validation import validate_real_pdfs
 from scripts.gates.run_phase1_gate import evaluate_phase1_gate
 from services.analysis.jira_issue_analysis import build_jira_batch_spec_report, build_jira_spec_question_payload, build_jira_time_report
 from services.analysis.llm_backends import build_llm_backend
+from services.analysis.retrieval_consumption import build_retrieval_consumption_payload
 from services.eval.harness import evaluate_dataset
 from services.ingest.adapters.markdown.adapter import parse_markdown
 from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, parse_xlsx
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
-from services.ingest.markdown_export import documents_to_markdown
+from services.ingest.markdown_export import documents_to_markdown, write_documents_markdown_tree
 from services.ops.health import build_ops_health
 from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
-from services.retrieval.toolkit import build_retrieval_index, citation_for_documents, load_document_snapshot, search_documents
+from services.retrieval.persistence.snapshot_store import snapshot_paths
+from services.retrieval.toolkit import (
+    build_retrieval_index,
+    citation_for_documents,
+    citation_for_index,
+    load_document_snapshot,
+    load_page_index_artifact,
+    search_documents,
+    search_index,
+)
 from services.retrieval.indexing.page_index import build_page_index
 
 
 def _print_json(payload: dict | list) -> int:
     print(json.dumps(payload, indent=2, ensure_ascii=False))
     return 0
+
+
+def _write_json_output(path: str | Path, payload: dict | list) -> str:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return str(output_path)
 
 
 def _json_default(value: object) -> object:
@@ -42,9 +61,15 @@ def _json_default(value: object) -> object:
         return dict(value)
     raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
 
+def _validate_retrieval_source(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.page_index and args.snapshot_dir:
+        parser.error("Provide at most one of --page-index or --snapshot-dir")
+    if (args.page_index or args.snapshot_dir) and args.corpus != "fixtures/retrieval/pageindex_corpus.json":
+        parser.error("Provide one retrieval source override: --corpus, --page-index, or --snapshot-dir")
 
-def _load_index(corpus: str | Path) -> list[dict]:
-    return build_retrieval_index(load_document_snapshot(corpus))
+
+def _load_snapshot_page_index(snapshot_dir: str | Path) -> list[dict]:
+    return load_page_index_artifact(snapshot_paths(snapshot_dir)["page_index"])
 
 
 def _validate_live_connector_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -147,6 +172,78 @@ def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argpar
     )["documents"]
 
 
+def _load_retrieval_consumption_documents(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[dict]:
+    if args.snapshot_dir:
+        return load_document_snapshot(snapshot_paths(args.snapshot_dir)["documents"])
+    if args.source_kind == "jira-live":
+        return load_source_payload(
+            kind="jira",
+            path=None,
+            live=True,
+            base_url=args.base_url,
+            username=args.username,
+            password=args.password,
+            token=args.token,
+            auth_mode=args.auth_mode,
+            cursor=args.cursor,
+            page_size=args.page_size,
+            jql=args.jql,
+            insecure=args.insecure,
+        )["documents"]
+    if args.source_kind == "confluence-live":
+        return load_source_payload(
+            kind="confluence",
+            path=None,
+            live=True,
+            base_url=args.base_url,
+            username=args.username,
+            password=args.password,
+            token=args.token,
+            auth_mode=args.auth_mode,
+            cursor=args.cursor,
+            page_size=args.page_size,
+            cql=args.cql,
+            space_key=args.space_key,
+            insecure=args.insecure,
+        )["documents"]
+    if args.source_kind == "jira-sync":
+        return load_source_payload(kind="jira", path=args.source_path, live=False)["documents"]
+    if args.source_kind == "confluence-sync":
+        return load_source_payload(kind="confluence", path=args.source_path, live=False)["documents"]
+    if args.source_kind == "markdown":
+        return [parse_markdown(args.source_path)]
+    if args.source_kind == "docx":
+        return [parse_docx(args.source_path)]
+    if args.source_kind == "xlsx":
+        return [parse_xlsx(args.source_path)]
+    if args.source_kind == "pptx":
+        return [parse_pptx(args.source_path)]
+    if args.source_kind == "pdf":
+        return [extract_pdf_structure(args.source_path)]
+    parser.error(f"Unsupported source kind: {args.source_kind}")
+
+
+def _load_retrieval_consumption_documents_quietly(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[dict]:
+    sink = io.StringIO()
+    with redirect_stdout(sink), redirect_stderr(sink):
+        return _load_retrieval_consumption_documents(parser, args)
+
+
+def _validate_retrieval_consumption_source(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    has_snapshot = bool(args.snapshot_dir)
+    has_source = bool(args.source_kind or args.source_path)
+    if has_snapshot and has_source:
+        parser.error("Provide either --snapshot-dir or --source-kind/--source-path, not both")
+    if not has_snapshot and not (args.source_kind and args.source_path):
+        if args.source_kind not in {"jira-live", "confluence-live"}:
+            parser.error("Provide --snapshot-dir or both --source-kind and --source-path")
+    if args.source_kind in {"jira-live", "confluence-live"}:
+        if not args.base_url:
+            parser.error("--base-url is required for live retrieval-consume sources")
+        if args.source_path:
+            parser.error("--source-path is not used with live retrieval-consume sources")
+
+
 def _validate_prefixed_live_args(
     parser: argparse.ArgumentParser,
     *,
@@ -212,6 +309,7 @@ def main() -> int:
     connector_parser.add_argument("--cql")
     connector_parser.add_argument("--space-key")
     connector_parser.add_argument("--insecure", action="store_true")
+    connector_parser.add_argument("--output-json")
 
     sync_health_parser = subparsers.add_parser("sync-health")
     sync_health_parser.add_argument("kind", choices=["jira", "confluence"])
@@ -266,11 +364,15 @@ def main() -> int:
     search_parser = subparsers.add_parser("search")
     search_parser.add_argument("query")
     search_parser.add_argument("--corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    search_parser.add_argument("--page-index")
+    search_parser.add_argument("--snapshot-dir")
     search_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
 
     citation_parser = subparsers.add_parser("citation")
     citation_parser.add_argument("query")
     citation_parser.add_argument("--corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    citation_parser.add_argument("--page-index")
+    citation_parser.add_argument("--snapshot-dir")
     citation_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
 
     jira_report_parser = subparsers.add_parser("jira-report")
@@ -304,9 +406,36 @@ def main() -> int:
     jira_batch_spec_report_parser.add_argument("--spec-corpus", default="fixtures/retrieval/pageindex_corpus.json")
     jira_batch_spec_report_parser.add_argument("--spec-document-id", required=True)
     jira_batch_spec_report_parser.add_argument("--question-template", default="Analyze Jira {jira_issue_id} against the selected spec.")
+    jira_batch_spec_report_parser.add_argument("--prompt-template")
     jira_batch_spec_report_parser.add_argument("--output-md")
     jira_batch_spec_report_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
     _add_llm_backend_args(jira_batch_spec_report_parser)
+
+    retrieval_consume_parser = subparsers.add_parser("retrieval-consume")
+    retrieval_consume_parser.add_argument("--snapshot-dir")
+    retrieval_consume_parser.add_argument(
+        "--source-kind",
+        choices=["jira-sync", "confluence-sync", "jira-live", "confluence-live", "markdown", "docx", "xlsx", "pptx", "pdf"],
+    )
+    retrieval_consume_parser.add_argument("--source-path")
+    retrieval_consume_parser.add_argument("--base-url")
+    retrieval_consume_parser.add_argument("--username")
+    retrieval_consume_parser.add_argument("--password")
+    retrieval_consume_parser.add_argument("--token")
+    retrieval_consume_parser.add_argument("--auth-mode", default="auto")
+    retrieval_consume_parser.add_argument("--cursor")
+    retrieval_consume_parser.add_argument("--page-size", type=int, default=50)
+    retrieval_consume_parser.add_argument("--jql", default="order by updated asc")
+    retrieval_consume_parser.add_argument("--cql")
+    retrieval_consume_parser.add_argument("--space-key")
+    retrieval_consume_parser.add_argument("--insecure", action="store_true")
+    retrieval_consume_parser.add_argument("--question", required=True)
+    retrieval_consume_parser.add_argument("--prompt-template")
+    retrieval_consume_parser.add_argument("--output-answer-md")
+    retrieval_consume_parser.add_argument("--output-json")
+    retrieval_consume_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    retrieval_consume_parser.add_argument("--top-k", type=int, default=5)
+    _add_llm_backend_args(retrieval_consume_parser)
 
     sync_export_parser = subparsers.add_parser("sync-export")
     sync_export_parser.add_argument("--snapshot-dir")
@@ -316,6 +445,7 @@ def main() -> int:
     sync_export_parser.add_argument("--reference-time-iso")
     sync_export_parser.add_argument("--export-scope", choices=["incoming", "snapshot"], default="incoming")
     sync_export_parser.add_argument("--output-md")
+    sync_export_parser.add_argument("--output-md-dir")
     sync_export_parser.add_argument("--output-page-index")
     sync_export_parser.add_argument("--jira-path")
     sync_export_parser.add_argument("--jira-live", action="store_true")
@@ -387,7 +517,10 @@ def main() -> int:
         _validate_live_connector_args(parser, args)
         if not args.live and not args.path:
             parser.error("connector path is required unless --live is set")
-        return _print_json(_load_connector_payload(args))
+        payload = _load_connector_payload(args)
+        if args.output_json:
+            payload["output_json"] = _write_json_output(args.output_json, payload)
+        return _print_json(payload)
     if args.command == "sync-health":
         _validate_live_connector_args(parser, args)
         if not args.live and not args.path:
@@ -445,9 +578,21 @@ def main() -> int:
         result["profile"] = args.profile
         return _print_json(result)
     if args.command == "search":
+        _validate_retrieval_source(parser, args)
+        if args.page_index:
+            results = search_index(load_page_index_artifact(args.page_index), args.query, set(args.policies))
+            return _print_json(results)
+        if args.snapshot_dir:
+            results = search_index(_load_snapshot_page_index(args.snapshot_dir), args.query, set(args.policies))
+            return _print_json(results)
         results = search_documents(load_document_snapshot(args.corpus), args.query, set(args.policies))
         return _print_json(results)
     if args.command == "citation":
+        _validate_retrieval_source(parser, args)
+        if args.page_index:
+            return _print_json(citation_for_index(load_page_index_artifact(args.page_index), args.query, set(args.policies)))
+        if args.snapshot_dir:
+            return _print_json(citation_for_index(_load_snapshot_page_index(args.snapshot_dir), args.query, set(args.policies)))
         return _print_json(citation_for_documents(load_document_snapshot(args.corpus), args.query, set(args.policies)))
     if args.command == "jira-report":
         jira_documents = _load_jira_documents_from_args(parser, args)
@@ -522,6 +667,7 @@ def main() -> int:
             updated_to_iso=args.updated_to_iso,
             updated_on_date=args.updated_on_date,
             updated_at_iso=args.updated_at_iso,
+            prompt_template=args.prompt_template,
             prompt_mode=args.llm_prompt_mode,
             llm_backend=_build_llm_backend_from_args(parser, args),
         )
@@ -532,6 +678,26 @@ def main() -> int:
             sections.extend(report["answer"]["text"] for report in payload["issues"])
             output_path.write_text("\n\n---\n\n".join(section for section in sections if section), encoding="utf-8")
             payload["output_md"] = str(output_path)
+        return _print_json(payload)
+    if args.command == "retrieval-consume":
+        _validate_retrieval_consumption_source(parser, args)
+        documents = _load_retrieval_consumption_documents_quietly(parser, args)
+        payload = build_retrieval_consumption_payload(
+            documents=documents,
+            question=args.question,
+            allowed_policies=set(args.policies),
+            top_k=args.top_k,
+            prompt_template=args.prompt_template,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=_build_llm_backend_from_args(parser, args),
+        )
+        if args.output_answer_md:
+            output_path = Path(args.output_answer_md)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(payload["answer"]["text"], encoding="utf-8")
+            payload["output_answer_md"] = str(output_path)
+        if args.output_json:
+            payload["output_json"] = _write_json_output(args.output_json, payload)
         return _print_json(payload)
     if args.command == "sync-export":
         if args.profile:
@@ -567,6 +733,11 @@ def main() -> int:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(documents_to_markdown(payload["documents"]), encoding="utf-8")
             payload["output_md"] = str(output_path)
+        if args.output_md_dir:
+            output_root = Path(args.output_md_dir)
+            output_root.mkdir(parents=True, exist_ok=True)
+            write_documents_markdown_tree(payload["documents"], output_root)
+            payload["output_md_dir"] = str(output_root)
         if args.output_page_index:
             output_path = Path(args.output_page_index)
             output_path.parent.mkdir(parents=True, exist_ok=True)

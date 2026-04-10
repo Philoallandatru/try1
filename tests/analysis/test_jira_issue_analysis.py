@@ -191,6 +191,20 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertEqual(report["issues"][0]["answer"]["mode"], "local-llm")
         self.assertEqual(report["issues"][0]["answer"]["text"], "Batch mock analysis")
 
+    def test_jira_batch_spec_report_forwards_prompt_template_to_issue_qa(self) -> None:
+        report = build_jira_batch_spec_report(
+            jira_documents=self.jira_documents,
+            spec_documents=self.spec_documents,
+            question_template="Analyze Jira {jira_issue_id} against the selected spec.",
+            allowed_policies={"team:ssd"},
+            updated_from_iso="2026-04-05T09:00:00Z",
+            updated_to_iso="2026-04-05T10:00:00Z",
+            prompt_template="BATCH {jira_issue_id}\nQ={question}\nE={evidence}",
+        )
+
+        self.assertTrue(report["issues"][0]["ai_prompt"].startswith("BATCH SSD-102"))
+        self.assertIn("Q=Analyze Jira SSD-102 against the selected spec.", report["issues"][0]["ai_prompt"])
+
 
 if __name__ == "__main__":
     unittest.main()

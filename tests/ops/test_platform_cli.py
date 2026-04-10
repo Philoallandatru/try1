@@ -40,12 +40,85 @@ class PlatformCliTest(unittest.TestCase):
         self.assertIn("aggregate", payload)
         self.assertIn("recall@10", payload["aggregate"])
 
+    def test_cli_connector_can_write_utf8_json_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_json = Path(temp_dir) / "jira-live.json"
+            result = self._run(
+                "connector",
+                "jira",
+                "fixtures/connectors/jira/full_sync.json",
+                "--output-json",
+                str(output_json),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_json"], str(output_json))
+            written = json.loads(output_json.read_text(encoding="utf-8"))
+            self.assertEqual(written["documents"][0]["document_id"], "SSD-101")
+
     def test_cli_citation_outputs_contract_payload(self) -> None:
         result = self._run("citation", "flush command")
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["citation"]["document"], "nvme-spec-v1")
         self.assertIn("inspection", payload)
+
+    def test_cli_search_and_citation_can_read_page_index_artifact(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_page_index = Path(temp_dir) / "page-index.json"
+            index_result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/retrieval/toolkit_cli.py",
+                    "index",
+                    "--corpus",
+                    "fixtures/retrieval/pageindex_corpus.json",
+                    "--output-page-index",
+                    str(output_page_index),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(index_result.returncode, 0, index_result.stderr)
+
+            search_result = self._run("search", "flush command", "--page-index", str(output_page_index))
+            self.assertEqual(search_result.returncode, 0, search_result.stderr)
+            search_payload = json.loads(search_result.stdout)
+            self.assertEqual(search_payload[0]["document_id"], "nvme-spec-v1")
+
+            citation_result = self._run("citation", "flush command", "--page-index", str(output_page_index))
+            self.assertEqual(citation_result.returncode, 0, citation_result.stderr)
+            citation_payload = json.loads(citation_result.stdout)
+            self.assertEqual(citation_payload["citation"]["document"], "nvme-spec-v1")
+
+    def test_cli_search_and_citation_can_read_snapshot_page_index(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            snapshot_create = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/retrieval/snapshot_cli.py",
+                    "create",
+                    "--snapshot-dir",
+                    temp_dir,
+                    "--corpus",
+                    "fixtures/retrieval/pageindex_corpus.json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(snapshot_create.returncode, 0, snapshot_create.stderr)
+
+            search_result = self._run("search", "flush command", "--snapshot-dir", temp_dir)
+            self.assertEqual(search_result.returncode, 0, search_result.stderr)
+            search_payload = json.loads(search_result.stdout)
+            self.assertEqual(search_payload[0]["document_id"], "nvme-spec-v1")
+
+            citation_result = self._run("citation", "flush command", "--snapshot-dir", temp_dir)
+            self.assertEqual(citation_result.returncode, 0, citation_result.stderr)
+            citation_payload = json.loads(citation_result.stdout)
+            self.assertEqual(citation_payload["citation"]["document"], "nvme-spec-v1")
 
     def test_cli_jira_report_filters_by_time_and_renders_custom_prompt(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -194,6 +267,115 @@ class PlatformCliTest(unittest.TestCase):
         self.assertEqual(payload["answer"]["text"], "Mock local model answer")
         self.assertIn("Separate direct evidence from reasonable inference", payload["ai_prompt"])
 
+    def test_cli_retrieval_consume_supports_pdf_source(self) -> None:
+        result = self._run(
+            "retrieval-consume",
+            "--source-kind",
+            "pdf",
+            "--source-path",
+            "fixtures/corpus/pdf/sample.pdf",
+            "--question",
+            "What document covers flush semantics?",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["retrieval"]["citations"][0]["document"], "sample")
+        self.assertEqual(payload["answer"]["mode"], "extractive")
+
+    def test_cli_retrieval_consume_supports_confluence_with_mock_llm(self) -> None:
+        result = self._run(
+            "retrieval-consume",
+            "--source-kind",
+            "confluence-sync",
+            "--source-path",
+            "fixtures/connectors/confluence/page_sync.json",
+            "--question",
+            "Which page mentions telemetry architecture?",
+            "--llm-backend",
+            "mock",
+            "--llm-mock-response",
+            "Mock confluence answer",
+            "--llm-prompt-mode",
+            "balanced",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["retrieval"]["citations"][0]["document"], "CONF-201")
+        self.assertEqual(payload["answer"]["mode"], "local-llm")
+        self.assertEqual(payload["answer"]["text"], "Mock confluence answer")
+
+    def test_cli_retrieval_consume_can_write_answer_markdown(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_answer_md = Path(temp_dir) / "retrieval-consume-answer.md"
+            result = self._run(
+                "retrieval-consume",
+                "--source-kind",
+                "confluence-sync",
+                "--source-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--question",
+                "Which page mentions telemetry architecture?",
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock written answer",
+                "--output-answer-md",
+                str(output_answer_md),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_answer_md"], str(output_answer_md))
+            self.assertEqual(output_answer_md.read_text(encoding="utf-8"), "Mock written answer")
+
+    def test_cli_retrieval_consume_can_read_snapshot_documents(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            snapshot_create = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/retrieval/snapshot_cli.py",
+                    "create",
+                    "--snapshot-dir",
+                    temp_dir,
+                    "--corpus",
+                    "fixtures/retrieval/pageindex_corpus.json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(snapshot_create.returncode, 0, snapshot_create.stderr)
+
+            result = self._run(
+                "retrieval-consume",
+                "--snapshot-dir",
+                temp_dir,
+                "--question",
+                "What document covers flush semantics?",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["retrieval"]["citations"][0]["document"], "nvme-spec-v1")
+
+    def test_cli_retrieval_consume_can_write_utf8_json_output(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_json = Path(temp_dir) / "consume.json"
+            result = self._run(
+                "retrieval-consume",
+                "--source-kind",
+                "confluence-sync",
+                "--source-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--question",
+                "Which page mentions telemetry architecture?",
+                "--output-json",
+                str(output_json),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_json"], str(output_json))
+            written = json.loads(output_json.read_text(encoding="utf-8"))
+            self.assertEqual(written["retrieval"]["citations"][0]["document"], "CONF-201")
+
     def test_cli_jira_batch_spec_report_filters_and_writes_markdown(self) -> None:
         with TemporaryDirectory() as temp_dir:
             output_md = Path(temp_dir) / "batch-report.md"
@@ -254,6 +436,28 @@ class PlatformCliTest(unittest.TestCase):
         self.assertEqual(payload["issues"][0]["answer"]["backend"], "mock")
         self.assertEqual(payload["issues"][0]["answer"]["text"], "Batch mock local answer")
         self.assertIn("Label hypotheses explicitly", payload["issues"][0]["ai_prompt"])
+
+    def test_cli_jira_batch_spec_report_forwards_prompt_template(self) -> None:
+        result = self._run(
+            "jira-batch-spec-report",
+            "--jira-path",
+            "fixtures/connectors/jira/incremental_sync.json",
+            "--updated-from-iso",
+            "2026-04-05T09:00:00Z",
+            "--updated-to-iso",
+            "2026-04-05T10:00:00Z",
+            "--spec-corpus",
+            "fixtures/retrieval/pageindex_corpus.json",
+            "--spec-document-id",
+            "nvme-spec-v1",
+            "--question-template",
+            "Analyze Jira {jira_issue_id} against the selected spec.",
+            "--prompt-template",
+            "BATCH {jira_issue_id}\nQ={question}\nE={evidence}",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["issues"][0]["ai_prompt"].startswith("BATCH SSD-102"))
 
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")
@@ -401,6 +605,28 @@ class PlatformCliTest(unittest.TestCase):
             manifest = json.loads((Path(temp_dir) / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(manifest["sources"]["jira"]["cursor"], "jira-incr-002")
             self.assertEqual(manifest["sources"]["confluence"]["cursor"], "conf-incr-003")
+
+    def test_cli_sync_export_can_write_markdown_tree(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md_dir = Path(temp_dir) / "documents"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/incremental_sync.json",
+                "--output-md-dir",
+                str(output_md_dir),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["output_md_dir"], str(output_md_dir))
+            matches = list(output_md_dir.rglob("document.md"))
+            self.assertEqual(len(matches), 2)
 
     def test_cli_sync_export_can_export_snapshot_scope(self) -> None:
         with TemporaryDirectory() as temp_dir:
