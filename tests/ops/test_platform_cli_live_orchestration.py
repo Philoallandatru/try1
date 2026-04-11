@@ -273,6 +273,79 @@ class PlatformCliLiveOrchestrationTest(unittest.TestCase):
         payload = json.loads(stdout.getvalue())
         self.assertEqual(payload["answer"]["text"], "Mock live confluence answer")
 
+    def test_connector_supports_selective_atlassian_api_jira_fetch_args(self) -> None:
+        stdout = StringIO()
+        argv = [
+            "platform_cli.py",
+            "connector",
+            "jira",
+            "--live",
+            "--base-url",
+            "https://jira.example.com",
+            "--token",
+            "secret",
+            "--fetch-backend",
+            "atlassian-api",
+            "--issue-key",
+            "SSD-777",
+        ]
+        with patch(
+            "scripts.platform_cli.load_source_payload",
+            return_value={"sync_type": "full", "cursor": None, "documents": [], "selector_summary": {"issue_key": "SSD-777"}},
+        ) as mocked, patch("sys.argv", argv), redirect_stdout(stdout):
+            exit_code = platform_cli.main()
+
+        self.assertEqual(exit_code, 0)
+        mocked.assert_called_once()
+        self.assertEqual(mocked.call_args.kwargs["fetch_backend"], "atlassian-api")
+        self.assertEqual(mocked.call_args.kwargs["issue_key"], "SSD-777")
+
+    def test_connector_rejects_jql_combined_with_jira_helper_filters(self) -> None:
+        argv = [
+            "platform_cli.py",
+            "connector",
+            "jira",
+            "--live",
+            "--base-url",
+            "https://jira.example.com",
+            "--token",
+            "secret",
+            "--fetch-backend",
+            "atlassian-api",
+            "--jql",
+            "project = SSD",
+            "--issue-key",
+            "SSD-777",
+        ]
+        stderr = StringIO()
+        with patch("sys.argv", argv), patch("sys.stderr", stderr):
+            with self.assertRaises(SystemExit) as raised:
+                platform_cli.main()
+
+        self.assertNotEqual(raised.exception.code, 0)
+        self.assertIn("Jira helper filters cannot be combined with raw JQL", stderr.getvalue())
+
+    def test_connector_rejects_selective_jira_flags_on_native_backend(self) -> None:
+        argv = [
+            "platform_cli.py",
+            "connector",
+            "jira",
+            "--live",
+            "--base-url",
+            "https://jira.example.com",
+            "--token",
+            "secret",
+            "--issue-key",
+            "SSD-777",
+        ]
+        stderr = StringIO()
+        with patch("sys.argv", argv), patch("sys.stderr", stderr):
+            with self.assertRaises(SystemExit) as raised:
+                platform_cli.main()
+
+        self.assertNotEqual(raised.exception.code, 0)
+        self.assertIn("Selective Jira live fetch flags require the atlassian-api backend", stderr.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -72,6 +72,162 @@ def _load_snapshot_page_index(snapshot_dir: str | Path) -> list[dict]:
     return load_page_index_artifact(snapshot_paths(snapshot_dir)["page_index"])
 
 
+def _add_live_fetch_args(command_parser: argparse.ArgumentParser) -> None:
+    command_parser.add_argument("--fetch-backend", choices=["native", "atlassian-api"], default="native")
+    command_parser.add_argument("--issue-key")
+    command_parser.add_argument("--issue-keys")
+    command_parser.add_argument("--project-key")
+    command_parser.add_argument("--project-keys")
+    command_parser.add_argument("--issue-type")
+    command_parser.add_argument("--status")
+    command_parser.add_argument("--label")
+    command_parser.add_argument("--updated-from")
+    command_parser.add_argument("--updated-to")
+    command_parser.add_argument("--page-id")
+    command_parser.add_argument("--page-ids")
+    command_parser.add_argument("--title")
+    command_parser.add_argument("--ancestor-id")
+    command_parser.add_argument("--modified-from")
+    command_parser.add_argument("--modified-to")
+    command_parser.add_argument("--no-include-comments", action="store_true")
+    command_parser.add_argument("--no-include-attachments", action="store_true")
+    command_parser.add_argument("--no-include-image-metadata", action="store_true")
+    command_parser.add_argument("--download-images", action="store_true")
+    command_parser.add_argument("--image-download-dir")
+
+
+def _add_prefixed_jira_fetch_args(command_parser: argparse.ArgumentParser) -> None:
+    command_parser.add_argument("--jira-fetch-backend", choices=["native", "atlassian-api"], default="native")
+    command_parser.add_argument("--jira-issue-key")
+    command_parser.add_argument("--jira-issue-keys")
+    command_parser.add_argument("--jira-project-key")
+    command_parser.add_argument("--jira-project-keys")
+    command_parser.add_argument("--jira-issue-type")
+    command_parser.add_argument("--jira-status")
+    command_parser.add_argument("--jira-label")
+    command_parser.add_argument("--jira-updated-from")
+    command_parser.add_argument("--jira-updated-to")
+    command_parser.add_argument("--jira-no-include-comments", action="store_true")
+    command_parser.add_argument("--jira-no-include-attachments", action="store_true")
+    command_parser.add_argument("--jira-no-include-image-metadata", action="store_true")
+    command_parser.add_argument("--jira-download-images", action="store_true")
+    command_parser.add_argument("--jira-image-download-dir")
+
+
+def _add_prefixed_confluence_fetch_args(command_parser: argparse.ArgumentParser) -> None:
+    command_parser.add_argument("--confluence-fetch-backend", choices=["native", "atlassian-api"], default="native")
+    command_parser.add_argument("--confluence-page-id")
+    command_parser.add_argument("--confluence-page-ids")
+    command_parser.add_argument("--confluence-title")
+    command_parser.add_argument("--confluence-label")
+    command_parser.add_argument("--confluence-ancestor-id")
+    command_parser.add_argument("--confluence-modified-from")
+    command_parser.add_argument("--confluence-modified-to")
+    command_parser.add_argument("--confluence-no-include-attachments", action="store_true")
+    command_parser.add_argument("--confluence-no-include-image-metadata", action="store_true")
+    command_parser.add_argument("--confluence-download-images", action="store_true")
+    command_parser.add_argument("--confluence-image-download-dir")
+
+
+def _validate_jira_filter_args(parser: argparse.ArgumentParser, args: argparse.Namespace, *, prefix: str = "") -> None:
+    jql = getattr(args, f"{prefix}jql")
+    fetch_backend = getattr(args, f"{prefix}fetch_backend", "native")
+    helper_values = [
+        getattr(args, f"{prefix}issue_key", None),
+        getattr(args, f"{prefix}issue_keys", None),
+        getattr(args, f"{prefix}project_key", None),
+        getattr(args, f"{prefix}project_keys", None),
+        getattr(args, f"{prefix}issue_type", None),
+        getattr(args, f"{prefix}status", None),
+        getattr(args, f"{prefix}label", None),
+        getattr(args, f"{prefix}updated_from", None),
+        getattr(args, f"{prefix}updated_to", None),
+    ]
+    backend_only_features = any(helper_values) or getattr(args, f"{prefix}no_include_comments", False) or getattr(args, f"{prefix}no_include_attachments", False) or getattr(args, f"{prefix}no_include_image_metadata", False) or getattr(args, f"{prefix}download_images", False)
+    if fetch_backend != "atlassian-api" and backend_only_features:
+        parser.error("Selective Jira live fetch flags require the atlassian-api backend")
+    if jql != "order by updated asc" and any(helper_values):
+        parser.error("Jira helper filters cannot be combined with raw JQL")
+    if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_attachments", False):
+        parser.error("Image download requires attachments to be included")
+    if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_image_metadata", False):
+        parser.error("Image download requires image metadata to be included")
+    if getattr(args, f"{prefix}download_images", False) and not getattr(args, f"{prefix}image_download_dir", None):
+        parser.error("Image download requires --image-download-dir")
+
+
+def _validate_confluence_filter_args(parser: argparse.ArgumentParser, args: argparse.Namespace, *, prefix: str = "") -> None:
+    cql = getattr(args, f"{prefix}cql")
+    fetch_backend = getattr(args, f"{prefix}fetch_backend", "native")
+    helper_values = [
+        getattr(args, f"{prefix}page_id", None),
+        getattr(args, f"{prefix}page_ids", None),
+        getattr(args, f"{prefix}title", None),
+        getattr(args, f"{prefix}label", None),
+        getattr(args, f"{prefix}ancestor_id", None),
+        getattr(args, f"{prefix}modified_from", None),
+        getattr(args, f"{prefix}modified_to", None),
+    ]
+    backend_only_features = any(helper_values) or getattr(args, f"{prefix}no_include_attachments", False) or getattr(args, f"{prefix}no_include_image_metadata", False) or getattr(args, f"{prefix}download_images", False)
+    if fetch_backend != "atlassian-api" and backend_only_features:
+        parser.error("Selective Confluence live fetch flags require the atlassian-api backend")
+    if cql and any(helper_values):
+        parser.error("Confluence helper filters cannot be combined with raw CQL")
+    if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_attachments", False):
+        parser.error("Image download requires attachments to be included")
+    if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_image_metadata", False):
+        parser.error("Image download requires image metadata to be included")
+    if getattr(args, f"{prefix}download_images", False) and not getattr(args, f"{prefix}image_download_dir", None):
+        parser.error("Image download requires --image-download-dir")
+
+
+def _validate_profile_source_config(parser: argparse.ArgumentParser, *, source_name: str, config: dict) -> None:
+    if config.get("fetch_backend", "native") != "atlassian-api":
+        if source_name == "jira" and any(
+            [
+                config.get("issue_key"),
+                config.get("issue_keys"),
+                config.get("project_key"),
+                config.get("project_keys"),
+                config.get("issue_type"),
+                config.get("status"),
+                config.get("label"),
+                config.get("updated_from"),
+                config.get("updated_to"),
+                config.get("include_comments") is False,
+                config.get("include_attachments") is False,
+                config.get("include_image_metadata") is False,
+                config.get("download_images"),
+            ]
+        ):
+            parser.error("Selective Jira profile fetch flags require the atlassian-api backend")
+        if source_name == "confluence" and any(
+            [
+                config.get("page_id"),
+                config.get("page_ids"),
+                config.get("title"),
+                config.get("label"),
+                config.get("ancestor_id"),
+                config.get("modified_from"),
+                config.get("modified_to"),
+                config.get("include_attachments") is False,
+                config.get("include_image_metadata") is False,
+                config.get("download_images"),
+            ]
+        ):
+            parser.error("Selective Confluence profile fetch flags require the atlassian-api backend")
+    if source_name == "jira" and config.get("jql") not in {None, "order by updated asc"} and any(
+        [config.get("issue_key"), config.get("issue_keys"), config.get("project_key"), config.get("project_keys"), config.get("issue_type"), config.get("status"), config.get("label"), config.get("updated_from"), config.get("updated_to")]
+    ):
+        parser.error("Jira profile helper filters cannot be combined with raw JQL")
+    if source_name == "confluence" and config.get("cql") and any(
+        [config.get("page_id"), config.get("page_ids"), config.get("title"), config.get("label"), config.get("ancestor_id"), config.get("modified_from"), config.get("modified_to")]
+    ):
+        parser.error("Confluence profile helper filters cannot be combined with raw CQL")
+    if config.get("download_images") and not config.get("image_download_dir"):
+        parser.error("Profile image download requires an image_download_dir")
+
+
 def _validate_live_connector_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if not args.live:
         return
@@ -79,6 +235,10 @@ def _validate_live_connector_args(parser: argparse.ArgumentParser, args: argpars
         parser.error("--base-url is required when --live is set")
     if args.page_size <= 0:
         parser.error("--page-size must be greater than 0")
+    if args.kind == "jira":
+        _validate_jira_filter_args(parser, args)
+    if args.kind == "confluence":
+        _validate_confluence_filter_args(parser, args)
 
 
 def _load_connector_payload(args: argparse.Namespace) -> dict:
@@ -97,6 +257,27 @@ def _load_connector_payload(args: argparse.Namespace) -> dict:
         cql=args.cql,
         space_key=args.space_key,
         insecure=args.insecure,
+        fetch_backend=args.fetch_backend,
+        issue_key=args.issue_key,
+        issue_keys=args.issue_keys,
+        project_key=args.project_key,
+        project_keys=args.project_keys,
+        issue_type=args.issue_type,
+        status=args.status,
+        label=args.label,
+        updated_from=args.updated_from,
+        updated_to=args.updated_to,
+        page_id=args.page_id,
+        page_ids=args.page_ids,
+        title=args.title,
+        ancestor_id=args.ancestor_id,
+        modified_from=args.modified_from,
+        modified_to=args.modified_to,
+        include_comments=not args.no_include_comments,
+        include_attachments=not args.no_include_attachments,
+        include_image_metadata=not args.no_include_image_metadata,
+        download_images=args.download_images,
+        image_download_dir=args.image_download_dir,
     )
 
 
@@ -112,6 +293,7 @@ def _add_jira_source_args(command_parser: argparse.ArgumentParser) -> None:
     command_parser.add_argument("--jira-page-size", type=int, default=50)
     command_parser.add_argument("--jira-jql", default="order by updated asc")
     command_parser.add_argument("--jira-insecure", action="store_true")
+    _add_prefixed_jira_fetch_args(command_parser)
 
 
 def _add_llm_backend_args(command_parser: argparse.ArgumentParser) -> None:
@@ -149,6 +331,7 @@ def _build_llm_backend_from_args(parser: argparse.ArgumentParser, args: argparse
 def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[dict]:
     _validate_prefixed_live_args(
         parser,
+        args=args,
         live=args.jira_live,
         base_url=args.jira_base_url,
         page_size=args.jira_page_size,
@@ -156,6 +339,7 @@ def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argpar
     )
     if not args.jira_live and not args.jira_path:
         parser.error("Jira source is required via --jira-path or --jira-live")
+    _validate_jira_filter_args(parser, args, prefix="jira_")
     return load_source_payload(
         kind="jira",
         path=args.jira_path,
@@ -169,6 +353,21 @@ def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argpar
         page_size=args.jira_page_size,
         jql=args.jira_jql,
         insecure=args.jira_insecure,
+        fetch_backend=args.jira_fetch_backend,
+        issue_key=args.jira_issue_key,
+        issue_keys=args.jira_issue_keys,
+        project_key=args.jira_project_key,
+        project_keys=args.jira_project_keys,
+        issue_type=args.jira_issue_type,
+        status=args.jira_status,
+        label=args.jira_label,
+        updated_from=args.jira_updated_from,
+        updated_to=args.jira_updated_to,
+        include_comments=not args.jira_no_include_comments,
+        include_attachments=not args.jira_no_include_attachments,
+        include_image_metadata=not args.jira_no_include_image_metadata,
+        download_images=args.jira_download_images,
+        image_download_dir=args.jira_image_download_dir,
     )["documents"]
 
 
@@ -176,6 +375,7 @@ def _load_retrieval_consumption_documents(parser: argparse.ArgumentParser, args:
     if args.snapshot_dir:
         return load_document_snapshot(snapshot_paths(args.snapshot_dir)["documents"])
     if args.source_kind == "jira-live":
+        _validate_jira_filter_args(parser, args)
         return load_source_payload(
             kind="jira",
             path=None,
@@ -189,8 +389,24 @@ def _load_retrieval_consumption_documents(parser: argparse.ArgumentParser, args:
             page_size=args.page_size,
             jql=args.jql,
             insecure=args.insecure,
+            fetch_backend=args.fetch_backend,
+            issue_key=args.issue_key,
+            issue_keys=args.issue_keys,
+            project_key=args.project_key,
+            project_keys=args.project_keys,
+            issue_type=args.issue_type,
+            status=args.status,
+            label=args.label,
+            updated_from=args.updated_from,
+            updated_to=args.updated_to,
+            include_comments=not args.no_include_comments,
+            include_attachments=not args.no_include_attachments,
+            include_image_metadata=not args.no_include_image_metadata,
+            download_images=args.download_images,
+            image_download_dir=args.image_download_dir,
         )["documents"]
     if args.source_kind == "confluence-live":
+        _validate_confluence_filter_args(parser, args)
         return load_source_payload(
             kind="confluence",
             path=None,
@@ -205,6 +421,18 @@ def _load_retrieval_consumption_documents(parser: argparse.ArgumentParser, args:
             cql=args.cql,
             space_key=args.space_key,
             insecure=args.insecure,
+            fetch_backend=args.fetch_backend,
+            page_id=args.page_id,
+            page_ids=args.page_ids,
+            title=args.title,
+            label=args.label,
+            ancestor_id=args.ancestor_id,
+            modified_from=args.modified_from,
+            modified_to=args.modified_to,
+            include_attachments=not args.no_include_attachments,
+            include_image_metadata=not args.no_include_image_metadata,
+            download_images=args.download_images,
+            image_download_dir=args.image_download_dir,
         )["documents"]
     if args.source_kind == "jira-sync":
         return load_source_payload(kind="jira", path=args.source_path, live=False)["documents"]
@@ -247,6 +475,7 @@ def _validate_retrieval_consumption_source(parser: argparse.ArgumentParser, args
 def _validate_prefixed_live_args(
     parser: argparse.ArgumentParser,
     *,
+    args: argparse.Namespace,
     live: bool,
     base_url: str | None,
     page_size: int,
@@ -258,6 +487,10 @@ def _validate_prefixed_live_args(
         parser.error(f"--{source_name}-base-url is required when --{source_name}-live is set")
     if page_size <= 0:
         parser.error(f"--{source_name}-page-size must be greater than 0")
+    if source_name == "jira":
+        _validate_jira_filter_args(parser, args, prefix="jira_")
+    if source_name == "confluence":
+        _validate_confluence_filter_args(parser, args, prefix="confluence_")
 
 
 def main() -> int:
@@ -310,6 +543,7 @@ def main() -> int:
     connector_parser.add_argument("--space-key")
     connector_parser.add_argument("--insecure", action="store_true")
     connector_parser.add_argument("--output-json")
+    _add_live_fetch_args(connector_parser)
 
     sync_health_parser = subparsers.add_parser("sync-health")
     sync_health_parser.add_argument("kind", choices=["jira", "confluence"])
@@ -330,6 +564,7 @@ def main() -> int:
     sync_health_parser.add_argument("--insecure", action="store_true")
     sync_health_parser.add_argument("--freshness-budget-minutes", type=int, default=30)
     sync_health_parser.add_argument("--reference-time-iso")
+    _add_live_fetch_args(sync_health_parser)
 
     multi_sync_health_parser = subparsers.add_parser("multi-sync-health")
     multi_sync_health_parser.add_argument("--snapshot-dir")
@@ -348,6 +583,7 @@ def main() -> int:
     multi_sync_health_parser.add_argument("--jira-page-size", type=int, default=50)
     multi_sync_health_parser.add_argument("--jira-jql", default="order by updated asc")
     multi_sync_health_parser.add_argument("--jira-insecure", action="store_true")
+    _add_prefixed_jira_fetch_args(multi_sync_health_parser)
     multi_sync_health_parser.add_argument("--confluence-path")
     multi_sync_health_parser.add_argument("--confluence-live", action="store_true")
     multi_sync_health_parser.add_argument("--confluence-base-url")
@@ -360,6 +596,7 @@ def main() -> int:
     multi_sync_health_parser.add_argument("--confluence-cql")
     multi_sync_health_parser.add_argument("--confluence-space-key")
     multi_sync_health_parser.add_argument("--confluence-insecure", action="store_true")
+    _add_prefixed_confluence_fetch_args(multi_sync_health_parser)
 
     search_parser = subparsers.add_parser("search")
     search_parser.add_argument("query")
@@ -429,6 +666,7 @@ def main() -> int:
     retrieval_consume_parser.add_argument("--cql")
     retrieval_consume_parser.add_argument("--space-key")
     retrieval_consume_parser.add_argument("--insecure", action="store_true")
+    _add_live_fetch_args(retrieval_consume_parser)
     retrieval_consume_parser.add_argument("--question", required=True)
     retrieval_consume_parser.add_argument("--prompt-template")
     retrieval_consume_parser.add_argument("--output-answer-md")
@@ -458,6 +696,7 @@ def main() -> int:
     sync_export_parser.add_argument("--jira-page-size", type=int, default=50)
     sync_export_parser.add_argument("--jira-jql", default="order by updated asc")
     sync_export_parser.add_argument("--jira-insecure", action="store_true")
+    _add_prefixed_jira_fetch_args(sync_export_parser)
     sync_export_parser.add_argument("--confluence-path")
     sync_export_parser.add_argument("--confluence-live", action="store_true")
     sync_export_parser.add_argument("--confluence-base-url")
@@ -470,6 +709,7 @@ def main() -> int:
     sync_export_parser.add_argument("--confluence-cql")
     sync_export_parser.add_argument("--confluence-space-key")
     sync_export_parser.add_argument("--confluence-insecure", action="store_true")
+    _add_prefixed_confluence_fetch_args(sync_export_parser)
 
     args = parser.parse_args()
 
@@ -545,6 +785,27 @@ def main() -> int:
                 insecure=args.insecure,
                 freshness_budget_minutes=args.freshness_budget_minutes,
                 reference_time_iso=args.reference_time_iso,
+                fetch_backend=args.fetch_backend,
+                issue_key=args.issue_key,
+                issue_keys=args.issue_keys,
+                project_key=args.project_key,
+                project_keys=args.project_keys,
+                issue_type=args.issue_type,
+                status=args.status,
+                label=args.label,
+                updated_from=args.updated_from,
+                updated_to=args.updated_to,
+                page_id=args.page_id,
+                page_ids=args.page_ids,
+                title=args.title,
+                ancestor_id=args.ancestor_id,
+                modified_from=args.modified_from,
+                modified_to=args.modified_to,
+                include_comments=not args.no_include_comments,
+                include_attachments=not args.no_include_attachments,
+                include_image_metadata=not args.no_include_image_metadata,
+                download_images=args.download_images,
+                image_download_dir=args.image_download_dir,
             )
         )
     if args.command == "multi-sync-health":
@@ -558,6 +819,7 @@ def main() -> int:
         jira_config, confluence_config = profile["sources"]
         _validate_prefixed_live_args(
             parser,
+            args=args,
             live=jira_config["live"],
             base_url=jira_config.get("base_url"),
             page_size=jira_config["page_size"],
@@ -565,6 +827,7 @@ def main() -> int:
         )
         _validate_prefixed_live_args(
             parser,
+            args=args,
             live=confluence_config["live"],
             base_url=confluence_config.get("base_url"),
             page_size=confluence_config["page_size"],
@@ -710,6 +973,7 @@ def main() -> int:
         jira_config, confluence_config = profile["sources"]
         _validate_prefixed_live_args(
             parser,
+            args=args,
             live=jira_config["live"],
             base_url=jira_config.get("base_url"),
             page_size=jira_config["page_size"],
@@ -717,11 +981,16 @@ def main() -> int:
         )
         _validate_prefixed_live_args(
             parser,
+            args=args,
             live=confluence_config["live"],
             base_url=confluence_config.get("base_url"),
             page_size=confluence_config["page_size"],
             source_name="confluence",
         )
+        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
+        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
+        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
+        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
         if not jira_config["live"] and not jira_config.get("path"):
             parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
         if not confluence_config["live"] and not confluence_config.get("path"):

@@ -27,6 +27,8 @@ Target modules:
 Required changes:
 
 - add authenticated API clients
+- support backend-selectable live fetch adapters so experimental SDK-backed fetching can coexist with the current native path
+- support selective fetch parameters for bounded Jira and Confluence pulls instead of only broad whole-query or whole-space syncs
 - support pagination and incremental sync cursors
 - preserve version markers and attachment metadata
 - map live payloads into the existing normalized document contract
@@ -36,6 +38,7 @@ Rules:
 - do not change the retrieval or portal contracts first
 - keep fixture-based tests as contract tests
 - add separate integration tests for live connector behavior
+- keep image binary download explicit and opt-in; metadata and download URL capture remain the default live behavior
 
 ### 2. Replace Minimal PDF Parsing with Production Parser Path
 

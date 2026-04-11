@@ -32,6 +32,7 @@ python scripts/platform_cli.py sync-health jira fixtures/connectors/jira/increme
 python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/incremental_sync.json --reference-time-iso 2026-04-06T09:10:00Z
 python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN
 python scripts/platform_cli.py multi-sync-health --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot
+python scripts/platform_cli.py multi-sync-health --profile fixtures/ops/selective_live_multi_sync_profile.json --snapshot-dir .tmp/selective-live-snapshot
 ```
 
 ### Ingestion
@@ -52,6 +53,22 @@ python scripts/platform_cli.py connector confluence fixtures/connectors/confluen
 python scripts/platform_cli.py connector jira fixtures/connectors/jira/full_sync.json --output-json .tmp/jira.json
 python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $TOKEN
 python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $TOKEN
+```
+
+Selective live fetch with the experimental Atlassian backend:
+
+```bash
+python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --issue-key SSD-777
+python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --project-key SSD --issue-type Bug --updated-from 2026-04-01T00:00:00Z --updated-to 2026-04-10T00:00:00Z --no-include-comments
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --page-id 123456
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --space-key SSDENG --label firmware --modified-from 2026-04-01T00:00:00Z
+```
+
+Optional image download examples:
+
+```bash
+python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --issue-key SSD-777 --download-images --image-download-dir .tmp/jira-images
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --page-id 123456 --download-images --image-download-dir .tmp/confluence-images
 ```
 
 ### Retrieval and Citation
@@ -92,6 +109,8 @@ python scripts/platform_cli.py retrieval-consume --source-kind jira-sync --sourc
 python scripts/platform_cli.py retrieval-consume --source-kind confluence-sync --source-path fixtures/connectors/confluence/page_sync.json --question "Which page mentions telemetry architecture?" --llm-backend mock --llm-mock-response "Mock confluence answer"
 python scripts/platform_cli.py retrieval-consume --source-kind jira-live --base-url https://jira.example.com --token $JIRA_TOKEN --question "What changed in the latest SSD issue?"
 python scripts/platform_cli.py retrieval-consume --source-kind confluence-live --base-url https://confluence.example.com --token $CONF_TOKEN --space-key SSD --question "What changed in the latency budget page?"
+python scripts/platform_cli.py retrieval-consume --source-kind jira-live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --issue-key SSD-777 --question "What changed in this exact issue?"
+python scripts/platform_cli.py retrieval-consume --source-kind confluence-live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --page-id 123456 --question "What changed on this exact page?"
 python scripts/platform_cli.py retrieval-consume --source-kind pptx --source-path fixtures/corpus/office/sample.pptx --question "Which slide mentions latency targets?"
 python scripts/platform_cli.py retrieval-consume --source-kind pdf --source-path fixtures/corpus/pdf/sample.pdf --question "What document covers flush semantics?"
 python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --question "What document covers flush semantics?"
@@ -114,6 +133,8 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - `multi-sync-health` provides a sequential dual-source path: Jira refresh -> Confluence refresh -> aggregated ops health.
 - `multi-sync-health` supports both fixture-backed and live dual-source operation, with source-prefixed live configuration flags.
 - `multi-sync-health` also supports a JSON profile file so source configuration can be versioned outside the command line.
+- Live Jira/Confluence commands now support `--fetch-backend atlassian-api` plus bounded selectors such as `--issue-key`, `--project-key`, `--page-id`, `--title`, `--label`, and date windows. These selective flags are intentionally rejected on the `native` backend.
+- `--download-images` is opt-in and requires `--image-download-dir`.
 - `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, can optionally call a local LLM backend through `--llm-backend`, can write that answer to `--output-answer-md`, and renders an optional prompt template.
 - `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer by default, can optionally call a local LLM backend through `--llm-backend`, and can write the selected answer to `--output-answer-md`.
 - `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA, supports the same optional local LLM backend flags, and can write a combined Markdown report to `--output-md`.

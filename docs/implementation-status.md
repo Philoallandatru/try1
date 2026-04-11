@@ -68,6 +68,7 @@ The current foundation is now largely in place against that narrower roadmap:
 - Live step AG: Jira time reports support opt-in local LLM summaries with separate raw report and answer exports
 - Live step AH: Jira, Confluence, and MinerU PDF ingestion merge image references plus provided OCR/caption metadata into readable and indexable Markdown evidence blocks
 - Live step AI: skill-ready normalization CLI can export readable Markdown and PageIndex JSON for Jira sync, Confluence sync, PPTX, PDF, and other normalized document sources
+- Live step AJ: live connector CLI and orchestration now support backend-selectable, selective Jira/Confluence fetch filters plus opt-in image download controls for bounded live pulls
 
 ## Validation Status
 
@@ -108,6 +109,7 @@ Current validation entrypoints:
 - ACL contract validators
 - document normalization adapters
 - live Jira and Confluence canonical markdown connectors
+- backend-selectable live Jira and Confluence fetch adapters with bounded selector support
 - Jira bug-template field mapping for structured issue metadata
 - configurable Jira field-alias contract
 - explicit Confluence page mapping contract for space, version, attachments, and storage-body normalization
@@ -179,6 +181,7 @@ Current validation entrypoints:
 - `services/connectors/confluence/connector.py` now builds canonical sections and content blocks directly from Confluence storage payloads instead of deriving them from Markdown re-parsing.
 - `services/analysis/jira_issue_analysis.py` builds deterministic Jira reports and Jira-plus-spec question payloads; `services/analysis/llm_backends.py` adds explicit opt-in local LLM answer generation.
 - `services/ingest/visual_assets.py` renders image evidence blocks for Markdown ingestion and indexing. It currently consumes image references plus provided `ocr_text`, `vision_caption`, and `alt_text` metadata; automatic download/OCR/vision extraction remains a production gap.
+- `scripts/platform_cli.py connector`, `sync-health`, `multi-sync-health`, `sync-export`, and `retrieval-consume` now accept backend-selectable live fetch controls so Jira/Confluence pulls can be bounded by exact IDs or helper filters instead of always defaulting to broad live sync scope.
 - `services/ingest/markdown_export.py` turns canonical documents into readable Markdown when a source does not already provide Markdown, and `scripts/ingest/normalize_cli.py --output-page-index` writes the PageIndex derived from the same normalized documents.
 - `scripts/platform_cli.py jira-report` and `scripts/platform_cli.py jira-spec-qa` expose the Jira analysis workflow through the unified CLI for fixture-backed and live Jira Server sources.
 - `scripts/platform_cli.py jira-report --output-md ...` writes the generated Jira report Markdown to disk while preserving JSON output.

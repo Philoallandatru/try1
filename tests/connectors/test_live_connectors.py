@@ -94,6 +94,80 @@ class LiveConnectorTest(unittest.TestCase):
         self.assertIn("[diagram.png](/download/attachments/1/diagram.png)", payload["documents"][0]["markdown"])
         self.assertGreaterEqual(len(build_page_index(payload["documents"])), 1)
 
+    def test_jira_atlassian_api_backend_supports_selective_fetch_and_document_build(self) -> None:
+        with patch(
+            "services.connectors.jira.connector.fetch_jira_server_sync_atlassian_api",
+            return_value={
+                "sync_type": "full",
+                "cursor": None,
+                "names": {},
+                "issues": [
+                    {
+                        "key": "SSD-777",
+                        "fields": {
+                            "summary": "Selective live fetch",
+                            "description": "Pull only this issue.",
+                            "updated": "2026-04-08T09:00:00Z",
+                            "project": {"key": "SSD"},
+                            "comment": {"comments": []},
+                            "attachment": [
+                                {
+                                    "filename": "failure.png",
+                                    "mimeType": "image/png",
+                                    "content": "https://jira.example.com/secure/attachment/777/failure.png",
+                                }
+                            ],
+                        },
+                    }
+                ],
+                "selector_summary": {"fetch_backend": "atlassian-api", "issue_key": "SSD-777"},
+            },
+        ) as mocked:
+            payload = fetch_jira_server_sync(
+                base_url="https://jira.example.com",
+                token="secret",
+                fetch_backend="atlassian-api",
+                issue_key="SSD-777",
+            )
+
+        mocked.assert_called_once()
+        self.assertEqual(payload["documents"][0]["document_id"], "SSD-777")
+        self.assertEqual(payload["selector_summary"]["issue_key"], "SSD-777")
+        self.assertEqual(payload["selector_summary"]["fetch_backend"], "atlassian-api")
+        self.assertEqual(payload["documents"][0]["metadata"]["visual_asset_count"], 1)
+
+    def test_confluence_atlassian_api_backend_supports_selective_fetch_and_document_build(self) -> None:
+        with patch(
+            "services.connectors.confluence.connector.fetch_confluence_page_sync_atlassian_api",
+            return_value={
+                "sync_type": "full",
+                "cursor": None,
+                "pages": [
+                    {
+                        "id": "CONF-888",
+                        "title": "Selective page",
+                        "space": {"key": "SSDENG"},
+                        "version": {"number": 4, "when": "2026-04-08T10:00:00Z"},
+                        "body": {"storage": {"value": "<h1>Selective page</h1><p>Only one page.</p>"}},
+                        "attachments": [],
+                        "_links": {"webui": "/pages/viewpage.action?pageId=CONF-888"},
+                    }
+                ],
+                "selector_summary": {"fetch_backend": "atlassian-api", "page_id": "CONF-888"},
+            },
+        ) as mocked:
+            payload = fetch_confluence_page_sync(
+                base_url="https://confluence.example.com",
+                token="secret",
+                fetch_backend="atlassian-api",
+                page_id="CONF-888",
+            )
+
+        mocked.assert_called_once()
+        self.assertEqual(payload["documents"][0]["document_id"], "CONF-888")
+        self.assertEqual(payload["selector_summary"]["page_id"], "CONF-888")
+        self.assertEqual(payload["selector_summary"]["fetch_backend"], "atlassian-api")
+
 
 if __name__ == "__main__":
     unittest.main()

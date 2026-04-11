@@ -180,6 +180,12 @@ PageIndex
 
 Live Jira uses `scripts/platform_cli.py connector jira --live ...`; fixture-backed conversion uses `scripts/ingest/normalize_cli.py jira-sync ...`.
 
+Selective live Jira fetch is also available through the experimental Atlassian backend, for example:
+
+```powershell
+python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $env:JIRA_TOKEN --fetch-backend atlassian-api --issue-key SSD-777
+```
+
 ### 3. Confluence Connector Pipeline
 
 ```text
@@ -202,6 +208,12 @@ PageIndex
 ```
 
 Current Confluence image handling indexes provided `alt_text`, `ocr_text`, and `vision_caption` metadata. Automatic image download/OCR/vision captioning is still a future backend.
+
+Selective live Confluence fetch is also available through the experimental Atlassian backend, for example:
+
+```powershell
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $env:CONF_TOKEN --fetch-backend atlassian-api --page-id 123456
+```
 
 ### 4. PPTX Pipeline
 

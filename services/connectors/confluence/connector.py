@@ -10,6 +10,7 @@ import re
 import ssl
 
 from services.ingest.normalizer import append_content_block, append_section, build_base_document, finalize_document
+from services.connectors.confluence.atlassian_api_fetch import fetch_confluence_page_sync_atlassian_api
 from services.ingest.visual_assets import (
     append_visual_asset_to_document,
     build_visual_asset_markdown,
@@ -419,7 +420,66 @@ def fetch_confluence_page_sync(
     page_size: int = 25,
     verify_ssl: bool = True,
     acl_policy: str = "team:ssd",
+    fetch_backend: str = "native",
+    page_id: str | None = None,
+    page_ids: str | None = None,
+    title: str | None = None,
+    label: str | None = None,
+    ancestor_id: str | None = None,
+    modified_from: str | None = None,
+    modified_to: str | None = None,
+    include_attachments: bool = True,
+    include_image_metadata: bool = True,
+    download_images: bool = False,
+    image_download_dir: str | None = None,
 ) -> dict:
+    if fetch_backend == "atlassian-api":
+        payload = fetch_confluence_page_sync_atlassian_api(
+            base_url=base_url,
+            username=username,
+            password=password,
+            token=token,
+            auth_mode=auth_mode,
+            cql=cql,
+            space_key=space_key,
+            cursor=cursor,
+            page_size=page_size,
+            verify_ssl=verify_ssl,
+            page_id=page_id,
+            page_ids=page_ids,
+            title=title,
+            label=label,
+            ancestor_id=ancestor_id,
+            modified_from=modified_from,
+            modified_to=modified_to,
+            include_attachments=include_attachments,
+            include_image_metadata=include_image_metadata,
+            download_images=download_images,
+            image_download_dir=image_download_dir,
+        )
+        documents = [
+            _page_to_document(
+                page,
+                source_uri=(
+                    page.get("_links", {}).get("webui")
+                    if str(page.get("_links", {}).get("webui", "")).startswith("http")
+                    else f"{base_url.rstrip('/')}{page.get('_links', {}).get('webui', f'/pages/viewpage.action?pageId={page['id']}')}"
+                ),
+                incremental=bool(payload.get("cursor") or modified_from or modified_to),
+                acl_policy=acl_policy,
+            )
+            for page in payload.get("pages", [])
+        ]
+        next_cursor = cursor
+        if documents:
+            next_cursor = max(document["metadata"]["sync_cursor"] for document in documents)
+        return {
+            "sync_type": payload.get("sync_type", "incremental" if cursor else "full"),
+            "cursor": next_cursor,
+            "documents": documents,
+            "selector_summary": payload.get("selector_summary", {}),
+        }
+
     normalized_base_url = base_url.rstrip("/")
     headers = {"Accept": "application/json"}
     auth_header = _build_auth_header(username=username, password=password, token=token, auth_mode=auth_mode)

@@ -1,0 +1,23 @@
+{
+  "snapshot_dir": ".tmp/selective-live-snapshot",
+  "freshness_budget_minutes": 30,
+  "jira": {
+    "live": true,
+    "fetch_backend": "atlassian-api",
+    "base_url": "https://jira.example.com",
+    "auth_mode": "bearer",
+    "issue_key": "SSD-777",
+    "include_comments": true,
+    "include_attachments": true,
+    "include_image_metadata": true
+  },
+  "confluence": {
+    "live": true,
+    "fetch_backend": "atlassian-api",
+    "base_url": "https://confluence.example.com",
+    "auth_mode": "bearer",
+    "page_id": "123456",
+    "include_attachments": true,
+    "include_image_metadata": true
+  }
+}

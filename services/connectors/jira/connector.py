@@ -10,6 +10,7 @@ import ssl
 
 from services.connectors.jira.field_aliases import load_jira_field_aliases
 from services.connectors.jira.issue_type_profiles import load_jira_issue_type_profiles, route_jira_issue_type
+from services.connectors.jira.atlassian_api_fetch import fetch_jira_server_sync_atlassian_api
 from services.ingest.normalizer import append_content_block, append_section, build_base_document, finalize_document
 from services.ingest.visual_assets import (
     append_visual_asset_to_document,
@@ -371,7 +372,72 @@ def fetch_jira_server_sync(
     page_size: int = 50,
     verify_ssl: bool = True,
     acl_policy: str = "team:ssd",
+    fetch_backend: str = "native",
+    issue_key: str | None = None,
+    issue_keys: str | None = None,
+    project_key: str | None = None,
+    project_keys: str | None = None,
+    issue_type: str | None = None,
+    status: str | None = None,
+    label: str | None = None,
+    updated_from: str | None = None,
+    updated_to: str | None = None,
+    include_comments: bool = True,
+    include_attachments: bool = True,
+    include_image_metadata: bool = True,
+    download_images: bool = False,
+    image_download_dir: str | None = None,
 ) -> dict:
+    if fetch_backend == "atlassian-api":
+        payload = fetch_jira_server_sync_atlassian_api(
+            base_url=base_url,
+            username=username,
+            password=password,
+            token=token,
+            auth_mode=auth_mode,
+            jql=jql,
+            cursor=cursor,
+            page_size=page_size,
+            verify_ssl=verify_ssl,
+            issue_key=issue_key,
+            issue_keys=issue_keys,
+            project_key=project_key,
+            project_keys=project_keys,
+            issue_type=issue_type,
+            status=status,
+            label=label,
+            updated_from=updated_from,
+            updated_to=updated_to,
+            include_comments=include_comments,
+            include_attachments=include_attachments,
+            include_image_metadata=include_image_metadata,
+            download_images=download_images,
+            image_download_dir=image_download_dir,
+        )
+        field_aliases = load_jira_field_aliases()
+        issue_type_profiles = load_jira_issue_type_profiles()
+        documents = [
+            _issue_to_document(
+                issue,
+                source_uri=f"{base_url.rstrip('/')}/browse/{issue['key']}",
+                incremental=bool(payload.get("cursor") or updated_from or updated_to),
+                acl_policy=acl_policy,
+                field_name_map=payload.get("names", {}),
+                field_aliases=field_aliases,
+                issue_type_profiles=issue_type_profiles,
+            )
+            for issue in payload.get("issues", [])
+        ]
+        next_cursor = cursor
+        if documents:
+            next_cursor = max(document["version"] for document in documents)
+        return {
+            "sync_type": payload.get("sync_type", "incremental" if cursor else "full"),
+            "cursor": next_cursor,
+            "documents": documents,
+            "selector_summary": payload.get("selector_summary", {}),
+        }
+
     normalized_base_url = base_url.rstrip("/")
     headers = {"Accept": "application/json"}
     auth_header = _build_auth_header(username=username, password=password, token=token, auth_mode=auth_mode)
