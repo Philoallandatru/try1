@@ -9,6 +9,7 @@ Available runbooks:
 - [Backup and restore](backup-restore.md)
 - [Freshness monitoring](freshness-monitoring.md)
 - [Jira analysis reporting](jira-analysis-reporting.md)
+- [Live selective fetch smoke](live-selective-fetch-smoke.md)
 
 They do not yet assume:
 

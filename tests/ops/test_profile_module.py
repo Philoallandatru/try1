@@ -72,6 +72,21 @@ class OpsProfileModuleTest(unittest.TestCase):
         self.assertEqual(profile["sources"][0]["path"], "fixtures/connectors/jira/incremental_sync.json")
         self.assertEqual(profile["sources"][1]["path"], "fixtures/connectors/confluence/incremental_sync.json")
 
+    def test_validate_multi_sync_profile_requires_image_download_dir_when_download_enabled(self) -> None:
+        profile = {
+            "jira": {
+                "live": True,
+                "base_url": "https://jira.example.com",
+                "fetch_backend": "atlassian-api",
+                "download_images": True,
+            },
+            "confluence": {
+                "path": "fixtures/connectors/confluence/incremental_sync.json",
+            },
+        }
+        errors = validate_multi_sync_profile(profile)
+        self.assertIn("profile.jira.image_download_dir is required when download_images is true", errors)
+
 
 if __name__ == "__main__":
     unittest.main()
