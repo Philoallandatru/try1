@@ -306,7 +306,8 @@ def _issue_to_document(
     if attachments:
         append_section(document, "Attachments")
     document["markdown"] = markdown
-    document["comments"] = comment_bodies
+    document["comments"] = comment_items
+    document["comment_bodies"] = comment_bodies
     document["attachments"] = attachments
     document["visual_assets"] = []
     document["metadata"] = {
@@ -333,7 +334,9 @@ def _issue_to_document(
             section="Attachments",
         )
         append_visual_asset_to_document(document, asset)
-    return finalize_document(document)
+    document = finalize_document(document)
+    document["title"] = summary
+    return document
 
 
 def load_jira_sync(path: str | Path) -> dict:

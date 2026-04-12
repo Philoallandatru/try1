@@ -18,7 +18,15 @@ from scripts.gates.check_module_contracts import main as module_check_main
 from scripts.gates.check_repo_shape import main as repo_check_main
 from services.eval.real_pdf_validation import validate_real_pdfs
 from scripts.gates.run_phase1_gate import evaluate_phase1_gate
-from services.analysis.jira_issue_analysis import build_jira_batch_spec_report, build_jira_spec_question_payload, build_jira_time_report
+from services.analysis.jira_issue_analysis import (
+    build_confluence_wiki_summary_payload,
+    build_jira_batch_spec_report,
+    build_jira_pm_daily_report,
+    build_jira_spec_question_payload,
+    build_jira_time_report,
+    build_spec_section_explain_payload,
+    render_confluence_static_wiki,
+)
 from services.analysis.llm_backends import build_llm_backend
 from services.analysis.retrieval_consumption import build_retrieval_consumption_payload
 from services.eval.harness import evaluate_dataset
@@ -296,6 +304,22 @@ def _add_jira_source_args(command_parser: argparse.ArgumentParser) -> None:
     _add_prefixed_jira_fetch_args(command_parser)
 
 
+def _add_confluence_source_args(command_parser: argparse.ArgumentParser) -> None:
+    command_parser.add_argument("--confluence-path")
+    command_parser.add_argument("--confluence-live", action="store_true")
+    command_parser.add_argument("--confluence-base-url")
+    command_parser.add_argument("--confluence-username")
+    command_parser.add_argument("--confluence-password")
+    command_parser.add_argument("--confluence-token")
+    command_parser.add_argument("--confluence-auth-mode", default="auto")
+    command_parser.add_argument("--confluence-cursor")
+    command_parser.add_argument("--confluence-page-size", type=int, default=25)
+    command_parser.add_argument("--confluence-cql")
+    command_parser.add_argument("--confluence-space-key")
+    command_parser.add_argument("--confluence-insecure", action="store_true")
+    _add_prefixed_confluence_fetch_args(command_parser)
+
+
 def _add_llm_backend_args(command_parser: argparse.ArgumentParser) -> None:
     command_parser.add_argument(
         "--llm-backend",
@@ -368,6 +392,47 @@ def _load_jira_documents_from_args(parser: argparse.ArgumentParser, args: argpar
         include_image_metadata=not args.jira_no_include_image_metadata,
         download_images=args.jira_download_images,
         image_download_dir=args.jira_image_download_dir,
+    )["documents"]
+
+
+def _load_confluence_documents_from_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[dict]:
+    _validate_prefixed_live_args(
+        parser,
+        args=args,
+        live=args.confluence_live,
+        base_url=args.confluence_base_url,
+        page_size=args.confluence_page_size,
+        source_name="confluence",
+    )
+    if not args.confluence_live and not args.confluence_path:
+        parser.error("Confluence source is required via --confluence-path or --confluence-live")
+    _validate_confluence_filter_args(parser, args, prefix="confluence_")
+    return load_source_payload(
+        kind="confluence",
+        path=args.confluence_path,
+        live=args.confluence_live,
+        base_url=args.confluence_base_url,
+        username=args.confluence_username,
+        password=args.confluence_password,
+        token=args.confluence_token,
+        auth_mode=args.confluence_auth_mode,
+        cursor=args.confluence_cursor,
+        page_size=args.confluence_page_size,
+        cql=args.confluence_cql,
+        space_key=args.confluence_space_key,
+        insecure=args.confluence_insecure,
+        fetch_backend=args.confluence_fetch_backend,
+        page_id=args.confluence_page_id,
+        page_ids=args.confluence_page_ids,
+        title=args.confluence_title,
+        label=args.confluence_label,
+        ancestor_id=args.confluence_ancestor_id,
+        modified_from=args.confluence_modified_from,
+        modified_to=args.confluence_modified_to,
+        include_attachments=not args.confluence_no_include_attachments,
+        include_image_metadata=not args.confluence_no_include_image_metadata,
+        download_images=args.confluence_download_images,
+        image_download_dir=args.confluence_image_download_dir,
     )["documents"]
 
 
@@ -618,6 +683,10 @@ def main() -> int:
     jira_report_parser.add_argument("--updated-to-iso")
     jira_report_parser.add_argument("--updated-on-date")
     jira_report_parser.add_argument("--updated-at-iso")
+    jira_report_parser.add_argument("--report-profile", choices=["standard", "pm-daily"], default="standard")
+    jira_report_parser.add_argument("--reference-date")
+    jira_report_parser.add_argument("--status-filter", default="In Progress")
+    jira_report_parser.add_argument("--stale-threshold-hours", type=int, default=24)
     jira_report_parser.add_argument("--prompt-template")
     jira_report_parser.add_argument("--output-md")
     jira_report_parser.add_argument("--output-answer-md")
@@ -647,6 +716,25 @@ def main() -> int:
     jira_batch_spec_report_parser.add_argument("--output-md")
     jira_batch_spec_report_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
     _add_llm_backend_args(jira_batch_spec_report_parser)
+
+    spec_section_explain_parser = subparsers.add_parser("spec-section-explain")
+    _add_jira_source_args(spec_section_explain_parser)
+    spec_section_explain_parser.add_argument("--spec-corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    spec_section_explain_parser.add_argument("--spec-document-id", required=True)
+    spec_section_explain_parser.add_argument("--clause")
+    spec_section_explain_parser.add_argument("--section-heading")
+    spec_section_explain_parser.add_argument("--question")
+    spec_section_explain_parser.add_argument("--prompt-template")
+    spec_section_explain_parser.add_argument("--output-answer-md")
+    spec_section_explain_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    spec_section_explain_parser.add_argument("--top-k", type=int, default=5)
+    _add_llm_backend_args(spec_section_explain_parser)
+
+    confluence_wiki_demo_parser = subparsers.add_parser("confluence-wiki-demo")
+    _add_confluence_source_args(confluence_wiki_demo_parser)
+    confluence_wiki_demo_parser.add_argument("--output-dir", required=True)
+    confluence_wiki_demo_parser.add_argument("--prompt-template")
+    _add_llm_backend_args(confluence_wiki_demo_parser)
 
     retrieval_consume_parser = subparsers.add_parser("retrieval-consume")
     retrieval_consume_parser.add_argument("--snapshot-dir")
@@ -859,16 +947,31 @@ def main() -> int:
         return _print_json(citation_for_documents(load_document_snapshot(args.corpus), args.query, set(args.policies)))
     if args.command == "jira-report":
         jira_documents = _load_jira_documents_from_args(parser, args)
-        report = build_jira_time_report(
-            jira_documents,
-            updated_from_iso=args.updated_from_iso,
-            updated_to_iso=args.updated_to_iso,
-            updated_on_date=args.updated_on_date,
-            updated_at_iso=args.updated_at_iso,
-            prompt_template=args.prompt_template,
-            prompt_mode=args.llm_prompt_mode,
-            llm_backend=_build_llm_backend_from_args(parser, args),
-        )
+        llm_backend = _build_llm_backend_from_args(parser, args)
+        if args.report_profile == "pm-daily":
+            reference_date = args.reference_date or args.updated_on_date
+            if not reference_date:
+                parser.error("--report-profile pm-daily requires --reference-date or --updated-on-date")
+            report = build_jira_pm_daily_report(
+                jira_documents,
+                reference_date=reference_date,
+                status_filter=args.status_filter,
+                stale_threshold_hours=args.stale_threshold_hours,
+                prompt_template=args.prompt_template,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=llm_backend,
+            )
+        else:
+            report = build_jira_time_report(
+                jira_documents,
+                updated_from_iso=args.updated_from_iso,
+                updated_to_iso=args.updated_to_iso,
+                updated_on_date=args.updated_on_date,
+                updated_at_iso=args.updated_at_iso,
+                prompt_template=args.prompt_template,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=llm_backend,
+            )
         if args.output_md:
             output_path = Path(args.output_md)
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -941,6 +1044,38 @@ def main() -> int:
             sections.extend(report["answer"]["text"] for report in payload["issues"])
             output_path.write_text("\n\n---\n\n".join(section for section in sections if section), encoding="utf-8")
             payload["output_md"] = str(output_path)
+        return _print_json(payload)
+    if args.command == "spec-section-explain":
+        jira_documents = _load_jira_documents_from_args(parser, args)
+        spec_document = next(
+            (
+                document
+                for document in load_document_snapshot(args.spec_corpus)
+                if document["document_id"] == args.spec_document_id
+            ),
+            None,
+        )
+        if spec_document is None:
+            parser.error(f"Spec document not found: {args.spec_document_id}")
+        if not args.clause and not args.section_heading:
+            parser.error("Provide --clause or --section-heading")
+        payload = build_spec_section_explain_payload(
+            spec_document=spec_document,
+            jira_documents=jira_documents,
+            allowed_policies=set(args.policies),
+            clause=args.clause,
+            section_heading=args.section_heading,
+            question=args.question,
+            top_k=args.top_k,
+            prompt_template=args.prompt_template,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=_build_llm_backend_from_args(parser, args),
+        )
+        if args.output_answer_md:
+            output_path = Path(args.output_answer_md)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(payload["answer"]["text"], encoding="utf-8")
+            payload["output_answer_md"] = str(output_path)
         return _print_json(payload)
     if args.command == "retrieval-consume":
         _validate_retrieval_consumption_source(parser, args)
@@ -1016,6 +1151,27 @@ def main() -> int:
             )
             payload["output_page_index"] = str(output_path)
         return _print_json(payload)
+    if args.command == "confluence-wiki-demo":
+        documents = _load_confluence_documents_from_args(parser, args)
+        llm_backend = _build_llm_backend_from_args(parser, args)
+        page_payloads = [
+            build_confluence_wiki_summary_payload(
+                document=document,
+                prompt_template=args.prompt_template,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=llm_backend,
+            )
+            for document in documents
+        ]
+        site = render_confluence_static_wiki(page_payloads=page_payloads, output_dir=args.output_dir)
+        return _print_json(
+            {
+                "output_dir": site["output_dir"],
+                "index_html": site["index_html"],
+                "page_count": len(page_payloads),
+                "pages": page_payloads,
+            }
+        )
     return 1
 
 

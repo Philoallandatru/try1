@@ -78,3 +78,37 @@ def build_jira_spec_extractive_answer(question: str, citations: list[dict]) -> d
         ).strip(),
         "citation_count": len(citations),
     }
+
+
+def build_spec_section_extractive_answer(
+    *,
+    spec_document_id: str,
+    section_label: str,
+    citations: list[dict],
+) -> dict:
+    jira_citations = [citation for citation in citations if str(citation["document"]).startswith("SSD-")]
+    evidence_lines = []
+    for citation in citations:
+        evidence = " ".join(citation.get("evidence_span", []))
+        evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
+
+    if jira_citations:
+        conclusion = "Related Jira evidence was retrieved for the selected spec section."
+    else:
+        conclusion = "No related Jira evidence was retrieved for the selected spec section."
+
+    return {
+        "mode": "extractive",
+        "text": "\n".join(
+            [
+                f"Spec document: {spec_document_id}",
+                f"Section: {section_label}",
+                "",
+                conclusion,
+                "",
+                "Evidence:",
+                *(evidence_lines or ["- None"]),
+            ]
+        ).strip(),
+        "citation_count": len(citations),
+    }

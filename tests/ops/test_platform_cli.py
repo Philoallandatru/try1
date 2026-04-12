@@ -177,6 +177,27 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("Mode: strict Jira report summarization.", payload["prompt"])
             self.assertEqual(output_answer_md.read_text(encoding="utf-8"), "Mock Jira report summary")
 
+    def test_cli_jira_report_supports_pm_daily_profile(self) -> None:
+        result = self._run(
+            "jira-report",
+            "--jira-path",
+            "fixtures/connectors/jira/full_sync.json",
+            "--report-profile",
+            "pm-daily",
+            "--reference-date",
+            "2026-04-05",
+            "--llm-backend",
+            "mock",
+            "--llm-mock-response",
+            "Mock PM daily summary",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["report_profile"], "pm-daily")
+        self.assertEqual(payload["reference_date"], "2026-04-05")
+        self.assertEqual(payload["answer"]["text"], "Mock PM daily summary")
+        self.assertIn("Updated Today", payload["markdown"])
+
     def test_cli_jira_report_filters_by_calendar_date(self) -> None:
         result = self._run(
             "jira-report",
@@ -458,6 +479,42 @@ class PlatformCliTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertTrue(payload["issues"][0]["ai_prompt"].startswith("BATCH SSD-102"))
+
+    def test_cli_spec_section_explain_outputs_answer(self) -> None:
+        result = self._run(
+            "spec-section-explain",
+            "--jira-path",
+            "fixtures/connectors/jira/incremental_sync.json",
+            "--spec-corpus",
+            "fixtures/retrieval/pageindex_corpus.json",
+            "--spec-document-id",
+            "nvme-spec-v1",
+            "--clause",
+            "1.1",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["section"]["clause"], "1.1")
+        self.assertIn("Flush Semantics", payload["section"]["label"])
+
+    def test_cli_confluence_wiki_demo_writes_static_site(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            result = self._run(
+                "confluence-wiki-demo",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--output-dir",
+                temp_dir,
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock confluence wiki summary",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["page_count"], 1)
+            self.assertTrue((Path(temp_dir) / "index.html").exists())
+            self.assertTrue((Path(temp_dir) / "pages" / "CONF-201.html").exists())
 
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")
