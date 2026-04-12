@@ -2,6 +2,37 @@
 
 For a Chinese guide with command purpose, parameter tables, and end-to-end examples, see [platform-cli-guide.zh.md](platform-cli-guide.zh.md).
 
+## Retrieval Model
+
+The current retrieval implementation is PageIndex-first and page-scoped.
+
+High-level flow:
+
+1. source files or connector payloads are normalized into canonical documents
+2. canonical documents are projected into PageIndex entries
+3. search applies ACL filtering before scoring
+4. ranking uses lexical overlap, token overlap, and source authority boost
+5. citations and source inspection are assembled from the matched PageIndex entries
+
+PageIndex artifacts use the canonical JSON shape:
+
+```json
+{
+  "entries": [...]
+}
+```
+
+Current retrieval source options:
+
+- `--corpus`
+  - loads canonical documents and rebuilds PageIndex at runtime
+- `--page-index`
+  - consumes an exported PageIndex artifact directly
+- `--snapshot-dir`
+  - reuses snapshot-managed `page_index.json`
+
+Snapshot refresh currently merges documents by `document_id` and then rebuilds the full `page_index.json`. There is no entry-level patching or vector-index maintenance in the current implementation.
+
 ## Unified CLI
 
 Primary entrypoint:
@@ -92,6 +123,7 @@ python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/
 python scripts/platform_cli.py jira-report --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z
 python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --prompt-template "Summarize {issue_count} issue(s): {summaries}"
 python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-on-date 2026-04-05 --llm-backend ollama --llm-model qwen2.5:7b --llm-prompt-mode strict --output-answer-md .tmp/jira-report-answer.md
+python scripts/platform_cli.py jira-report --jira-path fixtures/connectors/jira/full_sync.json --report-profile pm-daily --reference-date 2026-04-05 --status-filter "In Progress" --llm-backend mock --llm-mock-response "Mock PM daily summary"
 python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?"
 python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --output-answer-md .tmp/jira-spec-answer.md
 python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira/incremental_sync.json --jira-issue-id SSD-102 --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question "Does the NAND TLC write issue relate to NVMe flush command evidence?" --llm-backend ollama --llm-model qwen2.5:7b --llm-base-url http://localhost:11434
@@ -100,6 +132,8 @@ python scripts/platform_cli.py jira-spec-qa --jira-path fixtures/connectors/jira
 python scripts/platform_cli.py jira-spec-qa --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --jira-issue-id SSD-102 --spec-document-id nvme-spec-v1 --question "Does this issue relate to the spec?"
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --output-md .tmp/jira-batch-spec-report.md
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
+python scripts/platform_cli.py spec-section-explain --jira-path fixtures/connectors/jira/incremental_sync.json --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1
+python scripts/platform_cli.py confluence-wiki-demo --confluence-path fixtures/connectors/confluence/page_sync.json --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock confluence wiki summary"
 ```
 
 ### Generic Retrieval Consumption
@@ -117,6 +151,20 @@ python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --
 python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --question "What document covers flush semantics?" --output-json .tmp/consume.json
 ```
 
+### Sync Export
+
+```bash
+python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md .tmp/export.md --output-page-index .tmp/export-page-index.json
+python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md-dir .tmp/export-docs
+```
+
+`sync-export` performs a source sync, refreshes the local snapshot, and exports Markdown / Markdown tree / PageIndex from either:
+
+- `--export-scope incoming`
+  - only the documents returned by the current sync
+- `--export-scope snapshot`
+  - the full current snapshot document set
+
 ### Portal
 
 ```bash
@@ -127,6 +175,7 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 
 - All commands currently operate on local fixtures and local contracts.
 - The CLI is intended to be stable enough to be wrapped as future reusable skills.
+- The current retrieval model is page-scoped and not a dense-vector or learned sparse retrieval system.
 - Ingestion now merges image references into canonical Markdown when Jira attachments, Confluence inline/attachment images, or MinerU PDF image blocks include image metadata. Provided `ocr_text`, `vision_caption`, and `alt_text` fields are indexed as image evidence; automatic OCR/vision extraction is not yet enabled.
 - `ops-health` can now read either fixture-backed status or a real local snapshot manifest/page index via `--snapshot-dir`.
 - `sync-health` provides a sequential ops path: connector payload -> snapshot refresh -> ops health.
@@ -136,9 +185,13 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - Live Jira/Confluence commands now support `--fetch-backend atlassian-api` plus bounded selectors such as `--issue-key`, `--project-key`, `--page-id`, `--title`, `--label`, and date windows. These selective flags are intentionally rejected on the `native` backend.
 - `--download-images` is opt-in and requires `--image-download-dir`.
 - `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, can optionally call a local LLM backend through `--llm-backend`, can write that answer to `--output-answer-md`, and renders an optional prompt template.
+- `jira-report --report-profile pm-daily` produces a project-manager-oriented daily report for `In Progress` issues, splitting updated-today versus stale-in-progress items while preserving deterministic status facts.
 - `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer by default, can optionally call a local LLM backend through `--llm-backend`, and can write the selected answer to `--output-answer-md`.
 - `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA, supports the same optional local LLM backend flags, and can write a combined Markdown report to `--output-md`.
+- `spec-section-explain` is a section-centered demo flow that explains a selected spec clause or heading through retrieved Jira evidence.
 - `retrieval-consume` is the source-generic retrieval-consumption CLI for Jira/Confluence fixture payloads, live Jira/Confluence sources, direct file-backed Markdown/Office/PDF inputs, and snapshot-backed document sets. It assembles citation-backed prompts and can optionally call a local LLM backend.
+- `confluence-wiki-demo` builds a small static HTML wiki demo from Confluence-derived summaries; it is a demo/export path rather than a full wiki system.
+- `sync-export` is the current document-level export path. It does not yet implement section-level derived wiki generation.
 - `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 
 ## Skill-Ready CLIs

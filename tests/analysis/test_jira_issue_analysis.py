@@ -2,12 +2,16 @@ from pathlib import Path
 import unittest
 
 from services.analysis.jira_issue_analysis import (
+    build_confluence_wiki_summary_payload,
+    build_jira_pm_daily_report,
     build_jira_batch_spec_report,
     build_jira_spec_question_payload,
+    build_spec_section_explain_payload,
     build_jira_time_report,
     summarize_jira_issue_markdown,
 )
 from services.analysis.llm_backends import MockLLMBackend
+from services.connectors.confluence.connector import load_confluence_sync
 from services.connectors.jira.connector import load_jira_sync
 from services.retrieval.indexing.page_index import load_documents
 
@@ -25,6 +29,7 @@ class JiraIssueAnalysisTest(unittest.TestCase):
             for document in load_documents(Path("fixtures/retrieval/pageindex_corpus.json"))
             if document["document_id"] == "nvme-spec-v1"
         ]
+        cls.confluence_document = load_confluence_sync(Path("fixtures/connectors/confluence/page_sync.json"))["documents"][0]
 
     def test_jira_issue_summary_markdown_preserves_bug_fields_and_comments(self) -> None:
         markdown = summarize_jira_issue_markdown(self.jira_document)
@@ -160,6 +165,28 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertEqual(report["time_filter"], "at:2026-04-05T09:30:00Z")
         self.assertEqual(report["issue_ids"], ["SSD-102"])
 
+    def test_jira_pm_daily_report_splits_updated_and_stale_in_progress(self) -> None:
+        report = build_jira_pm_daily_report(
+            self.jira_documents,
+            reference_date="2026-04-05",
+        )
+
+        self.assertEqual(report["report_profile"], "pm-daily")
+        self.assertEqual(report["updated_issue_ids"], ["SSD-101", "SSD-102"])
+        self.assertEqual(report["stale_issue_ids"], [])
+        self.assertIn("## Updated Today", report["markdown"])
+
+    def test_jira_pm_daily_report_can_use_local_llm_backend(self) -> None:
+        report = build_jira_pm_daily_report(
+            self.jira_documents,
+            reference_date="2026-04-05",
+            llm_backend=MockLLMBackend(response_text="Mock PM daily"),
+        )
+
+        self.assertEqual(report["answer"]["mode"], "local-llm")
+        self.assertEqual(report["answer"]["text"], "Mock PM daily")
+        self.assertIn("Mode: strict project-manager status reporting.", report["prompt"])
+
     def test_jira_batch_spec_report_runs_qa_for_filtered_issues(self) -> None:
         report = build_jira_batch_spec_report(
             jira_documents=self.jira_documents,
@@ -203,7 +230,29 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         )
 
         self.assertTrue(report["issues"][0]["ai_prompt"].startswith("BATCH SSD-102"))
-        self.assertIn("Q=Analyze Jira SSD-102 against the selected spec.", report["issues"][0]["ai_prompt"])
+
+    def test_spec_section_explain_payload_retrieves_selected_section_and_jira(self) -> None:
+        payload = build_spec_section_explain_payload(
+            spec_document=self.spec_documents[0],
+            jira_documents=self.jira_documents,
+            allowed_policies={"team:ssd"},
+            clause="1.1",
+        )
+
+        self.assertEqual(payload["section"]["clause"], "1.1")
+        self.assertEqual(payload["section"]["heading"], "Flush Semantics")
+        self.assertIn("Flush ordering is preserved", payload["section"]["markdown"])
+        self.assertIn("Explain the selected spec section using only the section text and retrieved Jira evidence.", payload["ai_prompt"])
+        self.assertIn("SSD-102", {issue["document_id"] for issue in payload["related_issues"]})
+
+    def test_confluence_wiki_summary_payload_supports_mock_llm(self) -> None:
+        payload = build_confluence_wiki_summary_payload(
+            document=self.confluence_document,
+            llm_backend=MockLLMBackend(response_text="Mock wiki summary"),
+        )
+
+        self.assertEqual(payload["answer"]["mode"], "local-llm")
+        self.assertEqual(payload["answer"]["text"], "Mock wiki summary")
 
 
 if __name__ == "__main__":
