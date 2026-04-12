@@ -158,6 +158,8 @@ python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --
 ```bash
 python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md .tmp/export.md --output-page-index .tmp/export-page-index.json
 python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md-dir .tmp/export-docs
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp/jira-snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --output-md .tmp/jira-only.md --output-page-index .tmp/jira-only-page-index.json
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp/confluence-snapshot --confluence-path fixtures/connectors/confluence/incremental_sync.json --output-md .tmp/confluence-only.md --output-page-index .tmp/confluence-only-page-index.json
 ```
 
 `sync-export` performs a source sync, refreshes the local snapshot, and exports Markdown / Markdown tree / PageIndex from either:
@@ -166,6 +168,8 @@ python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_hea
   - only the documents returned by the current sync
 - `--export-scope snapshot`
   - the full current snapshot document set
+
+`sync-export` now supports single-source execution. You can provide only Jira or only Confluence when the goal is to validate document export for one source family.
 
 ### Portal
 

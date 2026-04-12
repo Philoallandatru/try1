@@ -36,7 +36,7 @@ from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, pars
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
 from services.ingest.markdown_export import documents_to_markdown, write_documents_markdown_tree
 from services.ops.health import build_ops_health
-from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
+from services.ops.orchestration import configured_sources, load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
 from services.retrieval.persistence.snapshot_store import snapshot_paths
 from services.retrieval.toolkit import (
@@ -1174,31 +1174,19 @@ def main() -> int:
         profile = build_multi_sync_profile(args)
         if not profile["snapshot_dir"]:
             parser.error("snapshot dir is required via --snapshot-dir or --profile")
-        jira_config, confluence_config = profile["sources"]
-        _validate_prefixed_live_args(
-            parser,
-            args=args,
-            live=jira_config["live"],
-            base_url=jira_config.get("base_url"),
-            page_size=jira_config["page_size"],
-            source_name="jira",
-        )
-        _validate_prefixed_live_args(
-            parser,
-            args=args,
-            live=confluence_config["live"],
-            base_url=confluence_config.get("base_url"),
-            page_size=confluence_config["page_size"],
-            source_name="confluence",
-        )
-        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
-        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
-        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
-        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
-        if not jira_config["live"] and not jira_config.get("path"):
-            parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
-        if not confluence_config["live"] and not confluence_config.get("path"):
-            parser.error("Confluence source is required via --confluence-path, --confluence-live, or --profile")
+        active_source_configs = configured_sources(profile)
+        if not active_source_configs:
+            parser.error("At least one source is required for sync-export")
+        for config in active_source_configs:
+            _validate_prefixed_live_args(
+                parser,
+                args=args,
+                live=config["live"],
+                base_url=config.get("base_url"),
+                page_size=config["page_size"],
+                source_name=config["source_name"],
+            )
+            _validate_profile_source_config(parser, source_name=config["source_name"], config=config)
         payload = run_sync_export(profile, export_scope=args.export_scope)
         payload["profile"] = args.profile
         if args.output_md:

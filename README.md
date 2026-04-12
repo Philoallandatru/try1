@@ -368,6 +368,13 @@ python scripts/platform_cli.py sync-health jira fixtures/connectors/jira/increme
 python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/incremental_sync.json
 ```
 
+`sync-export` can now run against a single source when you only need to validate Markdown/PageIndex generation for Jira or Confluence:
+
+```powershell
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp\jira-snapshot --jira-path fixtures\connectors\jira\incremental_sync.json --output-md .tmp\jira-only.md --output-page-index .tmp\jira-only-page-index.json
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp\confluence-snapshot --confluence-path fixtures\connectors\confluence\incremental_sync.json --output-md .tmp\confluence-only.md --output-page-index .tmp\confluence-only-page-index.json
+```
+
 ## Environment
 
 See [docs/environment-setup.md](docs/environment-setup.md) for:

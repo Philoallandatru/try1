@@ -298,6 +298,14 @@ def _resolve_source_cursor(manifest: dict, config: dict) -> str | None:
     return source_manifest.get("cursor")
 
 
+def configured_sources(profile: dict) -> list[dict]:
+    return [
+        config
+        for config in profile["sources"]
+        if config.get("live") or config.get("path")
+    ]
+
+
 def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
     snapshot_dir = profile["snapshot_dir"]
     ensure_snapshot(snapshot_dir, profile["corpus"])
@@ -305,7 +313,7 @@ def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
     incoming_documents = []
     refresh_reports = []
 
-    for config in profile["sources"]:
+    for config in configured_sources(profile):
         sync_payload = load_source_payload(
             kind=config["kind"],
             path=config["path"],

@@ -789,6 +789,37 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("Latency Budget Update", written_markdown)
             self.assertIn("NVMe Flush Command", written_markdown)
 
+    def test_cli_sync_export_supports_single_jira_source(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md = Path(temp_dir) / "jira-only-export.md"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--output-md",
+                str(output_md),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["document_count"], 1)
+            self.assertEqual([document["source_type"] for document in payload["documents"]], ["jira"])
+            self.assertIn("SSD-102", output_md.read_text(encoding="utf-8"))
+
+    def test_cli_sync_export_requires_at_least_one_source(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("At least one source is required for sync-export", result.stderr)
+
     def test_cli_multi_sync_health_validates_live_jira_base_url(self) -> None:
         result = self._run(
             "multi-sync-health",
