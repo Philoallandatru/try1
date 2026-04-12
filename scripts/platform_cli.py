@@ -5,6 +5,7 @@ from collections import Counter
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -75,6 +76,45 @@ def _json_default(value: object) -> object:
     if isinstance(value, Counter):
         return dict(value)
     raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
+
+
+def _build_spec_corpus_from_pdf(
+    *,
+    spec_pdf: str | Path,
+    output_dir: str | Path,
+    preferred_parser: str = "auto",
+    mineru_python_exe: str | None = None,
+) -> dict:
+    output_root = Path(output_dir)
+    output_root.mkdir(parents=True, exist_ok=True)
+    previous_mineru_python = os.environ.get("MINERU_PYTHON_EXE")
+    try:
+        if mineru_python_exe:
+            os.environ["MINERU_PYTHON_EXE"] = mineru_python_exe
+        document = extract_pdf_structure(spec_pdf, preferred_parser=preferred_parser)
+    finally:
+        if mineru_python_exe:
+            if previous_mineru_python is None:
+                os.environ.pop("MINERU_PYTHON_EXE", None)
+            else:
+                os.environ["MINERU_PYTHON_EXE"] = previous_mineru_python
+
+    spec_doc_path = output_root / "spec-doc.json"
+    spec_corpus_path = output_root / "spec-corpus.json"
+    spec_doc_path.write_text(json.dumps(document, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8")
+    spec_corpus_path.write_text(
+        json.dumps({"documents": [document]}, indent=2, ensure_ascii=False, default=_json_default),
+        encoding="utf-8",
+    )
+    return {
+        "document_id": document["document_id"],
+        "preferred_parser": preferred_parser,
+        "parser_used": document.get("provenance", {}).get("parser"),
+        "spec_doc_json": str(spec_doc_path),
+        "spec_corpus_json": str(spec_corpus_path),
+        "section_count": len(document.get("structure", {}).get("sections", [])),
+        "content_block_count": len(document.get("content_blocks", [])),
+    }
 
 def _validate_retrieval_source(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.page_index and args.snapshot_dir:
@@ -743,6 +783,12 @@ def main() -> int:
     confluence_wiki_demo_parser.add_argument("--prompt-template")
     _add_llm_backend_args(confluence_wiki_demo_parser)
 
+    build_spec_corpus_parser = subparsers.add_parser("build-spec-corpus")
+    build_spec_corpus_parser.add_argument("--spec-pdf", required=True)
+    build_spec_corpus_parser.add_argument("--output-dir", required=True)
+    build_spec_corpus_parser.add_argument("--preferred-parser", choices=["auto", "mineru", "pypdf"], default="auto")
+    build_spec_corpus_parser.add_argument("--mineru-python-exe")
+
     demo_orchestrate_parser = subparsers.add_parser("demo-orchestrate")
     demo_orchestrate_parser.add_argument("--snapshot-dir", default=".tmp/demo/snapshot")
     demo_orchestrate_parser.add_argument("--output-dir", default=".tmp/demo")
@@ -1194,6 +1240,15 @@ def main() -> int:
                 "page_count": len(page_payloads),
                 "pages": page_payloads,
             }
+        )
+    if args.command == "build-spec-corpus":
+        return _print_json(
+            _build_spec_corpus_from_pdf(
+                spec_pdf=args.spec_pdf,
+                output_dir=args.output_dir,
+                preferred_parser=args.preferred_parser,
+                mineru_python_exe=args.mineru_python_exe,
+            )
         )
     if args.command == "demo-orchestrate":
         if not args.clause and not args.section_heading:

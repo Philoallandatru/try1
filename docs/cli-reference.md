@@ -134,6 +134,7 @@ python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/conne
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
 python scripts/platform_cli.py spec-section-explain --jira-path fixtures/connectors/jira/incremental_sync.json --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1
 python scripts/platform_cli.py confluence-wiki-demo --confluence-path fixtures/connectors/confluence/page_sync.json --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock confluence wiki summary"
+python scripts/platform_cli.py build-spec-corpus --spec-pdf fixtures/corpus/pdf/sample.pdf --output-dir .tmp/spec-build --preferred-parser pypdf
 python scripts/platform_cli.py demo-orchestrate --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/demo/snapshot --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp/demo
 ```
 
@@ -192,8 +193,10 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - `spec-section-explain` is a section-centered demo flow that explains a selected spec clause or heading through retrieved Jira evidence. The payload now includes a lightweight `section_anchor_id` helper and a prompt section with structured Jira summaries.
 - `retrieval-consume` is the source-generic retrieval-consumption CLI for Jira/Confluence fixture payloads, live Jira/Confluence sources, direct file-backed Markdown/Office/PDF inputs, and snapshot-backed document sets. It assembles citation-backed prompts and can optionally call a local LLM backend.
 - `confluence-wiki-demo` builds a small static HTML wiki demo from Confluence-derived summaries, including an index page with grouped summary cards and detail pages that retain version/source/derived traceability markers.
+- `build-spec-corpus` converts a spec PDF into `spec-doc.json` plus `spec-corpus.json` so downstream spec demo flows can consume a stable `{"documents": [...]}` corpus input.
 - `demo-orchestrate` is the one-command demo path. It refreshes the snapshot-first Jira/Confluence demo inputs, writes `.tmp/demo/jira-daily.md` and `.tmp/demo/spec-section.md`, and builds `.tmp/demo/wiki/`.
 - `sync-export` is the current document-level export path. It does not yet implement section-level derived wiki generation.
+- PDF parsing defaults to `auto`: try MinerU first, then fall back to `pypdf`. If MinerU is installed in a separate Python environment, set `MINERU_PYTHON_EXE` or use `build-spec-corpus --mineru-python-exe ...`.
 - `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 
 ## Skill-Ready CLIs

@@ -620,3 +620,26 @@ python scripts/platform_cli.py demo-orchestrate --jira-path fixtures\connectors\
 - `.tmp\demo\jira-daily.md`
 - `.tmp\demo\spec-section.md`
 - `.tmp\demo\wiki\`
+## 2026-04 CLI 增补
+
+### build-spec-corpus
+
+```powershell
+python scripts/platform_cli.py build-spec-corpus --spec-pdf fixtures\corpus\pdf\sample.pdf --output-dir .tmp\spec-build --preferred-parser pypdf
+```
+
+用途：
+
+- 把 spec PDF 转成：
+  - `spec-doc.json`
+  - `spec-corpus.json`
+- 让 `spec-section-explain` / `demo-orchestrate` 可以直接消费 `{"documents":[...]}` 形式的 spec corpus
+
+### MinerU 配置
+
+- PDF 解析默认是 `auto`
+  - 先尝试 MinerU
+  - 再 fallback 到 `pypdf`
+- 如果 MinerU 不在当前 Python 环境里，可以：
+  - 设置环境变量 `MINERU_PYTHON_EXE`
+  - 或在 `build-spec-corpus` 上显式传 `--mineru-python-exe`

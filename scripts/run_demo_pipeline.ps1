@@ -2,6 +2,9 @@ param(
     [string]$SpecPdfPath,
     [string]$SpecCorpusPath,
     [string]$SpecDocumentId,
+    [ValidateSet("auto", "mineru", "pypdf")]
+    [string]$PreferredParser = "auto",
+    [string]$MineruPythonExe,
     [string]$Clause,
     [string]$SectionHeading,
     [string]$ReferenceDate = "2026-04-05",
@@ -35,44 +38,46 @@ function Require-Command {
 function New-SpecCorpusFromPdf {
     param(
         [Parameter(Mandatory = $true)][string]$PdfPath,
-        [Parameter(Mandatory = $true)][string]$TargetDir
+        [Parameter(Mandatory = $true)][string]$TargetDir,
+        [Parameter(Mandatory = $true)][string]$Parser,
+        [string]$MineruPython
     )
 
     New-Item -ItemType Directory -Force $TargetDir | Out-Null
-
-    $pythonScript = @"
-import json
-from pathlib import Path
-from services.ingest.adapters.pdf.adapter import extract_pdf_structure
-
-pdf_path = Path(r"$PdfPath")
-target_dir = Path(r"$TargetDir")
-target_dir.mkdir(parents=True, exist_ok=True)
-
-doc = extract_pdf_structure(pdf_path)
-(target_dir / "spec-doc.json").write_text(
-    json.dumps(doc, indent=2, ensure_ascii=False),
-    encoding="utf-8",
-)
-(target_dir / "spec-corpus.json").write_text(
-    json.dumps({"documents": [doc]}, indent=2, ensure_ascii=False),
-    encoding="utf-8",
-)
-print("__SPEC_RESULT__" + json.dumps({
-    "document_id": doc["document_id"],
-    "spec_doc_json": str(target_dir / "spec-doc.json"),
-    "spec_corpus_json": str(target_dir / "spec-corpus.json"),
-    "section_count": len(doc.get("structure", {}).get("sections", [])),
-    "content_block_count": len(doc.get("content_blocks", [])),
-}, ensure_ascii=False))
-"@
-
-    $resultLines = $pythonScript | python -
-    $resultLine = $resultLines | Where-Object { $_ -like "__SPEC_RESULT__*" } | Select-Object -Last 1
-    if (-not $resultLine) {
+    $buildArgs = @(
+        "scripts/platform_cli.py",
+        "build-spec-corpus",
+        "--spec-pdf", $PdfPath,
+        "--output-dir", $TargetDir,
+        "--preferred-parser", $Parser
+    )
+    if ($MineruPython) {
+        $buildArgs += @("--mineru-python-exe", $MineruPython)
+    }
+    $resultLines = & python @buildArgs
+    if ($LASTEXITCODE -ne 0) {
         throw "Failed to build spec corpus from PDF: $PdfPath"
     }
-    return ($resultLine -replace "^__SPEC_RESULT__", "") | ConvertFrom-Json
+
+    $jsonStart = -1
+    for ($i = 0; $i -lt $resultLines.Count; $i++) {
+        if ($resultLines[$i] -match '^\s*\{') {
+            $jsonStart = $i
+            break
+        }
+    }
+    if ($jsonStart -lt 0) {
+        throw "Could not locate JSON payload from build-spec-corpus output"
+    }
+
+    $jsonCandidate = ($resultLines[$jsonStart..($resultLines.Count - 1)] -join [Environment]::NewLine)
+    $lastBraceIndex = $jsonCandidate.LastIndexOf("}")
+    if ($lastBraceIndex -lt 0) {
+        throw "Could not locate JSON end from build-spec-corpus output"
+    }
+
+    $jsonText = $jsonCandidate.Substring(0, $lastBraceIndex + 1)
+    return $jsonText | ConvertFrom-Json
 }
 
 function Resolve-DefaultSection {
@@ -115,7 +120,7 @@ Write-Host "Snapshot dir: $SnapshotDir"
 
 if ($SpecPdfPath) {
     $specBuildDir = Join-Path $OutputDir "spec-build"
-    $specResult = New-SpecCorpusFromPdf -PdfPath $SpecPdfPath -TargetDir $specBuildDir
+    $specResult = New-SpecCorpusFromPdf -PdfPath $SpecPdfPath -TargetDir $specBuildDir -Parser $PreferredParser -MineruPython $MineruPythonExe
     $SpecCorpusPath = $specResult.spec_corpus_json
     if (-not $SpecDocumentId) {
         $SpecDocumentId = $specResult.document_id

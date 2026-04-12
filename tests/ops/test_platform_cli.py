@@ -525,6 +525,32 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("Source Traceability", detail_html)
             self.assertIn("Version", detail_html)
 
+    def test_cli_build_spec_corpus_writes_document_and_corpus_json(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            result = self._run(
+                "build-spec-corpus",
+                "--spec-pdf",
+                "fixtures/corpus/pdf/sample.pdf",
+                "--output-dir",
+                temp_dir,
+                "--preferred-parser",
+                "pypdf",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["document_id"], "sample")
+            self.assertEqual(payload["preferred_parser"], "pypdf")
+            self.assertEqual(payload["parser_used"], "pypdf")
+            self.assertTrue((Path(temp_dir) / "spec-doc.json").exists())
+            self.assertTrue((Path(temp_dir) / "spec-corpus.json").exists())
+
+            spec_doc = json.loads((Path(temp_dir) / "spec-doc.json").read_text(encoding="utf-8"))
+            spec_corpus = json.loads((Path(temp_dir) / "spec-corpus.json").read_text(encoding="utf-8"))
+            self.assertEqual(spec_doc["document_id"], "sample")
+            self.assertEqual(spec_corpus["documents"][0]["document_id"], "sample")
+            self.assertGreaterEqual(payload["section_count"], 1)
+            self.assertGreaterEqual(payload["content_block_count"], 1)
+
     def test_cli_demo_orchestrate_generates_demo_output_tree(self) -> None:
         with TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir) / "demo"
