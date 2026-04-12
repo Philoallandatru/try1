@@ -130,7 +130,30 @@ uv pip install -U pageindex
 $env:PAGEINDEX_API_KEY = "<api-key>"
 ```
 
+### Wiki Rendering
+
+MkDocs Material is only required for local wiki-site preview/build. It is not part of the core retrieval runtime path.
+
+Install locally when you need to render `wiki_site/`:
+
+```powershell
+python -m pip install mkdocs mkdocs-material
+```
+
+Expected local preview URL:
+
+- `http://127.0.0.1:8000/`
+
+Expected static output location after `mkdocs build`:
+
+- `.tmp\wiki-demo\wiki_site\site\`
+
 ## Source Configuration
+
+For the workspace-first staged operator flow, see:
+
+- [workspace-cli-guide.md](workspace-cli-guide.md)
+- [runbooks/progressive-ingestion-workspace.md](runbooks/progressive-ingestion-workspace.md)
 
 ### Fixture Sources
 
@@ -169,6 +192,20 @@ python scripts/platform_cli.py connector confluence `
   --base-url https://confluence.example.com `
   --token $env:CONF_TOKEN `
   --output-json .tmp\confluence-live.json
+```
+
+To fetch one page and all descendants:
+
+```powershell
+python scripts/platform_cli.py connector confluence `
+  --live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --fetch-backend atlassian-api `
+  --root-page-id 123456 `
+  --include-descendants `
+  --max-depth 2 `
+  --output-json .tmp\confluence-tree.json
 ```
 
 ### Live Retrieval Consumption

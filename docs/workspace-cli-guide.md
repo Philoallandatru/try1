@@ -1,0 +1,601 @@
+# Workspace CLI Guide
+
+## Purpose
+
+This guide explains how to set up and use the workspace-first operator flow from zero.
+
+Use this guide when you want:
+
+- a fixed working directory for staged Jira and Confluence validation
+- repeatable source specs instead of long ad hoc command lines
+- a snapshot-first flow for `fetch -> build -> query -> export`
+
+The workspace is an orchestration layer only:
+
+- canonical documents remain the source of truth
+- snapshots remain the stable runtime state
+- PageIndex remains the retrieval projection
+- workspace exports and wiki outputs remain derived artifacts
+
+## 1. Environment Setup From Zero
+
+Create the local Python environment:
+
+```powershell
+python -m pip install --upgrade uv
+uv venv --python 3.12
+.\.venv\Scripts\Activate.ps1
+uv pip install -e .
+uv pip install -e ".[dev]"
+```
+
+If you do not use `uv`:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e .
+```
+
+Set live-source credentials only when needed:
+
+```powershell
+$env:JIRA_TOKEN = "<jira-token>"
+$env:CONF_TOKEN = "<confluence-token>"
+```
+
+## 2. Initialize a Workspace
+
+Create a new workspace:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+```
+
+This creates:
+
+```text
+.tmp/workspace/
+  config.json
+  raw/
+    jira/specs/
+    jira/payloads/
+    confluence/specs/
+    confluence/payloads/
+    files/
+  snapshots/current/
+  exports/latest/
+  runs/
+  wiki/
+```
+
+### `config.json`
+
+The workspace config is lightweight. Current fields:
+
+- `workspace_version`
+- `created_at`
+- `default_policies`
+- `paths.snapshot_dir`
+- `paths.export_dir`
+- `paths.runs_dir`
+
+In the current implementation this file is mostly metadata and defaults. Source-specific behavior is driven by spec files.
+
+## 3. Source Spec Files
+
+Each `fetch` operation is driven by one JSON spec file.
+
+### Common fields
+
+Required or commonly used top-level fields:
+
+- `kind`
+  - `jira` or `confluence`
+- `mode`
+  - `fixture` or `live`
+- `path`
+  - required for `fixture`
+- `base_url`
+  - required for `live`
+- `token`, `username`, `password`, `auth_mode`
+  - optional live auth fields
+- `scope`
+  - the bounded selection to fetch
+- `fetch`
+  - fetch backend and optional fetch behavior flags
+
+### Jira scope types
+
+Supported `scope.type` values:
+
+- `issue`
+- `project_slice`
+- `project_full`
+
+#### Jira issue example
+
+```json
+{
+  "kind": "jira",
+  "mode": "live",
+  "base_url": "https://jira.example.com",
+  "token": "env-or-inline-token",
+  "scope": {
+    "type": "issue",
+    "issue_key": "SSD-777"
+  },
+  "fetch": {
+    "fetch_backend": "atlassian-api",
+    "include_comments": true,
+    "include_attachments": true,
+    "include_image_metadata": true,
+    "download_images": false
+  }
+}
+```
+
+#### Jira project slice example
+
+```json
+{
+  "kind": "jira",
+  "mode": "live",
+  "base_url": "https://jira.example.com",
+  "token": "env-or-inline-token",
+  "scope": {
+    "type": "project_slice",
+    "project_key": "SSD",
+    "issue_type": "Bug",
+    "status": "In Progress",
+    "label": "firmware",
+    "updated_from": "2026-04-01T00:00:00Z",
+    "updated_to": "2026-04-10T00:00:00Z"
+  },
+  "fetch": {
+    "fetch_backend": "atlassian-api"
+  }
+}
+```
+
+### Confluence scope types
+
+Supported `scope.type` values:
+
+- `page`
+- `page_tree`
+- `space_slice`
+
+#### Confluence single page example
+
+```json
+{
+  "kind": "confluence",
+  "mode": "live",
+  "base_url": "https://confluence.example.com",
+  "token": "env-or-inline-token",
+  "scope": {
+    "type": "page",
+    "page_id": "123456"
+  },
+  "fetch": {
+    "fetch_backend": "atlassian-api"
+  }
+}
+```
+
+#### Confluence page tree example
+
+```json
+{
+  "kind": "confluence",
+  "mode": "live",
+  "base_url": "https://confluence.example.com",
+  "token": "env-or-inline-token",
+  "scope": {
+    "type": "page_tree",
+    "root_page_id": "123456",
+    "max_depth": 2
+  },
+  "fetch": {
+    "fetch_backend": "atlassian-api"
+  }
+}
+```
+
+#### Confluence space slice example
+
+```json
+{
+  "kind": "confluence",
+  "mode": "live",
+  "base_url": "https://confluence.example.com",
+  "token": "env-or-inline-token",
+  "scope": {
+    "type": "space_slice",
+    "space_key": "SSDENG",
+    "label": "firmware",
+    "modified_from": "2026-04-01T00:00:00Z",
+    "modified_to": "2026-04-10T00:00:00Z"
+  },
+  "fetch": {
+    "fetch_backend": "atlassian-api"
+  }
+}
+```
+
+## 4. Workspace CLI Commands and Parameters
+
+### `init`
+
+```powershell
+python scripts/workspace_cli.py init <workspace>
+```
+
+Parameters:
+
+- `<workspace>`
+  - required
+  - target workspace root directory
+
+### `fetch`
+
+```powershell
+python scripts/workspace_cli.py fetch <workspace> <spec>
+```
+
+Parameters:
+
+- `<workspace>`
+  - required
+  - existing initialized workspace
+- `<spec>`
+  - required
+  - either:
+    - an absolute or relative path to a spec file
+    - a short spec name resolvable from `raw/jira/specs/` or `raw/confluence/specs/`
+
+Behavior:
+
+- reads the spec
+- validates the spec
+- calls the existing connector flow
+- writes the resulting normalized sync payload into `raw/*/payloads/`
+- writes a run log into `runs/<timestamp>-<source>-fetch/`
+
+### `build`
+
+```powershell
+python scripts/workspace_cli.py build <workspace>
+```
+
+Parameters:
+
+- `<workspace>`
+  - required
+
+Behavior:
+
+- loads all current payload files from the workspace
+- merges documents by `document_id`
+- rebuilds `snapshots/current/manifest.json`
+- rebuilds `snapshots/current/documents.json`
+- rebuilds `snapshots/current/page_index.json`
+
+### `export`
+
+```powershell
+python scripts/workspace_cli.py export <workspace>
+```
+
+Behavior:
+
+- exports bundle Markdown to `exports/latest/documents.md`
+- exports per-document Markdown tree to `exports/latest/documents/`
+- copies snapshot `page_index.json` to `exports/latest/page_index.json`
+- writes export metadata to `exports/latest/manifest.json`
+
+### `query`
+
+```powershell
+python scripts/workspace_cli.py query <workspace> "<question>" [--top-k N] [--policies ...] [--llm-backend ...]
+```
+
+Parameters:
+
+- `<workspace>`
+  - required
+- `<question>`
+  - required
+- `--top-k`
+  - optional
+  - default: `5`
+- `--policies`
+  - optional
+  - default: `team:ssd public`
+- `--prompt-template`
+  - optional
+  - custom prompt template using the same evidence-driven flow
+- `--output-answer-md`
+  - optional
+  - writes the selected answer text to a Markdown file
+- `--llm-backend`
+  - optional
+  - `none`, `mock`, `ollama`, `openai-compatible`
+- `--llm-model`
+  - required when backend is `ollama` or `openai-compatible`
+- `--llm-base-url`
+  - required when backend is `openai-compatible`
+- `--llm-api-key`
+  - optional for `openai-compatible`
+- `--llm-timeout-seconds`
+  - optional
+  - default: `120`
+- `--llm-mock-response`
+  - optional
+  - mock return text when backend is `mock`
+- `--llm-prompt-mode`
+  - optional
+  - `strict`, `balanced`, `exploratory`
+  - default: `strict`
+
+Behavior:
+
+- reads `snapshots/current/page_index.json`
+- performs PageIndex-first retrieval
+- returns results, citation payload, generated AI prompt, and answer
+- uses extractive fallback when `--llm-backend` is not set
+
+Examples:
+
+```powershell
+python scripts/workspace_cli.py query .tmp\workspace "black screen"
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend mock --llm-mock-response "Mock workspace answer"
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend openai-compatible --llm-model local-model --llm-base-url http://localhost:1234/v1
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --output-answer-md .tmp\workspace-answer.md
+```
+
+### `status`
+
+```powershell
+python scripts/workspace_cli.py status <workspace>
+```
+
+Behavior:
+
+- reports:
+  - spec counts
+  - payload counts
+  - current snapshot manifest
+  - current export manifest
+  - latest run directory
+
+### `lint`
+
+```powershell
+python scripts/workspace_cli.py lint <workspace>
+```
+
+Behavior:
+
+- validates all workspace spec files
+- warns if payloads exist but no snapshot was built
+- warns if snapshot is newer than export output
+- checks presence of required snapshot files
+
+### `watch`
+
+```powershell
+python scripts/workspace_cli.py watch <workspace> [--interval-seconds S] [--max-cycles N] [--run-once]
+```
+
+Parameters:
+
+- `--interval-seconds`
+  - optional
+  - default: `2.0`
+  - polling interval
+- `--max-cycles`
+  - optional
+  - stop after N polling cycles
+- `--run-once`
+  - optional
+  - fetch all current specs once, then run one build and exit
+
+Current implementation note:
+
+- `watch` is a polling implementation over workspace JSON spec/payload files
+- it does not yet use filesystem events
+- it does not watch `raw/files/`
+
+## 5. End-to-End Flows
+
+### Demo from zero
+
+Use the workspace CLI when the goal is to stage source inputs and inspect snapshot/query behavior:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\project-slice.json
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+python scripts/workspace_cli.py build .tmp\workspace
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend mock --llm-mock-response "Mock workspace answer"
+```
+
+Use `platform_cli.py build-wiki-site` when the goal is a renderer-ready static site:
+
+```powershell
+python scripts/platform_cli.py build-wiki-site `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --confluence-path fixtures/connectors/confluence/page_sync.json `
+  --snapshot-dir .tmp\wiki-demo\snapshot `
+  --spec-pdf fixtures/corpus/pdf/sample.pdf `
+  --preferred-parser pypdf `
+  --reference-date 2026-04-05 `
+  --output-dir .tmp\wiki-demo `
+  --llm-backend mock `
+  --llm-mock-response "Mock wiki answer"
+
+Set-Location .tmp\wiki-demo\wiki_site
+python -m mkdocs serve
+```
+
+Role split:
+
+- `workspace_cli.py`
+  - staged source preparation
+  - payload capture
+  - snapshot/query iteration
+- `platform_cli.py build-wiki-site`
+  - export package generation
+  - MkDocs-compatible site assembly
+  - renderer-ready demo output
+
+### Jira from zero
+
+1. Initialize workspace:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+```
+
+2. Edit `raw/jira/specs/one-issue.json` with real `base_url`, `token`, and `issue_key`.
+
+3. Fetch:
+
+```powershell
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\one-issue.json
+```
+
+4. Build:
+
+```powershell
+python scripts/workspace_cli.py build .tmp\workspace
+```
+
+5. Inspect and query:
+
+```powershell
+python scripts/workspace_cli.py status .tmp\workspace
+python scripts/workspace_cli.py query .tmp\workspace "black screen"
+```
+
+6. Expand by editing `project-slice.json`, then re-run `fetch` and `build`.
+
+### Confluence page tree from zero
+
+1. Initialize workspace:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+```
+
+2. Edit `raw/confluence/specs/page-tree.json` with:
+
+- `mode: live`
+- `base_url`
+- `token`
+- `scope.root_page_id`
+- optional `scope.max_depth`
+
+3. Fetch:
+
+```powershell
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+```
+
+4. Build:
+
+```powershell
+python scripts/workspace_cli.py build .tmp\workspace
+```
+
+5. Export if needed:
+
+```powershell
+python scripts/workspace_cli.py export .tmp\workspace
+```
+
+## 6. Equivalent Lower-Level CLI Examples
+
+### Confluence subtree via `platform_cli.py connector`
+
+```powershell
+python scripts/platform_cli.py connector confluence `
+  --live `
+  --base-url https://confluence.example.com `
+  --token $env:CONF_TOKEN `
+  --fetch-backend atlassian-api `
+  --root-page-id 123456 `
+  --include-descendants `
+  --max-depth 2
+```
+
+### Confluence subtree via `multi-sync-health`
+
+```powershell
+python scripts/platform_cli.py multi-sync-health `
+  --snapshot-dir .tmp\snapshot `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --confluence-live `
+  --confluence-base-url https://confluence.example.com `
+  --confluence-token $env:CONF_TOKEN `
+  --confluence-fetch-backend atlassian-api `
+  --confluence-root-page-id 123456 `
+  --confluence-include-descendants `
+  --confluence-max-depth 2
+```
+
+### Confluence subtree via `sync-export`
+
+```powershell
+python scripts/platform_cli.py sync-export `
+  --snapshot-dir .tmp\snapshot `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --confluence-live `
+  --confluence-base-url https://confluence.example.com `
+  --confluence-token $env:CONF_TOKEN `
+  --confluence-fetch-backend atlassian-api `
+  --confluence-root-page-id 123456 `
+  --confluence-include-descendants `
+  --confluence-max-depth 2 `
+  --output-md-dir .tmp\export-docs
+```
+
+## 7. Current Boundaries
+
+- Source specs are currently JSON, not YAML.
+- Confluence subtree fetch is currently bounded to the `atlassian-api` backend.
+- `watch` is intentionally simple and optimized for operator workflows, not high-scale event processing.
+
+## 8. Running the Wiki Site Locally
+
+The generated wiki site is MkDocs-compatible. Install the site renderer in your local environment:
+
+```powershell
+python -m pip install mkdocs mkdocs-material
+```
+
+Build the site after `build-wiki-site` has generated `wiki_site/`:
+
+```powershell
+Set-Location .tmp\wiki-demo\wiki_site
+python -m mkdocs build
+```
+
+Serve the site locally:
+
+```powershell
+Set-Location .tmp\wiki-demo\wiki_site
+python -m mkdocs serve
+```
+
+Default local URL:
+
+- `http://127.0.0.1:8000/`
+
+The built static output will be under:
+
+- `.tmp\wiki-demo\wiki_site\site\`

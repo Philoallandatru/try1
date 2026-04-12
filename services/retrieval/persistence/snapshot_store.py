@@ -46,13 +46,12 @@ def snapshot_paths(snapshot_dir: str | Path) -> dict[str, Path]:
     return {key: root / filename for key, filename in SNAPSHOT_FILES.items()}
 
 
-def create_snapshot(
+def write_snapshot(
     snapshot_dir: str | Path,
     *,
     documents: Iterable[dict],
-    source_name: str = "manual",
-    source_cursor: str | None = None,
-    sync_type: str = "full",
+    sources: dict[str, dict],
+    created_at: str | None = None,
 ) -> dict:
     paths = snapshot_paths(snapshot_dir)
     root = Path(snapshot_dir)
@@ -61,11 +60,32 @@ def create_snapshot(
     document_list = list(documents)
     page_index = build_retrieval_index(document_list)
     manifest = {
-        "created_at": _utc_now(),
+        "created_at": created_at or _utc_now(),
         "updated_at": _utc_now(),
         "document_count": len(document_list),
         "page_index_count": len(page_index),
-        "sources": {
+        "sources": sources,
+    }
+
+    _write_json(paths["documents"], {"documents": document_list})
+    _write_json(paths["page_index"], {"entries": page_index})
+    _write_json(paths["manifest"], manifest)
+    return {"snapshot_dir": str(root), "manifest": manifest}
+
+
+def create_snapshot(
+    snapshot_dir: str | Path,
+    *,
+    documents: Iterable[dict],
+    source_name: str = "manual",
+    source_cursor: str | None = None,
+    sync_type: str = "full",
+) -> dict:
+    document_list = list(documents)
+    return write_snapshot(
+        snapshot_dir,
+        documents=document_list,
+        sources={
             source_name: {
                 "cursor": source_cursor,
                 "last_sync": _utc_now(),
@@ -73,12 +93,7 @@ def create_snapshot(
                 "document_count": len(document_list),
             }
         },
-    }
-
-    _write_json(paths["documents"], {"documents": document_list})
-    _write_json(paths["page_index"], {"entries": page_index})
-    _write_json(paths["manifest"], manifest)
-    return {"snapshot_dir": str(root), "manifest": manifest}
+    )
 
 
 def load_snapshot(snapshot_dir: str | Path) -> dict:

@@ -236,3 +236,40 @@ Add clustering and summarization only after the foundation is stable.
 - PageIndex remains retrieval projection.
 - Local LLM consumes retrieved evidence only.
 - Clustering and summarization are post-foundation enrichment.
+
+## Demo / Wiki Follow-up
+
+### Done Now
+
+1. Done: add a workspace-first operator flow for staged Jira/Confluence validation.
+2. Done: expose Confluence page-tree fetch through the current CLI/profile/runtime surfaces.
+3. Done: add workspace `query` support for local LLM backends.
+4. Done: implement a decoupled export package for wiki-site consumers:
+   - `manifest.json`
+   - `changes.json`
+   - `page_index.json`
+   - `documents/.../document.md`
+   - `documents/.../metadata.json`
+5. Done: implement a decoupled MkDocs-compatible `wiki_site/` generator.
+6. Done: add `build-wiki-site` CLI coverage for:
+   - fixture Jira + fixture Confluence + spec corpus
+   - fixture Jira + fixture Confluence + PDF spec parsing
+7. Done: document a from-zero demo workflow and local `mkdocs build` / `mkdocs serve` steps.
+
+### Remaining
+
+1. Remaining: add a first-class `mkdocs` optional dependency group or a dedicated demo environment bootstrap if we want reproducible wiki-site setup without manual pip install.
+2. Remaining: improve MkDocs navigation and page metadata presentation beyond the current deterministic baseline.
+3. Remaining: improve topic pages from simple source-type grouping to richer but still deterministic grouping.
+4. Remaining: add a stronger `wiki_site` smoke test that validates built HTML page presence and key route content, not only file generation plus manual/local verification.
+5. Remaining: optionally integrate `workspace export` directly with `build-wiki-site` for a smoother single-lane operator workflow.
+6. Remaining: optionally support YAML source specs instead of JSON.
+7. Remaining: document `build-wiki-site` with a real NVMe PDF path outside fixtures in an operator-facing example set once a non-fixture path is available.
+8. Remaining: add a fixture or harness for broader Confluence descendant-tree demo coverage beyond the current single-page fixture shape.
+
+### Deferred Intentionally
+
+1. Deferred intentionally: semantic topic clustering or OpenKB-style concept-page generation.
+2. Deferred intentionally: section-level wiki export as a stable contract.
+3. Deferred intentionally: replacing polling `watch` with a filesystem-event-based implementation unless operator workflow latency becomes a real problem.
+4. Deferred intentionally: turning the wiki-site renderer into part of the core retrieval runtime path.

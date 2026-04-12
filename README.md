@@ -16,6 +16,12 @@ This repository currently contains a Phase 1 foundation implementation for conve
 - Internal ops portal MVP
 - Skill-ready reusable component boundaries
 
+## Core Terms
+
+- `fixture`: a checked-in deterministic sample input or sample payload used for local development, contract validation, and repeatable tests. In this repo, fixture examples live mainly under `fixtures/` and stand in for live Jira, Confluence, Office, and PDF inputs.
+- `canonical document`: the repository's source-of-truth normalized document shape. It is the durable internal representation that preserves provenance, ACL metadata, structure metadata, and content blocks before any Markdown export, PageIndex derivation, or local LLM consumption.
+- `artifact`: a generated runtime or exchange output produced from canonical documents or from stable processing steps. In this repo, common artifacts include exported PageIndex JSON, snapshot files such as `manifest.json` / `documents.json` / `page_index.json`, evaluation outputs, and portal state outputs. Artifacts are derived outputs, not the source of truth unless a contract explicitly says they are the runtime input for a downstream step.
+
 ## Core Docs
 
 - [agent.md](agent.md)
@@ -26,6 +32,9 @@ This repository currently contains a Phase 1 foundation implementation for conve
 - [docs/platform-cli-guide.zh.md](docs/platform-cli-guide.zh.md)
 - [docs/implementation-status.md](docs/implementation-status.md)
 - [docs/cli-reference.md](docs/cli-reference.md)
+- [docs/runbooks/progressive-ingestion-workspace.md](docs/runbooks/progressive-ingestion-workspace.md)
+- [docs/runbooks/wiki-demo-validation.md](docs/runbooks/wiki-demo-validation.md)
+- [docs/workspace-cli-guide.md](docs/workspace-cli-guide.md)
 
 ## Repository Shape
 
@@ -120,6 +129,81 @@ Generate portal state for the static ops UI:
 ```powershell
 python -c "from apps.portal.portal_state import write_portal_state; print(write_portal_state())"
 ```
+
+## Workspace-First Operator Flow
+
+For staged Jira and Confluence validation, use the workspace CLI instead of assembling long one-off commands by hand.
+
+Initialize a workspace:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+```
+
+Fetch a saved source spec into the workspace:
+
+```powershell
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\one-issue.json
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+```
+
+Build the canonical snapshot from the fetched payloads:
+
+```powershell
+python scripts/workspace_cli.py build .tmp\workspace
+```
+
+Inspect status, query the snapshot, and export derived outputs:
+
+```powershell
+python scripts/workspace_cli.py status .tmp\workspace
+python scripts/workspace_cli.py query .tmp\workspace "black screen"
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
+python scripts/workspace_cli.py export .tmp\workspace
+python scripts/workspace_cli.py lint .tmp\workspace
+python scripts/workspace_cli.py watch .tmp\workspace --run-once
+```
+
+The workspace keeps operator-oriented state under:
+
+- `raw/` for reusable source specs and fetched payloads
+- `snapshots/current/` for canonical documents plus `page_index.json`
+- `exports/latest/` for Markdown and PageIndex exports
+- `runs/` for per-run request/result records
+
+This layer is workflow-oriented only. Canonical documents and snapshot/PageIndex contracts remain the source of truth.
+
+## Decoupled Wiki Demo
+
+The repository can now build a decoupled wiki demo in two layers:
+
+- `export/`
+  - stable document-level export package
+- `wiki_site/`
+  - MkDocs-compatible static site generated from the export package
+
+Example:
+
+```powershell
+python scripts/platform_cli.py build-wiki-site `
+  --jira-path fixtures/connectors/jira/incremental_sync.json `
+  --confluence-path fixtures/connectors/confluence/page_sync.json `
+  --snapshot-dir .tmp\wiki-demo\snapshot `
+  --spec-pdf fixtures/corpus/pdf/sample.pdf `
+  --preferred-parser pypdf `
+  --reference-date 2026-04-05 `
+  --output-dir .tmp\wiki-demo
+```
+
+Quick render:
+
+```powershell
+Set-Location .tmp\wiki-demo\wiki_site
+python -m mkdocs build
+python -m mkdocs serve
+```
+
+For the full verification checklist, see [docs/runbooks/wiki-demo-validation.md](docs/runbooks/wiki-demo-validation.md).
 
 ## Pipelines
 

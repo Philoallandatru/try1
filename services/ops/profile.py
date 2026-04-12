@@ -24,6 +24,8 @@ def validate_multi_sync_profile(profile: dict) -> list[str]:
         page_size = source_profile.get("page_size")
         auth_mode = source_profile.get("auth_mode")
         fetch_backend = source_profile.get("fetch_backend")
+        include_descendants = source_profile.get("include_descendants", False)
+        max_depth = source_profile.get("max_depth")
         if live and not base_url:
             errors.append(f"profile.{required_source}.base_url is required when live is true")
         if not live and not path:
@@ -36,6 +38,13 @@ def validate_multi_sync_profile(profile: dict) -> list[str]:
             errors.append(f"profile.{required_source}.fetch_backend must be one of: native, atlassian-api")
         if source_profile.get("download_images") and not source_profile.get("image_download_dir"):
             errors.append(f"profile.{required_source}.image_download_dir is required when download_images is true")
+        if required_source == "confluence":
+            if include_descendants and not source_profile.get("root_page_id"):
+                errors.append("profile.confluence.root_page_id is required when include_descendants is true")
+            if max_depth is not None and (not isinstance(max_depth, int) or max_depth < 0):
+                errors.append("profile.confluence.max_depth must be an integer greater than or equal to 0")
+            if max_depth is not None and not include_descendants:
+                errors.append("profile.confluence.include_descendants must be true when max_depth is set")
     budget = profile.get("freshness_budget_minutes")
     if budget is not None and (not isinstance(budget, int) or budget <= 0):
         errors.append("profile.freshness_budget_minutes must be a positive integer")
@@ -141,6 +150,9 @@ def build_multi_sync_profile(args: argparse.Namespace) -> dict:
             "space_key": _arg(args, "confluence_space_key"),
             "page_id": _arg(args, "confluence_page_id"),
             "page_ids": _arg(args, "confluence_page_ids"),
+            "root_page_id": _arg(args, "confluence_root_page_id"),
+            "include_descendants": True if _arg(args, "confluence_include_descendants", False) else confluence_profile.get("include_descendants"),
+            "max_depth": _arg(args, "confluence_max_depth"),
             "title": _arg(args, "confluence_title"),
             "label": _arg(args, "confluence_label"),
             "ancestor_id": _arg(args, "confluence_ancestor_id"),
@@ -160,6 +172,7 @@ def build_multi_sync_profile(args: argparse.Namespace) -> dict:
     confluence_config.setdefault("auth_mode", "auto")
     confluence_config.setdefault("page_size", 25)
     confluence_config.setdefault("fetch_backend", "native")
+    confluence_config.setdefault("include_descendants", False)
     confluence_config.setdefault("include_attachments", True)
     confluence_config.setdefault("include_image_metadata", True)
     confluence_config.setdefault("download_images", False)

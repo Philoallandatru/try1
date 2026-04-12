@@ -589,6 +589,79 @@ class PlatformCliTest(unittest.TestCase):
             self.assertEqual(payload["jira_daily_md"], str(output_dir / "jira-daily.md"))
             self.assertEqual(payload["spec_section_md"], str(output_dir / "spec-section.md"))
 
+    def test_cli_build_wiki_site_generates_export_and_mkdocs_tree(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "wiki-demo"
+            snapshot_dir = Path(temp_dir) / "snapshot"
+            result = self._run(
+                "build-wiki-site",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--snapshot-dir",
+                str(snapshot_dir),
+                "--spec-corpus",
+                "fixtures/retrieval/pageindex_corpus.json",
+                "--spec-document-id",
+                "nvme-spec-v1",
+                "--clause",
+                "1.1",
+                "--reference-date",
+                "2026-04-05",
+                "--output-dir",
+                str(output_dir),
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock wiki answer",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            export_root = output_dir / "export"
+            wiki_site_root = output_dir / "wiki_site"
+
+            self.assertTrue((export_root / "manifest.json").exists())
+            self.assertTrue((export_root / "changes.json").exists())
+            self.assertTrue((export_root / "page_index.json").exists())
+            self.assertTrue((wiki_site_root / "mkdocs.yml").exists())
+            self.assertTrue((wiki_site_root / "docs" / "index.md").exists())
+            self.assertTrue((wiki_site_root / "docs" / "analysis" / "demo-overview.md").exists())
+            self.assertEqual(payload["source_counts"]["jira"], 1)
+            self.assertEqual(payload["source_counts"]["confluence"], 1)
+            self.assertGreaterEqual(payload["source_counts"]["spec"], 1)
+
+    def test_cli_build_wiki_site_can_build_spec_from_pdf(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "wiki-demo"
+            snapshot_dir = Path(temp_dir) / "snapshot"
+            result = self._run(
+                "build-wiki-site",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--snapshot-dir",
+                str(snapshot_dir),
+                "--spec-pdf",
+                "fixtures/corpus/pdf/sample.pdf",
+                "--preferred-parser",
+                "pypdf",
+                "--reference-date",
+                "2026-04-05",
+                "--output-dir",
+                str(output_dir),
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock wiki answer",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue((output_dir / "spec_build" / "spec-corpus.json").exists())
+            self.assertTrue((output_dir / "wiki_site" / "mkdocs.yml").exists())
+            self.assertGreaterEqual(payload["source_counts"]["spec"], 1)
+
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")
         self.assertNotEqual(result.returncode, 0)
