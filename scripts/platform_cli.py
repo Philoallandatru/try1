@@ -62,6 +62,13 @@ def _write_json_output(path: str | Path, payload: dict | list) -> str:
     return str(output_path)
 
 
+def _write_text_output(path: str | Path, text: str) -> str:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(text, encoding="utf-8")
+    return str(output_path)
+
+
 def _json_default(value: object) -> object:
     if isinstance(value, set):
         return sorted(value)
@@ -736,6 +743,22 @@ def main() -> int:
     confluence_wiki_demo_parser.add_argument("--prompt-template")
     _add_llm_backend_args(confluence_wiki_demo_parser)
 
+    demo_orchestrate_parser = subparsers.add_parser("demo-orchestrate")
+    demo_orchestrate_parser.add_argument("--snapshot-dir", default=".tmp/demo/snapshot")
+    demo_orchestrate_parser.add_argument("--output-dir", default=".tmp/demo")
+    demo_orchestrate_parser.add_argument("--profile")
+    demo_orchestrate_parser.add_argument("--corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    demo_orchestrate_parser.add_argument("--reference-time-iso")
+    _add_jira_source_args(demo_orchestrate_parser)
+    _add_confluence_source_args(demo_orchestrate_parser)
+    demo_orchestrate_parser.add_argument("--spec-corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    demo_orchestrate_parser.add_argument("--spec-document-id", required=True)
+    demo_orchestrate_parser.add_argument("--clause")
+    demo_orchestrate_parser.add_argument("--section-heading")
+    demo_orchestrate_parser.add_argument("--reference-date", required=True)
+    demo_orchestrate_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    _add_llm_backend_args(demo_orchestrate_parser)
+
     retrieval_consume_parser = subparsers.add_parser("retrieval-consume")
     retrieval_consume_parser.add_argument("--snapshot-dir")
     retrieval_consume_parser.add_argument(
@@ -1170,6 +1193,102 @@ def main() -> int:
                 "index_html": site["index_html"],
                 "page_count": len(page_payloads),
                 "pages": page_payloads,
+            }
+        )
+    if args.command == "demo-orchestrate":
+        if not args.clause and not args.section_heading:
+            parser.error("Provide --clause or --section-heading")
+        if args.profile:
+            profile_errors = validate_multi_sync_profile(load_json_file(args.profile))
+            if profile_errors:
+                parser.error("; ".join(profile_errors))
+        profile = build_multi_sync_profile(args)
+        if not profile["snapshot_dir"]:
+            parser.error("snapshot dir is required via --snapshot-dir or --profile")
+        jira_config, confluence_config = profile["sources"]
+        _validate_prefixed_live_args(
+            parser,
+            args=args,
+            live=jira_config["live"],
+            base_url=jira_config.get("base_url"),
+            page_size=jira_config["page_size"],
+            source_name="jira",
+        )
+        _validate_prefixed_live_args(
+            parser,
+            args=args,
+            live=confluence_config["live"],
+            base_url=confluence_config.get("base_url"),
+            page_size=confluence_config["page_size"],
+            source_name="confluence",
+        )
+        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
+        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
+        if not jira_config["live"] and not jira_config.get("path"):
+            parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
+        if not confluence_config["live"] and not confluence_config.get("path"):
+            parser.error("Confluence source is required via --confluence-path, --confluence-live, or --profile")
+
+        sync_payload = run_sync_export(profile, export_scope="incoming")
+        jira_documents = [document for document in sync_payload["documents"] if document["source_type"] == "jira"]
+        confluence_documents = [document for document in sync_payload["documents"] if document["source_type"] == "confluence"]
+        llm_backend = _build_llm_backend_from_args(parser, args)
+        output_root = Path(args.output_dir)
+        wiki_output_dir = output_root / "wiki"
+        jira_daily_path = output_root / "jira-daily.md"
+        spec_section_path = output_root / "spec-section.md"
+
+        report = build_jira_pm_daily_report(
+            jira_documents,
+            reference_date=args.reference_date,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=llm_backend,
+        )
+        spec_document = next(
+            (
+                document
+                for document in load_document_snapshot(args.spec_corpus)
+                if document["document_id"] == args.spec_document_id
+            ),
+            None,
+        )
+        if spec_document is None:
+            parser.error(f"Spec document not found: {args.spec_document_id}")
+        spec_payload = build_spec_section_explain_payload(
+            spec_document=spec_document,
+            jira_documents=jira_documents,
+            allowed_policies=set(args.policies),
+            clause=args.clause,
+            section_heading=args.section_heading,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=llm_backend,
+        )
+        page_payloads = [
+            build_confluence_wiki_summary_payload(
+                document=document,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=llm_backend,
+            )
+            for document in confluence_documents
+        ]
+        site = render_confluence_static_wiki(page_payloads=page_payloads, output_dir=wiki_output_dir)
+        report_text = report.get("answer", {}).get("text") or report["markdown"]
+        spec_text = spec_payload["answer"]["text"]
+        _write_text_output(jira_daily_path, report_text)
+        _write_text_output(spec_section_path, spec_text)
+        return _print_json(
+            {
+                "output_dir": str(output_root),
+                "snapshot_dir": sync_payload["snapshot_dir"],
+                "report_profile": report["report_profile"],
+                "jira_daily_md": str(jira_daily_path),
+                "spec_section_md": str(spec_section_path),
+                "wiki_dir": site["output_dir"],
+                "index_html": site["index_html"],
+                "page_count": len(page_payloads),
+                "updated_issue_ids": report["updated_issue_ids"],
+                "stale_issue_ids": report["stale_issue_ids"],
+                "section": spec_payload["section"],
             }
         )
     return 1

@@ -87,27 +87,40 @@ def build_spec_section_extractive_answer(
     citations: list[dict],
 ) -> dict:
     jira_citations = [citation for citation in citations if str(citation["document"]).startswith("SSD-")]
-    evidence_lines = []
+    jira_evidence_lines = []
+    all_evidence_lines = []
     for citation in citations:
         evidence = " ".join(citation.get("evidence_span", []))
-        evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
+        line = f"- {citation['document']} v{citation['version']}: {evidence}"
+        all_evidence_lines.append(line)
+        if str(citation["document"]).startswith("SSD-"):
+            jira_evidence_lines.append(line)
 
     if jira_citations:
-        conclusion = "Related Jira evidence was retrieved for the selected spec section."
+        interpretation = "Retrieved Jira evidence exists for this section, so the section can be interpreted against active engineering issue context."
+        gaps = "None beyond the cited evidence spans."
     else:
-        conclusion = "No related Jira evidence was retrieved for the selected spec section."
+        interpretation = "The section can be read directly from the spec, but no Jira issue evidence was retrieved to ground an engineering interpretation."
+        gaps = "No related Jira evidence was retrieved for the selected spec section."
 
     return {
         "mode": "extractive",
         "text": "\n".join(
             [
-                f"Spec document: {spec_document_id}",
-                f"Section: {section_label}",
+                "## Section Intent",
+                f"The selected section is `{section_label}` from `{spec_document_id}` and should be read as the authoritative spec text.",
                 "",
-                conclusion,
+                "## Jira Evidence",
+                *(jira_evidence_lines or ["- None"]),
                 "",
-                "Evidence:",
-                *(evidence_lines or ["- None"]),
+                "## Engineering Interpretation",
+                interpretation,
+                "",
+                "## Evidence Gaps",
+                gaps,
+                "",
+                "## Retrieved Evidence",
+                *(all_evidence_lines or ["- None"]),
             ]
         ).strip(),
         "citation_count": len(citations),

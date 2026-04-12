@@ -65,6 +65,7 @@ def build_spec_section_explain_prompt(
     spec_document_id: str,
     section_label: str,
     section_markdown: str,
+    jira_summary_text: str,
     evidence_text: str,
     prompt_mode: str,
 ) -> str:
@@ -110,6 +111,9 @@ def build_spec_section_explain_prompt(
             "",
             "## Spec Section",
             section_markdown,
+            "",
+            "## Structured Jira Summaries",
+            jira_summary_text or "No related Jira summaries.",
             "",
             "## Retrieved Jira Evidence",
             evidence_text or "No Jira evidence.",
