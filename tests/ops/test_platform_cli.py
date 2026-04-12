@@ -196,7 +196,9 @@ class PlatformCliTest(unittest.TestCase):
         self.assertEqual(payload["report_profile"], "pm-daily")
         self.assertEqual(payload["reference_date"], "2026-04-05")
         self.assertEqual(payload["answer"]["text"], "Mock PM daily summary")
-        self.assertIn("Updated Today", payload["markdown"])
+        self.assertIn("Executive Summary", payload["markdown"])
+        self.assertIn("Manager Attention", payload["markdown"])
+        self.assertIn("Active Today", payload["markdown"])
 
     def test_cli_jira_report_filters_by_calendar_date(self) -> None:
         result = self._run(
@@ -515,6 +517,51 @@ class PlatformCliTest(unittest.TestCase):
             self.assertEqual(payload["page_count"], 1)
             self.assertTrue((Path(temp_dir) / "index.html").exists())
             self.assertTrue((Path(temp_dir) / "pages" / "CONF-201.html").exists())
+            index_html = (Path(temp_dir) / "index.html").read_text(encoding="utf-8")
+            detail_html = (Path(temp_dir) / "pages" / "CONF-201.html").read_text(encoding="utf-8")
+            self.assertIn("Derived Confluence Wiki", index_html)
+            self.assertIn("Telemetry Architecture", index_html)
+            self.assertIn("Derived page", detail_html)
+            self.assertIn("Source Traceability", detail_html)
+            self.assertIn("Version", detail_html)
+
+    def test_cli_demo_orchestrate_generates_demo_output_tree(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "demo"
+            snapshot_dir = Path(temp_dir) / "snapshot"
+            result = self._run(
+                "demo-orchestrate",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--snapshot-dir",
+                str(snapshot_dir),
+                "--spec-corpus",
+                "fixtures/retrieval/pageindex_corpus.json",
+                "--spec-document-id",
+                "nvme-spec-v1",
+                "--clause",
+                "1.1",
+                "--reference-date",
+                "2026-04-05",
+                "--output-dir",
+                str(output_dir),
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock demo output",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["report_profile"], "pm-daily")
+            self.assertEqual(payload["section"]["clause"], "1.1")
+            self.assertTrue((output_dir / "jira-daily.md").exists())
+            self.assertTrue((output_dir / "spec-section.md").exists())
+            self.assertTrue((output_dir / "wiki" / "index.html").exists())
+            self.assertTrue((snapshot_dir / "manifest.json").exists())
+            self.assertEqual(payload["jira_daily_md"], str(output_dir / "jira-daily.md"))
+            self.assertEqual(payload["spec_section_md"], str(output_dir / "spec-section.md"))
 
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")

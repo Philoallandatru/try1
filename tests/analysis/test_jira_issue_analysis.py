@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 import unittest
 
@@ -174,7 +175,51 @@ class JiraIssueAnalysisTest(unittest.TestCase):
         self.assertEqual(report["report_profile"], "pm-daily")
         self.assertEqual(report["updated_issue_ids"], ["SSD-101", "SSD-102"])
         self.assertEqual(report["stale_issue_ids"], [])
-        self.assertIn("## Updated Today", report["markdown"])
+        self.assertIn("## Executive Summary", report["markdown"])
+        self.assertIn("## Active Today", report["markdown"])
+
+    def test_jira_pm_daily_report_surfaces_manager_fields_and_attention_signals(self) -> None:
+        active_document = deepcopy(self.jira_documents[0])
+        stale_document = deepcopy(self.jira_documents[1])
+
+        active_document["document_id"] = "SSD-301"
+        active_document["title"] = "Active firmware validation"
+        active_document["version"] = "2026-04-05T11:00:00Z"
+        active_document["metadata"]["issue_fields"]["Status"] = "In Progress"
+        active_document["metadata"]["issue_fields"]["Priority"] = "Highest"
+        active_document["metadata"]["issue_fields"]["Assignee"] = "fw_owner"
+        active_document["comments"] = [
+            {
+                "author": {"displayName": "fw_owner"},
+                "created": "2026-04-05T10:45:00Z",
+                "body": "Validation pending after firmware fix; retest queued.",
+            }
+        ]
+
+        stale_document["document_id"] = "SSD-302"
+        stale_document["title"] = "Stale ownership check"
+        stale_document["version"] = "2026-04-03T08:00:00Z"
+        stale_document["metadata"]["issue_fields"]["Status"] = "In Progress"
+        stale_document["metadata"]["issue_fields"]["Priority"] = "Medium"
+        stale_document["comments"] = []
+
+        report = build_jira_pm_daily_report(
+            [active_document, stale_document],
+            reference_date="2026-04-05",
+        )
+
+        self.assertEqual([item["document_id"] for item in report["active_today"]], ["SSD-301"])
+        self.assertEqual([item["document_id"] for item in report["in_progress_no_update"]], ["SSD-302"])
+        self.assertEqual(report["active_today"][0]["owner"], "fw_owner")
+        self.assertEqual(report["active_today"][0]["latest_comment"]["author"], "fw_owner")
+        self.assertIn("validation_pending", report["active_today"][0]["attention_signals"])
+        self.assertIn("retest_pending", report["active_today"][0]["attention_signals"])
+        self.assertEqual(report["in_progress_no_update"][0]["owner"], "unknown")
+        self.assertIn("stale_in_progress", report["in_progress_no_update"][0]["attention_signals"])
+        self.assertIn("no_comment", report["in_progress_no_update"][0]["attention_signals"])
+        self.assertIn("unclear_ownership", report["in_progress_no_update"][0]["attention_signals"])
+        self.assertIn("## Manager Attention", report["markdown"])
+        self.assertIn("SSD-302", report["markdown"])
 
     def test_jira_pm_daily_report_can_use_local_llm_backend(self) -> None:
         report = build_jira_pm_daily_report(
@@ -241,9 +286,16 @@ class JiraIssueAnalysisTest(unittest.TestCase):
 
         self.assertEqual(payload["section"]["clause"], "1.1")
         self.assertEqual(payload["section"]["heading"], "Flush Semantics")
+        self.assertEqual(payload["section"]["section_anchor_id"], "nvme-spec-v1:1.1:2")
         self.assertIn("Flush ordering is preserved", payload["section"]["markdown"])
         self.assertIn("Explain the selected spec section using only the section text and retrieved Jira evidence.", payload["ai_prompt"])
+        self.assertIn("## Structured Jira Summaries", payload["ai_prompt"])
+        self.assertIn("Priority:", payload["ai_prompt"])
         self.assertIn("SSD-102", {issue["document_id"] for issue in payload["related_issues"]})
+        self.assertIn("## Section Intent", payload["answer"]["text"])
+        self.assertIn("## Jira Evidence", payload["answer"]["text"])
+        self.assertIn("## Engineering Interpretation", payload["answer"]["text"])
+        self.assertIn("## Evidence Gaps", payload["answer"]["text"])
 
     def test_confluence_wiki_summary_payload_supports_mock_llm(self) -> None:
         payload = build_confluence_wiki_summary_payload(

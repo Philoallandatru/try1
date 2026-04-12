@@ -134,6 +134,7 @@ python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/conne
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
 python scripts/platform_cli.py spec-section-explain --jira-path fixtures/connectors/jira/incremental_sync.json --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1
 python scripts/platform_cli.py confluence-wiki-demo --confluence-path fixtures/connectors/confluence/page_sync.json --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock confluence wiki summary"
+python scripts/platform_cli.py demo-orchestrate --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/demo/snapshot --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp/demo
 ```
 
 ### Generic Retrieval Consumption
@@ -185,12 +186,13 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - Live Jira/Confluence commands now support `--fetch-backend atlassian-api` plus bounded selectors such as `--issue-key`, `--project-key`, `--page-id`, `--title`, `--label`, and date windows. These selective flags are intentionally rejected on the `native` backend.
 - `--download-images` is opt-in and requires `--image-download-dir`.
 - `jira-report` builds a time-filtered Jira markdown report from fixture or live Jira input, supports explicit windows, calendar dates, and exact ISO timestamps, can write it to `--output-md`, can optionally call a local LLM backend through `--llm-backend`, can write that answer to `--output-answer-md`, and renders an optional prompt template.
-- `jira-report --report-profile pm-daily` produces a project-manager-oriented daily report for `In Progress` issues, splitting updated-today versus stale-in-progress items while preserving deterministic status facts.
+- `jira-report --report-profile pm-daily` produces a project-manager-oriented daily report for `In Progress` issues with deterministic owner/priority/status/update/comment facts and four fixed sections: `Executive Summary`, `Active Today`, `In Progress But No Update`, and `Manager Attention`.
 - `jira-spec-qa` builds a Jira-plus-spec retrieval payload from fixture or live Jira input, renders an optional prompt template, includes an extractive draft answer by default, can optionally call a local LLM backend through `--llm-backend`, and can write the selected answer to `--output-answer-md`.
 - `jira-batch-spec-report` combines time-filtered Jira reporting with per-issue Jira-plus-spec QA, supports the same optional local LLM backend flags, and can write a combined Markdown report to `--output-md`.
-- `spec-section-explain` is a section-centered demo flow that explains a selected spec clause or heading through retrieved Jira evidence.
+- `spec-section-explain` is a section-centered demo flow that explains a selected spec clause or heading through retrieved Jira evidence. The payload now includes a lightweight `section_anchor_id` helper and a prompt section with structured Jira summaries.
 - `retrieval-consume` is the source-generic retrieval-consumption CLI for Jira/Confluence fixture payloads, live Jira/Confluence sources, direct file-backed Markdown/Office/PDF inputs, and snapshot-backed document sets. It assembles citation-backed prompts and can optionally call a local LLM backend.
-- `confluence-wiki-demo` builds a small static HTML wiki demo from Confluence-derived summaries; it is a demo/export path rather than a full wiki system.
+- `confluence-wiki-demo` builds a small static HTML wiki demo from Confluence-derived summaries, including an index page with grouped summary cards and detail pages that retain version/source/derived traceability markers.
+- `demo-orchestrate` is the one-command demo path. It refreshes the snapshot-first Jira/Confluence demo inputs, writes `.tmp/demo/jira-daily.md` and `.tmp/demo/spec-section.md`, and builds `.tmp/demo/wiki/`.
 - `sync-export` is the current document-level export path. It does not yet implement section-level derived wiki generation.
 - `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 

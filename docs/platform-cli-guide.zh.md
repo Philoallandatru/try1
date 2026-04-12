@@ -564,3 +564,59 @@ python scripts/platform_cli.py sync-export --profile fixtures\ops\multi_sync_hea
 - 做可复用 artifact 时，优先导出 `--output-page-index`
 - 做持续更新时，优先维护 `snapshot-dir`
 - 做面向问答或总结的消费层时，优先用 `retrieval-consume`
+## 2026-04 Demo 增补说明
+
+### Jira PM Daily
+
+- `jira-report --report-profile pm-daily` 现在固定输出四段：
+  - `Executive Summary`
+  - `Active Today`
+  - `In Progress But No Update`
+  - `Manager Attention`
+- 这个 profile 会先计算 deterministic manager facts，再交给可选 LLM 做压缩表达。
+- 当前保留的 manager facts：
+  - owner / assignee
+  - priority
+  - status
+  - updated_at
+  - latest comment author / time / body
+- 当前规则信号：
+  - `stale_in_progress`
+  - `blocked`
+  - `retest_pending`
+  - `validation_pending`
+  - `no_comment`
+  - `unclear_ownership`
+
+### Spec Section Explain
+
+- `spec-section-explain` 仍然只支持单个手选 section / clause。
+- payload 现在包含轻量 section helper：
+  - `section`
+  - `clause`
+  - `page`
+  - `section_anchor_id`
+- prompt 会带结构化 Jira 摘要。
+- 输出固定为：
+  - `Section Intent`
+  - `Jira Evidence`
+  - `Engineering Interpretation`
+  - `Evidence Gaps`
+
+### Confluence Wiki Demo
+
+- `confluence-wiki-demo` 仍然是 document-level derived wiki。
+- index 页现在会输出 grouped summary cards。
+- 详情页会保留 version / source / derived marker / source traceability。
+
+### demo-orchestrate
+
+```powershell
+python scripts/platform_cli.py demo-orchestrate --jira-path fixtures\connectors\jira\incremental_sync.json --confluence-path fixtures\connectors\confluence\page_sync.json --snapshot-dir .tmp\demo\snapshot --spec-corpus fixtures\retrieval\pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp\demo
+```
+
+输出目录：
+
+- `.tmp\demo\jira-daily.md`
+- `.tmp\demo\spec-section.md`
+- `.tmp\demo\wiki\`

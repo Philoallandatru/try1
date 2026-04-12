@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from html import escape
 from pathlib import Path
 
@@ -101,6 +101,14 @@ def _issue_field(document: dict, label: str) -> str:
     return str(document.get("metadata", {}).get("issue_fields", {}).get(label, "") or "").strip()
 
 
+def _first_issue_field(document: dict, labels: list[str]) -> str:
+    for label in labels:
+        value = _issue_field(document, label)
+        if value:
+            return value
+    return ""
+
+
 def _comment_records(document: dict) -> list[dict]:
     records = []
     for comment in document.get("comments", []):
@@ -124,38 +132,123 @@ def _latest_comment(document: dict) -> dict | None:
     return records[0]
 
 
-def _render_pm_issue_line(document: dict, reference_date: str, stale_threshold_hours: int) -> str:
+def _dedupe(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for item in items:
+        if item and item not in seen:
+            seen.add(item)
+            deduped.append(item)
+    return deduped
+
+
+def _pm_attention_signals(document: dict, *, stale: bool) -> list[str]:
+    signals: list[str] = []
     latest_comment = _latest_comment(document)
-    latest_comment_text = "No comment update."
-    if latest_comment:
-        body = str(latest_comment.get("body") or "").strip() or "No comment body."
-        latest_comment_text = f"{latest_comment['author']} ({latest_comment.get('created') or 'unknown'}): {body}"
+    owner = _first_issue_field(document, ["Assignee", "Owner"])
+    if stale:
+        signals.append("stale_in_progress")
+    if not owner:
+        signals.append("unclear_ownership")
+    if latest_comment is None:
+        signals.append("no_comment")
+        return signals
+
+    body = str(latest_comment.get("body") or "").lower()
+    if any(term in body for term in ("blocked", "blocking", "阻塞")):
+        signals.append("blocked")
+    if any(term in body for term in ("retest", "复测", "待复测")):
+        signals.append("retest_pending")
+    if any(term in body for term in ("validation", "验证", "待验证", "pending")):
+        signals.append("validation_pending")
+    return _dedupe(signals)
+
+
+def _build_pm_issue_fact(document: dict, *, target_date: date, stale_threshold_hours: int) -> dict:
+    updated_at = _document_updated_at(document)
+    latest_comment = _latest_comment(document)
+    reference_end = datetime.combine(target_date, time.max, tzinfo=timezone.utc)
+    stale_cutoff = reference_end - timedelta(hours=stale_threshold_hours)
+    updated_today = updated_at is not None and updated_at.date() == target_date
+    stale = updated_at is None or updated_at < stale_cutoff
+    attention_signals = _pm_attention_signals(document, stale=stale)
+    return {
+        "document_id": document["document_id"],
+        "title": document.get("title", document["document_id"]),
+        "owner": _first_issue_field(document, ["Assignee", "Owner"]) or "unknown",
+        "priority": _issue_field(document, "Priority") or "unknown",
+        "status": _issue_field(document, "Status") or "unknown",
+        "updated_at": document.get("version") or "unknown",
+        "updated_today": updated_today,
+        "stale": stale,
+        "latest_comment": latest_comment,
+        "attention_signals": attention_signals,
+    }
+
+
+def _format_latest_comment(comment: dict | None) -> str:
+    if not comment:
+        return "No comment update."
+    body = str(comment.get("body") or "").strip() or "No comment body."
+    return f"{comment.get('author') or 'unknown'} ({comment.get('created') or 'unknown'}): {body}"
+
+
+def _render_pm_issue_line(issue: dict) -> str:
     return "\n".join(
         [
-            f"- Issue: {document['document_id']}",
-            f"  Summary: {document.get('title', document['document_id'])}",
-            f"  Priority: {_issue_field(document, 'Priority') or 'unknown'}",
-            f"  Status: {_issue_field(document, 'Status') or 'unknown'}",
-            f"  Updated: {document.get('version')}",
-            f"  Reference date: {reference_date}",
-            f"  Stale threshold hours: {stale_threshold_hours}",
-            f"  Latest comment: {latest_comment_text}",
+            f"- Issue: {issue['document_id']}",
+            f"  Summary: {issue['title']}",
+            f"  Owner: {issue['owner']}",
+            f"  Priority: {issue['priority']}",
+            f"  Status: {issue['status']}",
+            f"  Updated: {issue['updated_at']}",
+            f"  Latest comment: {_format_latest_comment(issue['latest_comment'])}",
+            f"  Attention signals: {', '.join(issue['attention_signals']) or 'none'}",
         ]
     )
 
 
-def _pm_attention_items(document: dict, stale: bool) -> list[str]:
-    items = []
-    latest_comment = _latest_comment(document)
-    if stale:
-        items.append(f"{document['document_id']}: still In Progress but no update in the selected day")
-    if latest_comment is None:
-        items.append(f"{document['document_id']}: no comments available")
+def _render_pm_attention_item(issue: dict) -> str:
+    signals = ", ".join(issue["attention_signals"]) or "none"
+    return f"{issue['document_id']}: {issue['title']} | owner={issue['owner']} | signals={signals}"
+
+
+def _build_pm_executive_summary(
+    *,
+    reference_date: str,
+    active_today: list[dict],
+    in_progress_no_update: list[dict],
+    attention_items: list[dict],
+) -> list[str]:
+    summary = [
+        f"{len(active_today)} In Progress issue(s) were updated on {reference_date}.",
+        f"{len(in_progress_no_update)} In Progress issue(s) had no same-day update.",
+    ]
+    if attention_items:
+        summary.append(
+            f"{len(attention_items)} issue(s) need manager attention: "
+            + ", ".join(issue["document_id"] for issue in attention_items[:5])
+            + "."
+        )
     else:
-        body = str(latest_comment.get("body") or "").lower()
-        if any(term in body for term in ("retest", "validation", "blocked", "pending")):
-            items.append(f"{document['document_id']}: latest comment mentions retest/validation/blocking signal")
-    return items
+        summary.append("No manager-attention signals were detected from deterministic rules.")
+    return summary
+
+
+def _structured_jira_summary(document: dict, *, evidence_spans: list[str] | None = None) -> str:
+    latest_comment = _latest_comment(document)
+    lines = [
+        f"### {document['document_id']} - {document.get('title', document['document_id'])}",
+        f"- Owner: {_first_issue_field(document, ['Assignee', 'Owner']) or 'unknown'}",
+        f"- Priority: {_issue_field(document, 'Priority') or 'unknown'}",
+        f"- Status: {_issue_field(document, 'Status') or 'unknown'}",
+        f"- Updated: {document.get('version') or 'unknown'}",
+        f"- Latest comment: {_format_latest_comment(latest_comment)}",
+    ]
+    if evidence_spans:
+        lines.append("- Evidence spans:")
+        lines.extend(f"  - {span}" for span in evidence_spans if span)
+    return "\n".join(lines)
 
 
 def filter_jira_documents_by_updated_time(
@@ -254,37 +347,39 @@ def build_jira_pm_daily_report(
     llm_backend: LLMBackend | None = None,
 ) -> dict:
     target_date = date.fromisoformat(reference_date)
-    in_progress_documents = [
-        document
+    issue_facts = [
+        _build_pm_issue_fact(document, target_date=target_date, stale_threshold_hours=stale_threshold_hours)
         for document in documents
         if _issue_field(document, "Status") == status_filter
     ]
-    updated_today = []
-    stale_in_progress = []
-    manager_attention: list[str] = []
-    for document in in_progress_documents:
-        updated_at = _document_updated_at(document)
-        updated_on_target_date = updated_at is not None and updated_at.date() == target_date
-        if updated_on_target_date:
-            updated_today.append(document)
-        else:
-            stale_in_progress.append(document)
-        manager_attention.extend(_pm_attention_items(document, stale=not updated_on_target_date))
+    active_today = [issue for issue in issue_facts if issue["updated_today"]]
+    in_progress_no_update = [issue for issue in issue_facts if not issue["updated_today"]]
+    stale_in_progress = [issue for issue in in_progress_no_update if issue["stale"]]
+    manager_attention_items = [issue for issue in issue_facts if issue["attention_signals"]]
+    executive_summary = _build_pm_executive_summary(
+        reference_date=reference_date,
+        active_today=active_today,
+        in_progress_no_update=in_progress_no_update,
+        attention_items=manager_attention_items,
+    )
 
     issue_summaries = "\n\n".join(
         [
-            "## Updated Today",
-            *(_render_pm_issue_line(document, reference_date, stale_threshold_hours) for document in updated_today),
+            "## Active Today",
+            *(_render_pm_issue_line(issue) for issue in active_today),
             "",
             "## In Progress But No Update",
-            *(_render_pm_issue_line(document, reference_date, stale_threshold_hours) for document in stale_in_progress),
+            *(_render_pm_issue_line(issue) for issue in in_progress_no_update),
+            "",
+            "## Manager Attention",
+            *(_render_pm_attention_item(issue) for issue in manager_attention_items),
         ]
     ).strip()
     if prompt_template:
         prompt = prompt_template.format(
             reference_date=reference_date,
             status_filter=status_filter,
-            updated_issue_count=len(updated_today),
+            updated_issue_count=len(active_today),
             stale_issue_count=len(stale_in_progress),
             issue_summaries=issue_summaries,
             prompt_mode=prompt_mode,
@@ -293,7 +388,7 @@ def build_jira_pm_daily_report(
         prompt = build_jira_pm_daily_prompt(
             reference_date=reference_date,
             status_filter=status_filter,
-            updated_issue_count=len(updated_today),
+            updated_issue_count=len(active_today),
             stale_issue_count=len(stale_in_progress),
             issue_summaries=issue_summaries,
             prompt_mode=prompt_mode,
@@ -301,31 +396,39 @@ def build_jira_pm_daily_report(
     markdown_sections = [
         f"# Jira PM Daily Report ({reference_date})",
         "",
-        "## Updated Today",
-        *(_render_pm_issue_line(document, reference_date, stale_threshold_hours) for document in updated_today),
+        "## Executive Summary",
+        *(f"- {line}" for line in executive_summary),
+        "",
+        "## Active Today",
+        *(_render_pm_issue_line(issue) for issue in active_today),
         "",
         "## In Progress But No Update",
-        *(_render_pm_issue_line(document, reference_date, stale_threshold_hours) for document in stale_in_progress),
+        *(_render_pm_issue_line(issue) for issue in in_progress_no_update),
         "",
         "## Manager Attention",
-        *(f"- {item}" for item in manager_attention or ["None"]),
+        *([f"- {_render_pm_attention_item(issue)}" for issue in manager_attention_items] or ["- None"]),
     ]
     payload = {
         "report_profile": "pm-daily",
         "reference_date": reference_date,
         "status_filter": status_filter,
-        "updated_issue_ids": [document["document_id"] for document in updated_today],
-        "stale_issue_ids": [document["document_id"] for document in stale_in_progress],
-        "issue_count": len(in_progress_documents),
-        "updated_issue_count": len(updated_today),
+        "executive_summary": executive_summary,
+        "active_today": active_today,
+        "in_progress_no_update": in_progress_no_update,
+        "updated_issue_ids": [issue["document_id"] for issue in active_today],
+        "stale_issue_ids": [issue["document_id"] for issue in stale_in_progress],
+        "issue_count": len(issue_facts),
+        "updated_issue_count": len(active_today),
         "stale_issue_count": len(stale_in_progress),
-        "manager_attention": manager_attention,
+        "manager_attention": [_render_pm_attention_item(issue) for issue in manager_attention_items],
+        "manager_attention_items": manager_attention_items,
         "markdown": "\n".join(markdown_sections).strip(),
         "prompt": prompt,
     }
     if llm_backend:
-        payload["answer"] = _build_report_llm_answer(prompt, llm_backend, len(in_progress_documents))
+        payload["answer"] = _build_report_llm_answer(prompt, llm_backend, len(issue_facts))
     return payload
+
 
 def _build_report_llm_answer(prompt: str, llm_backend: LLMBackend, issue_count: int) -> dict:
     return {
@@ -334,6 +437,7 @@ def _build_report_llm_answer(prompt: str, llm_backend: LLMBackend, issue_count: 
         "text": llm_backend.generate(prompt).strip(),
         "issue_count": issue_count,
     }
+
 
 def build_jira_spec_question_payload(
     *,
@@ -456,18 +560,70 @@ def _resolve_spec_section(spec_document: dict, *, clause: str | None = None, sec
     raise ValueError("Either clause or section_heading is required")
 
 
-def _spec_section_markdown(spec_document: dict, section: dict) -> tuple[str, str]:
+def _build_section_anchor(spec_document: dict, section: dict) -> dict:
+    clause = str(section.get("clause") or "").strip() or None
     page = section.get("page")
-    heading = section.get("heading") or "Untitled Section"
+    heading = str(section.get("heading") or "").strip() or "Untitled Section"
+    raw_section_id = str(section.get("id") or "").strip() or None
+    if clause and page is not None:
+        section_anchor_id = f"{spec_document['document_id']}:{clause}:{page}"
+    elif raw_section_id:
+        section_anchor_id = f"{spec_document['document_id']}:{raw_section_id}"
+    elif page is not None:
+        section_anchor_id = f"{spec_document['document_id']}:{heading}:{page}"
+    else:
+        section_anchor_id = f"{spec_document['document_id']}:{heading}"
+    return {
+        "heading": heading,
+        "clause": clause,
+        "page": page,
+        "raw_section_id": raw_section_id,
+        "section_anchor_id": section_anchor_id,
+    }
+
+
+def _section_blocks(spec_document: dict, section: dict) -> list[dict]:
+    content_blocks = spec_document.get("content_blocks", [])
+    section_id = section.get("id")
     clause = section.get("clause")
-    blocks = [
-        block.get("text", "")
-        for block in spec_document.get("content_blocks", [])
-        if page is None or block.get("page") == page
+    heading = section.get("heading")
+    page = section.get("page")
+
+    direct_matches = [
+        block
+        for block in content_blocks
+        if (section_id and block.get("section_id") == section_id)
+        or (clause and str(block.get("clause")) == str(clause))
+        or (heading and str(block.get("section_heading")) == str(heading))
     ]
-    section_label = f"{clause} {heading}".strip() if clause else heading
-    markdown = "\n".join([f"# {section_label}", "", *(block for block in blocks if block)]).strip()
-    return section_label, markdown
+    if direct_matches:
+        return direct_matches
+    if page is not None:
+        return [block for block in content_blocks if block.get("page") == page]
+    return list(content_blocks)
+
+
+def _spec_section_context(spec_document: dict, section: dict) -> dict:
+    anchor = _build_section_anchor(spec_document, section)
+    block_texts = [str(block.get("text") or "").strip() for block in _section_blocks(spec_document, section) if str(block.get("text") or "").strip()]
+    section_label = f"{anchor['clause']} {anchor['heading']}".strip() if anchor["clause"] else anchor["heading"]
+    markdown_lines = [
+        f"# {section_label}",
+        "",
+        f"- Section Anchor: {anchor['section_anchor_id']}",
+        f"- Page: {anchor['page'] if anchor['page'] is not None else 'unknown'}",
+        "",
+        *(block_texts or ["No section text available."]),
+    ]
+    return {
+        "heading": anchor["heading"],
+        "clause": anchor["clause"],
+        "page": anchor["page"],
+        "label": section_label,
+        "markdown": "\n".join(markdown_lines).strip(),
+        "section_anchor_id": anchor["section_anchor_id"],
+        "context_blocks": block_texts,
+    }
 
 
 def build_spec_section_explain_payload(
@@ -484,8 +640,11 @@ def build_spec_section_explain_payload(
     llm_backend: LLMBackend | None = None,
 ) -> dict:
     section = _resolve_spec_section(spec_document, clause=clause, section_heading=section_heading)
-    section_label, section_markdown = _spec_section_markdown(spec_document, section)
-    query = question or f"Which Jira issues help explain {section_label} in {spec_document['title']}?"
+    section_context = _spec_section_context(spec_document, section)
+    section_label = section_context["label"]
+    section_markdown = section_context["markdown"]
+    section_excerpt = " ".join(section_context["context_blocks"][:2]).strip()
+    query = question or f"Which Jira issues help explain {section_label} in {spec_document['title']}? {section_excerpt}".strip()
     retrieval_payload = build_retrieval_consumption_payload(
         documents=jira_documents,
         question=query,
@@ -504,22 +663,54 @@ def build_spec_section_explain_payload(
             "section_markdown": section_markdown,
         },
     )
-    if not prompt_template:
-        cited_jira_ids = {
-            citation["document"]
-            for citation in retrieval_payload["retrieval"]["citations"]
-            if citation["document"] != spec_document["document_id"]
+    citation_rank: dict[str, int] = {}
+    citation_evidence: dict[str, list[str]] = {}
+    for index, citation in enumerate(retrieval_payload["retrieval"]["citations"]):
+        document_id = citation["document"]
+        citation_rank.setdefault(document_id, index)
+        evidence_text = " ".join(citation.get("evidence_span", [])).strip()
+        if evidence_text:
+            citation_evidence.setdefault(document_id, []).append(evidence_text)
+
+    related_jira_documents = sorted(
+        [
+            document
+            for document in jira_documents
+            if document["document_id"] in citation_rank
+        ],
+        key=lambda document: citation_rank.get(document["document_id"], 10**6),
+    )
+    related_issues = [
+        {
+            "document_id": document["document_id"],
+            "title": document.get("title", document["document_id"]),
+            "owner": _first_issue_field(document, ["Assignee", "Owner"]) or "unknown",
+            "priority": _issue_field(document, "Priority") or "unknown",
+            "status": _issue_field(document, "Status") or "unknown",
+            "updated_at": document.get("version") or "unknown",
+            "latest_comment": _latest_comment(document),
+            "evidence_spans": citation_evidence.get(document["document_id"], []),
+            "summary_markdown": summarize_jira_issue_markdown(document),
         }
-        related_jira_documents = [
-            document for document in jira_documents if document["document_id"] in cited_jira_ids
-        ]
-        evidence_text = "\n\n---\n\n".join(
-            summarize_jira_issue_markdown(document) for document in related_jira_documents
+        for document in related_jira_documents
+    ]
+    if not prompt_template:
+        jira_summary_text = "\n\n".join(
+            _structured_jira_summary(
+                document,
+                evidence_spans=citation_evidence.get(document["document_id"], []),
+            )
+            for document in related_jira_documents
+        )
+        evidence_text = "\n".join(
+            f"- {citation['document']} v{citation['version']}: {' '.join(citation.get('evidence_span', []))}"
+            for citation in retrieval_payload["retrieval"]["citations"]
         )
         retrieval_payload["ai_prompt"] = build_spec_section_explain_prompt(
             spec_document_id=spec_document["document_id"],
             section_label=section_label,
             section_markdown=section_markdown,
+            jira_summary_text=jira_summary_text,
             evidence_text=evidence_text,
             prompt_mode=prompt_mode,
         )
@@ -534,28 +725,14 @@ def build_spec_section_explain_payload(
     jira_citations = citations
     return {
         "spec_document_id": spec_document["document_id"],
-        "section": {
-            "heading": section.get("heading"),
-            "clause": section.get("clause"),
-            "page": section.get("page"),
-            "label": section_label,
-            "markdown": section_markdown,
-        },
+        "section": section_context,
         "question": query,
         "retrieval": {
             "result_count": retrieval_payload["retrieval"]["result_count"],
             "citations": citations,
             "has_jira_evidence": bool(jira_citations),
         },
-        "related_issues": [
-            {
-                "document_id": document["document_id"],
-                "title": document.get("title", document["document_id"]),
-                "summary_markdown": summarize_jira_issue_markdown(document),
-            }
-            for document in jira_documents
-            if document["document_id"] in {citation["document"] for citation in citations}
-        ],
+        "related_issues": related_issues,
         "ai_prompt": retrieval_payload["ai_prompt"],
         "answer": retrieval_payload["answer"] if llm_backend else build_spec_section_extractive_answer(
             spec_document_id=spec_document["document_id"],
@@ -613,6 +790,8 @@ def build_confluence_wiki_summary_payload(
         "title": document.get("title", document["document_id"]),
         "source_uri": document.get("provenance", {}).get("source_uri"),
         "version": document.get("version"),
+        "space": document.get("metadata", {}).get("space") or document.get("provenance", {}).get("space") or "General",
+        "derived_marker": "Derived page - canonical source remains Confluence.",
         "prompt": prompt,
         "answer": answer,
     }
@@ -627,40 +806,150 @@ def render_confluence_static_wiki(
     pages_dir = root / "pages"
     pages_dir.mkdir(parents=True, exist_ok=True)
     written_pages = []
-    index_items = []
+    index_groups: dict[str, list[str]] = {}
+    shared_style = """
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f5f1e8;
+  --paper: #fffdf8;
+  --ink: #1f2933;
+  --muted: #5b6570;
+  --line: #d6cfbf;
+  --accent: #a4471c;
+  --accent-soft: #f4dfd3;
+}
+body {
+  margin: 0;
+  padding: 40px;
+  background: linear-gradient(180deg, #f7f3eb 0%, #efe6d8 100%);
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+}
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.hero,
+.page-shell,
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 30px rgba(31, 41, 51, 0.08);
+}
+.hero,
+.page-shell {
+  padding: 28px;
+}
+.eyebrow,
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.group-title {
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.card {
+  padding: 20px;
+}
+.card h3,
+.page-shell h1 {
+  margin-top: 0;
+}
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+.summary {
+  margin-top: 14px;
+  line-height: 1.6;
+}
+.traceability {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+a {
+  color: var(--accent);
+}
+</style>
+""".strip()
     for payload in page_payloads:
         page_path = pages_dir / f"{payload['document_id']}.html"
         answer_text = escape(payload["answer"]["text"]).replace("\n", "<br/>\n")
         page_html = "\n".join(
             [
                 "<!doctype html>",
-                "<html><head><meta charset=\"utf-8\"><title>{}</title></head><body>".format(escape(payload["title"])),
+                "<html><head><meta charset=\"utf-8\"><title>{}</title>{}</head><body><div class=\"shell\">".format(
+                    escape(payload["title"]),
+                    shared_style,
+                ),
+                "<article class=\"page-shell\">",
+                f"<span class=\"badge\">Derived page</span>",
                 f"<h1>{escape(payload['title'])}</h1>",
-                f"<p><strong>Document ID:</strong> {escape(payload['document_id'])}</p>",
-                f"<p><strong>Version:</strong> {escape(str(payload.get('version') or ''))}</p>",
+                f"<p class=\"meta\"><strong>Document ID:</strong> {escape(payload['document_id'])}</p>",
+                f"<p class=\"meta\"><strong>Version:</strong> {escape(str(payload.get('version') or ''))}</p>",
+                f"<p class=\"meta\"><strong>Space:</strong> {escape(str(payload.get('space') or 'General'))}</p>",
+                f"<div class=\"summary\"><h2>Summary</h2><p>{answer_text}</p></div>",
+                "<section class=\"traceability\">",
+                "<h2>Source Traceability</h2>",
                 f"<p><strong>Source:</strong> {escape(str(payload.get('source_uri') or ''))}</p>",
-                "<p><strong>Derived page:</strong> This page is a summary and does not replace source truth.</p>",
-                "<h2>Summary</h2>",
-                f"<p>{answer_text}</p>",
+                f"<p><strong>Derived marker:</strong> {escape(str(payload.get('derived_marker') or 'Derived page'))}</p>",
+                "</section>",
+                "</article>",
+                "</div>",
                 "</body></html>",
             ]
         )
         page_path.write_text(page_html, encoding="utf-8")
         written_pages.append(str(page_path))
         first_line = payload["answer"]["text"].splitlines()[0] if payload["answer"]["text"] else payload["title"]
-        index_items.append(
-            f"<li><a href=\"pages/{escape(payload['document_id'])}.html\">{escape(payload['title'])}</a> - {escape(first_line)}</li>"
+        card_html = "\n".join(
+            [
+                "<article class=\"card\">",
+                f"<span class=\"eyebrow\">{escape(str(payload.get('space') or 'General'))}</span>",
+                f"<h3><a href=\"pages/{escape(payload['document_id'])}.html\">{escape(payload['title'])}</a></h3>",
+                f"<p class=\"meta\">Version {escape(str(payload.get('version') or ''))}</p>",
+                f"<p class=\"summary\">{escape(first_line)}</p>",
+                "<p class=\"meta\">Derived Confluence Wiki entry with source traceability.</p>",
+                "</article>",
+            ]
         )
+        index_groups.setdefault(str(payload.get("space") or "General"), []).append(card_html)
 
+    grouped_sections = []
+    for group_name, cards in index_groups.items():
+        grouped_sections.extend(
+            [
+                f"<h2 class=\"group-title\">{escape(group_name)}</h2>",
+                "<section class=\"card-grid\">",
+                *cards,
+                "</section>",
+            ]
+        )
     index_html = "\n".join(
         [
             "<!doctype html>",
-            "<html><head><meta charset=\"utf-8\"><title>Confluence Wiki Demo</title></head><body>",
-            "<h1>Confluence Wiki Demo</h1>",
-            "<p>Derived summaries generated from Confluence documents.</p>",
-            "<ul>",
-            *index_items,
-            "</ul>",
+            f"<html><head><meta charset=\"utf-8\"><title>Derived Confluence Wiki</title>{shared_style}</head><body><div class=\"shell\">",
+            "<section class=\"hero\">",
+            "<span class=\"eyebrow\">Static export</span>",
+            "<h1>Derived Confluence Wiki</h1>",
+            "<p>Document-level summaries generated from Confluence sources. These pages are derived views and do not replace canonical source truth.</p>",
+            "</section>",
+            *grouped_sections,
+            "</div>",
             "</body></html>",
         ]
     )
