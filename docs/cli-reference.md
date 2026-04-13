@@ -41,6 +41,66 @@ Primary entrypoint:
 python scripts/platform_cli.py <command>
 ```
 
+## Workspace CLI
+
+The repository also provides a workflow-first operator CLI for staged Jira and Confluence validation:
+
+```bash
+python scripts/workspace_cli.py <command>
+```
+
+Supported commands:
+
+- `init <workspace>`
+- `fetch <workspace> <spec>`
+- `build <workspace>`
+- `export <workspace>`
+- `query <workspace> "<question>"`
+- `status <workspace>`
+- `lint <workspace>`
+- `watch <workspace>`
+
+Recommended workspace layout:
+
+```text
+<workspace>/
+  config.json
+  raw/
+    jira/specs/
+    jira/payloads/
+    confluence/specs/
+    confluence/payloads/
+  snapshots/current/
+  exports/latest/
+  runs/
+  wiki/
+```
+
+Usage model:
+
+- `init` creates the fixed workspace layout and starter spec files.
+- `fetch` resolves a saved source spec and writes the normalized sync payload into `raw/*/payloads/`.
+- `build` rebuilds `snapshots/current/` from the current payload set.
+- `export` emits Markdown plus `page_index.json` from the current snapshot.
+- `query` searches the snapshot PageIndex directly and can optionally call a local LLM backend.
+- `status` reports spec counts, payload counts, snapshot manifest, and latest export state.
+- `lint` checks workspace integrity and stale snapshot/export conditions.
+- `watch` polls workspace spec/payload changes and can run a bootstrap pass with `--run-once`.
+
+Query examples:
+
+```bash
+python scripts/workspace_cli.py query .tmp/workspace "black screen"
+python scripts/workspace_cli.py query .tmp/workspace "black screen" --llm-backend mock --llm-mock-response "Mock workspace answer"
+python scripts/workspace_cli.py query .tmp/workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
+python scripts/workspace_cli.py query .tmp/workspace "black screen" --llm-backend openai-compatible --llm-model local-model --llm-base-url http://localhost:1234/v1
+python scripts/workspace_cli.py query .tmp/workspace "black screen" --output-answer-md .tmp/workspace-answer.md
+```
+
+This CLI is an orchestration layer only. Canonical documents, snapshots, and PageIndex remain the repository truth-bearing runtime contracts.
+
+For a from-zero setup walkthrough and detailed source spec field descriptions, see [workspace-cli-guide.md](workspace-cli-guide.md).
+
 ## Commands
 
 ### Governance
@@ -62,6 +122,7 @@ python scripts/platform_cli.py ops-health --snapshot-dir .tmp/snapshot --referen
 python scripts/platform_cli.py sync-health jira fixtures/connectors/jira/incremental_sync.json --snapshot-dir .tmp/snapshot --reference-time-iso 2026-04-06T09:10:00Z
 python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/incremental_sync.json --reference-time-iso 2026-04-06T09:10:00Z
 python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN
+python scripts/platform_cli.py multi-sync-health --snapshot-dir .tmp/snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN --confluence-fetch-backend atlassian-api --confluence-root-page-id 123456 --confluence-include-descendants --confluence-max-depth 2
 python scripts/platform_cli.py multi-sync-health --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot
 python scripts/platform_cli.py multi-sync-health --profile fixtures/ops/selective_live_multi_sync_profile.json --snapshot-dir .tmp/selective-live-snapshot
 ```
@@ -92,6 +153,7 @@ Selective live fetch with the experimental Atlassian backend:
 python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --issue-key SSD-777
 python scripts/platform_cli.py connector jira --live --base-url https://jira.example.com --token $JIRA_TOKEN --fetch-backend atlassian-api --project-key SSD --issue-type Bug --updated-from 2026-04-01T00:00:00Z --updated-to 2026-04-10T00:00:00Z --no-include-comments
 python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --page-id 123456
+python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --root-page-id 123456 --include-descendants --max-depth 2
 python scripts/platform_cli.py connector confluence --live --base-url https://confluence.example.com --token $CONF_TOKEN --fetch-backend atlassian-api --space-key SSDENG --label firmware --modified-from 2026-04-01T00:00:00Z
 ```
 
@@ -134,6 +196,7 @@ python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/conne
 python scripts/platform_cli.py jira-batch-spec-report --jira-path fixtures/connectors/jira/incremental_sync.json --updated-from-iso 2026-04-05T09:00:00Z --updated-to-iso 2026-04-05T10:00:00Z --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --question-template "Analyze Jira {jira_issue_id} against the selected spec." --llm-backend ollama --llm-model qwen2.5:7b
 python scripts/platform_cli.py spec-section-explain --jira-path fixtures/connectors/jira/incremental_sync.json --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1
 python scripts/platform_cli.py confluence-wiki-demo --confluence-path fixtures/connectors/confluence/page_sync.json --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock confluence wiki summary"
+python scripts/platform_cli.py build-spec-corpus --spec-pdf fixtures/corpus/pdf/sample.pdf --output-dir .tmp/spec-build --preferred-parser pypdf
 python scripts/platform_cli.py demo-orchestrate --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/demo/snapshot --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp/demo
 ```
 
@@ -157,6 +220,9 @@ python scripts/platform_cli.py retrieval-consume --snapshot-dir .tmp/snapshot --
 ```bash
 python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md .tmp/export.md --output-page-index .tmp/export-page-index.json
 python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_health_profile.json --snapshot-dir .tmp/snapshot --output-md-dir .tmp/export-docs
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp/jira-snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --output-md .tmp/jira-only.md --output-page-index .tmp/jira-only-page-index.json
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp/confluence-snapshot --confluence-path fixtures/connectors/confluence/incremental_sync.json --output-md .tmp/confluence-only.md --output-page-index .tmp/confluence-only-page-index.json
+python scripts/platform_cli.py sync-export --snapshot-dir .tmp/tree-snapshot --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN --confluence-fetch-backend atlassian-api --confluence-root-page-id 123456 --confluence-include-descendants --confluence-max-depth 2 --output-md-dir .tmp/tree-export
 ```
 
 `sync-export` performs a source sync, refreshes the local snapshot, and exports Markdown / Markdown tree / PageIndex from either:
@@ -165,6 +231,67 @@ python scripts/platform_cli.py sync-export --profile fixtures/ops/multi_sync_hea
   - only the documents returned by the current sync
 - `--export-scope snapshot`
   - the full current snapshot document set
+
+`sync-export` now supports single-source execution. You can provide only Jira or only Confluence when the goal is to validate document export for one source family.
+
+### Build Wiki Site
+
+```bash
+python scripts/platform_cli.py build-wiki-site --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/wiki-demo/snapshot --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp/wiki-demo
+python scripts/platform_cli.py build-wiki-site --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/wiki-demo/snapshot --spec-pdf fixtures/corpus/pdf/sample.pdf --preferred-parser pypdf --reference-date 2026-04-05 --output-dir .tmp/wiki-demo
+python scripts/platform_cli.py build-wiki-site --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --jira-project-key SSD --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN --confluence-fetch-backend atlassian-api --confluence-root-page-id 123456 --confluence-include-descendants --spec-pdf C:\docs\nvme.pdf --reference-date 2026-04-05 --output-dir .tmp\wiki-demo
+```
+
+`build-wiki-site` creates two decoupled outputs:
+
+- `export/`
+  - document-level export package with `manifest.json`, `changes.json`, `page_index.json`, `documents/.../document.md`, and `metadata.json`
+- `wiki_site/`
+  - MkDocs-compatible docs tree plus `mkdocs.yml`
+
+The command reuses the existing connector, export, and analysis seams. The site layer remains derived and independent from canonical/snapshot truth.
+
+To render and preview the generated wiki site:
+
+```bash
+cd .tmp/wiki-demo/wiki_site
+python -m mkdocs build
+python -m mkdocs serve
+```
+
+## Demo Validation
+
+Shortest fixture-backed demo path:
+
+```bash
+python scripts/platform_cli.py build-wiki-site --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/wiki-demo/snapshot --spec-pdf fixtures/corpus/pdf/sample.pdf --preferred-parser pypdf --reference-date 2026-04-05 --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock wiki answer"
+```
+
+Real-PDF demo path with existing corpus contract:
+
+```bash
+python scripts/platform_cli.py build-wiki-site --jira-path fixtures/connectors/jira/incremental_sync.json --confluence-path fixtures/connectors/confluence/page_sync.json --snapshot-dir .tmp/wiki-demo/snapshot --spec-corpus fixtures/retrieval/pageindex_corpus.json --spec-document-id nvme-spec-v1 --clause 1.1 --reference-date 2026-04-05 --output-dir .tmp/wiki-demo --llm-backend mock --llm-mock-response "Mock wiki answer"
+```
+
+Optional live Jira + Confluence + real NVMe PDF path:
+
+```bash
+python scripts/platform_cli.py build-wiki-site --jira-live --jira-base-url https://jira.example.com --jira-token $JIRA_TOKEN --jira-project-key SSD --confluence-live --confluence-base-url https://confluence.example.com --confluence-token $CONF_TOKEN --confluence-fetch-backend atlassian-api --confluence-root-page-id 123456 --confluence-include-descendants --confluence-max-depth 2 --spec-pdf C:\docs\nvme.pdf --preferred-parser pypdf --reference-date 2026-04-05 --output-dir .tmp/wiki-demo-live
+```
+
+Render and preview:
+
+```bash
+cd .tmp/wiki-demo/wiki_site
+python -m mkdocs build
+python -m mkdocs serve
+```
+
+Notes:
+
+- `build-wiki-site` is renderer-decoupled from the export package.
+- `wiki_site/` is derived output only.
+- `mkdocs` and `mkdocs-material` are required locally for preview/build.
 
 ### Portal
 
@@ -192,8 +319,10 @@ python scripts/platform_cli.py portal-state --query "nvme flush"
 - `spec-section-explain` is a section-centered demo flow that explains a selected spec clause or heading through retrieved Jira evidence. The payload now includes a lightweight `section_anchor_id` helper and a prompt section with structured Jira summaries.
 - `retrieval-consume` is the source-generic retrieval-consumption CLI for Jira/Confluence fixture payloads, live Jira/Confluence sources, direct file-backed Markdown/Office/PDF inputs, and snapshot-backed document sets. It assembles citation-backed prompts and can optionally call a local LLM backend.
 - `confluence-wiki-demo` builds a small static HTML wiki demo from Confluence-derived summaries, including an index page with grouped summary cards and detail pages that retain version/source/derived traceability markers.
+- `build-spec-corpus` converts a spec PDF into `spec-doc.json` plus `spec-corpus.json` so downstream spec demo flows can consume a stable `{"documents": [...]}` corpus input.
 - `demo-orchestrate` is the one-command demo path. It refreshes the snapshot-first Jira/Confluence demo inputs, writes `.tmp/demo/jira-daily.md` and `.tmp/demo/spec-section.md`, and builds `.tmp/demo/wiki/`.
 - `sync-export` is the current document-level export path. It does not yet implement section-level derived wiki generation.
+- PDF parsing defaults to `auto`: try MinerU first, then fall back to `pypdf`. If MinerU is installed in a separate Python environment, set `MINERU_PYTHON_EXE` or use `build-spec-corpus --mineru-python-exe ...`.
 - `--llm-prompt-mode strict|balanced|exploratory` controls local-model behavior. Use `strict` for release notes and reviewable reports, `balanced` for engineering triage, and `exploratory` only for follow-up investigation ideas.
 
 ## Skill-Ready CLIs

@@ -5,6 +5,7 @@ from collections import Counter
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -35,7 +36,7 @@ from services.ingest.adapters.office.adapter import parse_docx, parse_pptx, pars
 from services.ingest.adapters.pdf.adapter import extract_pdf_structure
 from services.ingest.markdown_export import documents_to_markdown, write_documents_markdown_tree
 from services.ops.health import build_ops_health
-from services.ops.orchestration import load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
+from services.ops.orchestration import configured_sources, load_source_payload, run_multi_sync_health, run_sync_export, run_sync_health
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
 from services.retrieval.persistence.snapshot_store import snapshot_paths
 from services.retrieval.toolkit import (
@@ -48,6 +49,7 @@ from services.retrieval.toolkit import (
     search_index,
 )
 from services.retrieval.indexing.page_index import build_page_index
+from services.wiki_site.builder import build_export_package, build_wiki_site
 
 
 def _print_json(payload: dict | list) -> int:
@@ -76,6 +78,45 @@ def _json_default(value: object) -> object:
         return dict(value)
     raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
 
+
+def _build_spec_corpus_from_pdf(
+    *,
+    spec_pdf: str | Path,
+    output_dir: str | Path,
+    preferred_parser: str = "auto",
+    mineru_python_exe: str | None = None,
+) -> dict:
+    output_root = Path(output_dir)
+    output_root.mkdir(parents=True, exist_ok=True)
+    previous_mineru_python = os.environ.get("MINERU_PYTHON_EXE")
+    try:
+        if mineru_python_exe:
+            os.environ["MINERU_PYTHON_EXE"] = mineru_python_exe
+        document = extract_pdf_structure(spec_pdf, preferred_parser=preferred_parser)
+    finally:
+        if mineru_python_exe:
+            if previous_mineru_python is None:
+                os.environ.pop("MINERU_PYTHON_EXE", None)
+            else:
+                os.environ["MINERU_PYTHON_EXE"] = previous_mineru_python
+
+    spec_doc_path = output_root / "spec-doc.json"
+    spec_corpus_path = output_root / "spec-corpus.json"
+    spec_doc_path.write_text(json.dumps(document, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8")
+    spec_corpus_path.write_text(
+        json.dumps({"documents": [document]}, indent=2, ensure_ascii=False, default=_json_default),
+        encoding="utf-8",
+    )
+    return {
+        "document_id": document["document_id"],
+        "preferred_parser": preferred_parser,
+        "parser_used": document.get("provenance", {}).get("parser"),
+        "spec_doc_json": str(spec_doc_path),
+        "spec_corpus_json": str(spec_corpus_path),
+        "section_count": len(document.get("structure", {}).get("sections", [])),
+        "content_block_count": len(document.get("content_blocks", [])),
+    }
+
 def _validate_retrieval_source(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.page_index and args.snapshot_dir:
         parser.error("Provide at most one of --page-index or --snapshot-dir")
@@ -100,6 +141,9 @@ def _add_live_fetch_args(command_parser: argparse.ArgumentParser) -> None:
     command_parser.add_argument("--updated-to")
     command_parser.add_argument("--page-id")
     command_parser.add_argument("--page-ids")
+    command_parser.add_argument("--root-page-id")
+    command_parser.add_argument("--include-descendants", action="store_true")
+    command_parser.add_argument("--max-depth", type=int)
     command_parser.add_argument("--title")
     command_parser.add_argument("--ancestor-id")
     command_parser.add_argument("--modified-from")
@@ -133,6 +177,9 @@ def _add_prefixed_confluence_fetch_args(command_parser: argparse.ArgumentParser)
     command_parser.add_argument("--confluence-fetch-backend", choices=["native", "atlassian-api"], default="native")
     command_parser.add_argument("--confluence-page-id")
     command_parser.add_argument("--confluence-page-ids")
+    command_parser.add_argument("--confluence-root-page-id")
+    command_parser.add_argument("--confluence-include-descendants", action="store_true")
+    command_parser.add_argument("--confluence-max-depth", type=int)
     command_parser.add_argument("--confluence-title")
     command_parser.add_argument("--confluence-label")
     command_parser.add_argument("--confluence-ancestor-id")
@@ -177,17 +224,26 @@ def _validate_confluence_filter_args(parser: argparse.ArgumentParser, args: argp
     helper_values = [
         getattr(args, f"{prefix}page_id", None),
         getattr(args, f"{prefix}page_ids", None),
+        getattr(args, f"{prefix}root_page_id", None),
         getattr(args, f"{prefix}title", None),
         getattr(args, f"{prefix}label", None),
         getattr(args, f"{prefix}ancestor_id", None),
         getattr(args, f"{prefix}modified_from", None),
         getattr(args, f"{prefix}modified_to", None),
     ]
-    backend_only_features = any(helper_values) or getattr(args, f"{prefix}no_include_attachments", False) or getattr(args, f"{prefix}no_include_image_metadata", False) or getattr(args, f"{prefix}download_images", False)
+    include_descendants = getattr(args, f"{prefix}include_descendants", False)
+    max_depth = getattr(args, f"{prefix}max_depth", None)
+    backend_only_features = any(helper_values) or include_descendants or max_depth is not None or getattr(args, f"{prefix}no_include_attachments", False) or getattr(args, f"{prefix}no_include_image_metadata", False) or getattr(args, f"{prefix}download_images", False)
     if fetch_backend != "atlassian-api" and backend_only_features:
         parser.error("Selective Confluence live fetch flags require the atlassian-api backend")
     if cql and any(helper_values):
         parser.error("Confluence helper filters cannot be combined with raw CQL")
+    if include_descendants and not getattr(args, f"{prefix}root_page_id", None):
+        parser.error("Confluence descendant traversal requires --root-page-id")
+    if max_depth is not None and max_depth < 0:
+        parser.error("--max-depth must be greater than or equal to 0")
+    if max_depth is not None and not include_descendants:
+        parser.error("--max-depth requires --include-descendants")
     if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_attachments", False):
         parser.error("Image download requires attachments to be included")
     if getattr(args, f"{prefix}download_images", False) and getattr(args, f"{prefix}no_include_image_metadata", False):
@@ -220,11 +276,14 @@ def _validate_profile_source_config(parser: argparse.ArgumentParser, *, source_n
             [
                 config.get("page_id"),
                 config.get("page_ids"),
+                config.get("root_page_id"),
                 config.get("title"),
                 config.get("label"),
                 config.get("ancestor_id"),
                 config.get("modified_from"),
                 config.get("modified_to"),
+                config.get("include_descendants"),
+                config.get("max_depth") is not None,
                 config.get("include_attachments") is False,
                 config.get("include_image_metadata") is False,
                 config.get("download_images"),
@@ -236,9 +295,16 @@ def _validate_profile_source_config(parser: argparse.ArgumentParser, *, source_n
     ):
         parser.error("Jira profile helper filters cannot be combined with raw JQL")
     if source_name == "confluence" and config.get("cql") and any(
-        [config.get("page_id"), config.get("page_ids"), config.get("title"), config.get("label"), config.get("ancestor_id"), config.get("modified_from"), config.get("modified_to")]
+        [config.get("page_id"), config.get("page_ids"), config.get("root_page_id"), config.get("title"), config.get("label"), config.get("ancestor_id"), config.get("modified_from"), config.get("modified_to")]
     ):
         parser.error("Confluence profile helper filters cannot be combined with raw CQL")
+    if source_name == "confluence" and config.get("include_descendants") and not config.get("root_page_id"):
+        parser.error("Confluence descendant traversal requires root_page_id")
+    if source_name == "confluence" and config.get("max_depth") is not None:
+        if not isinstance(config.get("max_depth"), int) or config.get("max_depth") < 0:
+            parser.error("Confluence max_depth must be an integer greater than or equal to 0")
+        if not config.get("include_descendants"):
+            parser.error("Confluence max_depth requires include_descendants")
     if config.get("download_images") and not config.get("image_download_dir"):
         parser.error("Profile image download requires an image_download_dir")
 
@@ -284,10 +350,13 @@ def _load_connector_payload(args: argparse.Namespace) -> dict:
         updated_to=args.updated_to,
         page_id=args.page_id,
         page_ids=args.page_ids,
+        root_page_id=args.root_page_id,
         title=args.title,
         ancestor_id=args.ancestor_id,
         modified_from=args.modified_from,
         modified_to=args.modified_to,
+        include_descendants=args.include_descendants,
+        max_depth=args.max_depth,
         include_comments=not args.no_include_comments,
         include_attachments=not args.no_include_attachments,
         include_image_metadata=not args.no_include_image_metadata,
@@ -431,11 +500,14 @@ def _load_confluence_documents_from_args(parser: argparse.ArgumentParser, args: 
         fetch_backend=args.confluence_fetch_backend,
         page_id=args.confluence_page_id,
         page_ids=args.confluence_page_ids,
+        root_page_id=args.confluence_root_page_id,
         title=args.confluence_title,
         label=args.confluence_label,
         ancestor_id=args.confluence_ancestor_id,
         modified_from=args.confluence_modified_from,
         modified_to=args.confluence_modified_to,
+        include_descendants=args.confluence_include_descendants,
+        max_depth=args.confluence_max_depth,
         include_attachments=not args.confluence_no_include_attachments,
         include_image_metadata=not args.confluence_no_include_image_metadata,
         download_images=args.confluence_download_images,
@@ -496,11 +568,14 @@ def _load_retrieval_consumption_documents(parser: argparse.ArgumentParser, args:
             fetch_backend=args.fetch_backend,
             page_id=args.page_id,
             page_ids=args.page_ids,
+            root_page_id=args.root_page_id,
             title=args.title,
             label=args.label,
             ancestor_id=args.ancestor_id,
             modified_from=args.modified_from,
             modified_to=args.modified_to,
+            include_descendants=args.include_descendants,
+            max_depth=args.max_depth,
             include_attachments=not args.no_include_attachments,
             include_image_metadata=not args.no_include_image_metadata,
             download_images=args.download_images,
@@ -743,6 +818,12 @@ def main() -> int:
     confluence_wiki_demo_parser.add_argument("--prompt-template")
     _add_llm_backend_args(confluence_wiki_demo_parser)
 
+    build_spec_corpus_parser = subparsers.add_parser("build-spec-corpus")
+    build_spec_corpus_parser.add_argument("--spec-pdf", required=True)
+    build_spec_corpus_parser.add_argument("--output-dir", required=True)
+    build_spec_corpus_parser.add_argument("--preferred-parser", choices=["auto", "mineru", "pypdf"], default="auto")
+    build_spec_corpus_parser.add_argument("--mineru-python-exe")
+
     demo_orchestrate_parser = subparsers.add_parser("demo-orchestrate")
     demo_orchestrate_parser.add_argument("--snapshot-dir", default=".tmp/demo/snapshot")
     demo_orchestrate_parser.add_argument("--output-dir", default=".tmp/demo")
@@ -758,6 +839,26 @@ def main() -> int:
     demo_orchestrate_parser.add_argument("--reference-date", required=True)
     demo_orchestrate_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
     _add_llm_backend_args(demo_orchestrate_parser)
+
+    build_wiki_site_parser = subparsers.add_parser("build-wiki-site")
+    build_wiki_site_parser.add_argument("--snapshot-dir", default=".tmp/wiki-demo/snapshot")
+    build_wiki_site_parser.add_argument("--output-dir", default=".tmp/wiki-demo")
+    build_wiki_site_parser.add_argument("--profile")
+    build_wiki_site_parser.add_argument("--corpus", default="fixtures/retrieval/pageindex_corpus.json")
+    build_wiki_site_parser.add_argument("--reference-time-iso")
+    _add_jira_source_args(build_wiki_site_parser)
+    _add_confluence_source_args(build_wiki_site_parser)
+    build_wiki_site_parser.add_argument("--spec-corpus")
+    build_wiki_site_parser.add_argument("--spec-document-id")
+    build_wiki_site_parser.add_argument("--spec-pdf")
+    build_wiki_site_parser.add_argument("--preferred-parser", choices=["auto", "mineru", "pypdf"], default="auto")
+    build_wiki_site_parser.add_argument("--mineru-python-exe")
+    build_wiki_site_parser.add_argument("--clause")
+    build_wiki_site_parser.add_argument("--section-heading")
+    build_wiki_site_parser.add_argument("--reference-date", required=True)
+    build_wiki_site_parser.add_argument("--site-title", default="SSD Knowledge Wiki Demo")
+    build_wiki_site_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    _add_llm_backend_args(build_wiki_site_parser)
 
     retrieval_consume_parser = subparsers.add_parser("retrieval-consume")
     retrieval_consume_parser.add_argument("--snapshot-dir")
@@ -1128,31 +1229,19 @@ def main() -> int:
         profile = build_multi_sync_profile(args)
         if not profile["snapshot_dir"]:
             parser.error("snapshot dir is required via --snapshot-dir or --profile")
-        jira_config, confluence_config = profile["sources"]
-        _validate_prefixed_live_args(
-            parser,
-            args=args,
-            live=jira_config["live"],
-            base_url=jira_config.get("base_url"),
-            page_size=jira_config["page_size"],
-            source_name="jira",
-        )
-        _validate_prefixed_live_args(
-            parser,
-            args=args,
-            live=confluence_config["live"],
-            base_url=confluence_config.get("base_url"),
-            page_size=confluence_config["page_size"],
-            source_name="confluence",
-        )
-        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
-        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
-        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
-        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
-        if not jira_config["live"] and not jira_config.get("path"):
-            parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
-        if not confluence_config["live"] and not confluence_config.get("path"):
-            parser.error("Confluence source is required via --confluence-path, --confluence-live, or --profile")
+        active_source_configs = configured_sources(profile)
+        if not active_source_configs:
+            parser.error("At least one source is required for sync-export")
+        for config in active_source_configs:
+            _validate_prefixed_live_args(
+                parser,
+                args=args,
+                live=config["live"],
+                base_url=config.get("base_url"),
+                page_size=config["page_size"],
+                source_name=config["source_name"],
+            )
+            _validate_profile_source_config(parser, source_name=config["source_name"], config=config)
         payload = run_sync_export(profile, export_scope=args.export_scope)
         payload["profile"] = args.profile
         if args.output_md:
@@ -1194,6 +1283,15 @@ def main() -> int:
                 "page_count": len(page_payloads),
                 "pages": page_payloads,
             }
+        )
+    if args.command == "build-spec-corpus":
+        return _print_json(
+            _build_spec_corpus_from_pdf(
+                spec_pdf=args.spec_pdf,
+                output_dir=args.output_dir,
+                preferred_parser=args.preferred_parser,
+                mineru_python_exe=args.mineru_python_exe,
+            )
         )
     if args.command == "demo-orchestrate":
         if not args.clause and not args.section_heading:
@@ -1289,6 +1387,168 @@ def main() -> int:
                 "updated_issue_ids": report["updated_issue_ids"],
                 "stale_issue_ids": report["stale_issue_ids"],
                 "section": spec_payload["section"],
+            }
+        )
+    if args.command == "build-wiki-site":
+        if args.profile:
+            profile_errors = validate_multi_sync_profile(load_json_file(args.profile))
+            if profile_errors:
+                parser.error("; ".join(profile_errors))
+        profile = build_multi_sync_profile(args)
+        if not profile["snapshot_dir"]:
+            parser.error("snapshot dir is required via --snapshot-dir or --profile")
+        jira_config, confluence_config = profile["sources"]
+        _validate_prefixed_live_args(
+            parser,
+            args=args,
+            live=jira_config["live"],
+            base_url=jira_config.get("base_url"),
+            page_size=jira_config["page_size"],
+            source_name="jira",
+        )
+        _validate_prefixed_live_args(
+            parser,
+            args=args,
+            live=confluence_config["live"],
+            base_url=confluence_config.get("base_url"),
+            page_size=confluence_config["page_size"],
+            source_name="confluence",
+        )
+        _validate_profile_source_config(parser, source_name="jira", config=jira_config)
+        _validate_profile_source_config(parser, source_name="confluence", config=confluence_config)
+        if not jira_config["live"] and not jira_config.get("path"):
+            parser.error("Jira source is required via --jira-path, --jira-live, or --profile")
+        if not confluence_config["live"] and not confluence_config.get("path"):
+            parser.error("Confluence source is required via --confluence-path, --confluence-live, or --profile")
+
+        output_root = Path(args.output_dir)
+        export_root = output_root / "export"
+        wiki_output_root = output_root / "wiki_site"
+        llm_backend = _build_llm_backend_from_args(parser, args)
+
+        spec_corpus_path = args.spec_corpus
+        if args.spec_pdf:
+            spec_build_root = output_root / "spec_build"
+            spec_build_report = _build_spec_corpus_from_pdf(
+                spec_pdf=args.spec_pdf,
+                output_dir=spec_build_root,
+                preferred_parser=args.preferred_parser,
+                mineru_python_exe=args.mineru_python_exe,
+            )
+            spec_corpus_path = spec_build_report["spec_corpus_json"]
+            if not args.spec_document_id:
+                args.spec_document_id = spec_build_report["document_id"]
+
+        if not spec_corpus_path:
+            parser.error("Provide --spec-corpus or --spec-pdf")
+        spec_documents = load_document_snapshot(spec_corpus_path)
+        if not spec_documents:
+            parser.error("Spec corpus is empty")
+        spec_document = next(
+            (
+                document
+                for document in spec_documents
+                if not args.spec_document_id or document["document_id"] == args.spec_document_id
+            ),
+            None,
+        )
+        if spec_document is None:
+            parser.error(f"Spec document not found: {args.spec_document_id}")
+
+        if not args.clause and not args.section_heading:
+            first_section = (spec_document.get("structure", {}).get("sections") or [None])[0]
+            if not first_section:
+                parser.error("Provide --clause or --section-heading, or ensure the spec has at least one section")
+            if first_section.get("clause"):
+                args.clause = str(first_section["clause"])
+            else:
+                args.section_heading = str(first_section.get("heading") or "")
+
+        sync_payload = run_sync_export(profile, export_scope="incoming")
+        jira_documents = [document for document in sync_payload["documents"] if document["source_type"] == "jira"]
+        confluence_documents = [document for document in sync_payload["documents"] if document["source_type"] == "confluence"]
+        combined_documents = [*sync_payload["documents"], *spec_documents]
+
+        export_report = build_export_package(
+            export_root=export_root,
+            documents=combined_documents,
+            export_mode="wiki-demo",
+            source_snapshot=sync_payload["snapshot_dir"],
+        )
+
+        report = build_jira_pm_daily_report(
+            jira_documents,
+            reference_date=args.reference_date,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=llm_backend,
+        )
+        spec_payload = build_spec_section_explain_payload(
+            spec_document=spec_document,
+            jira_documents=jira_documents,
+            allowed_policies=set(args.policies),
+            clause=args.clause,
+            section_heading=args.section_heading,
+            prompt_mode=args.llm_prompt_mode,
+            llm_backend=llm_backend,
+        )
+
+        overview_body = "\n".join(
+            [
+                f"- Jira documents: {len(jira_documents)}",
+                f"- Confluence documents: {len(confluence_documents)}",
+                f"- Spec documents: {len(spec_documents)}",
+                f"- Snapshot dir: `{sync_payload['snapshot_dir']}`",
+                "",
+                "## Jira Daily Report",
+                "",
+                report.get("answer", {}).get("text") or report["markdown"],
+                "",
+                "## Spec Section Explanation",
+                "",
+                spec_payload["answer"]["text"],
+            ]
+        ).strip()
+        analysis_pages = [
+            {
+                "slug": "jira-daily.md",
+                "title": "Jira Daily Report",
+                "body": report.get("answer", {}).get("text") or report["markdown"],
+                "derived_from": [document["document_id"] for document in jira_documents],
+            },
+            {
+                "slug": "spec-section.md",
+                "title": "Spec Section Explanation",
+                "body": spec_payload["answer"]["text"],
+                "derived_from": [spec_document["document_id"], *[document["document_id"] for document in jira_documents]],
+            },
+            {
+                "slug": "demo-overview.md",
+                "title": "Three-Source Demo Overview",
+                "body": overview_body,
+                "derived_from": [document["document_id"] for document in combined_documents],
+            },
+        ]
+        site_report = build_wiki_site(
+            export_root=export_root,
+            output_root=wiki_output_root,
+            site_title=args.site_title,
+            analysis_pages=analysis_pages,
+        )
+        return _print_json(
+            {
+                "output_dir": str(output_root),
+                "snapshot_dir": sync_payload["snapshot_dir"],
+                "export": export_report,
+                "wiki_site": site_report,
+                "report_profile": report["report_profile"],
+                "updated_issue_ids": report["updated_issue_ids"],
+                "stale_issue_ids": report["stale_issue_ids"],
+                "section": spec_payload["section"],
+                "source_counts": {
+                    "jira": len(jira_documents),
+                    "confluence": len(confluence_documents),
+                    "spec": len(spec_documents),
+                },
             }
         )
     return 1

@@ -4,6 +4,12 @@
 
 This document summarizes the current foundation architecture as implemented in the repository. The active near-term milestone is Markdown + PageIndex + local LLM consumption for Jira, Confluence, PPTX, and PDF.
 
+## Terminology
+
+- `fixture`: a checked-in, deterministic sample input used to exercise the system without relying on live external systems. Fixtures are the contract-test baseline for sources such as Jira sync payloads, Confluence page payloads, and sample Office/PDF files.
+- `canonical document`: the normalized internal source-of-truth representation produced by ingestion. It is the authoritative shape that carries provenance, ACL metadata, structure metadata, and content blocks. Markdown, PageIndex, snapshots, and local LLM prompts are downstream projections or consumers of this representation.
+- `artifact`: a generated output with a stable shape that can be stored, exchanged, or consumed by later pipeline stages. In the current design this includes exported PageIndex JSON, snapshot files, evaluation outputs, and portal-state JSON. An artifact is usually derived from canonical documents rather than replacing them as truth.
+
 ## System Layers
 
 ### 1. Contract Layer

@@ -37,10 +37,13 @@ def load_source_payload(
     updated_to: str | None = None,
     page_id: str | None = None,
     page_ids: str | None = None,
+    root_page_id: str | None = None,
     title: str | None = None,
     ancestor_id: str | None = None,
     modified_from: str | None = None,
     modified_to: str | None = None,
+    include_descendants: bool = False,
+    max_depth: int | None = None,
     include_comments: bool = True,
     include_attachments: bool = True,
     include_image_metadata: bool = True,
@@ -92,11 +95,14 @@ def load_source_payload(
         fetch_backend=fetch_backend,
         page_id=page_id,
         page_ids=page_ids,
+        root_page_id=root_page_id,
         title=title,
         label=label,
         ancestor_id=ancestor_id,
         modified_from=modified_from,
         modified_to=modified_to,
+        include_descendants=include_descendants,
+        max_depth=max_depth,
         include_attachments=include_attachments,
         include_image_metadata=include_image_metadata,
         download_images=download_images,
@@ -149,10 +155,13 @@ def run_sync_health(
     updated_to: str | None = None,
     page_id: str | None = None,
     page_ids: str | None = None,
+    root_page_id: str | None = None,
     title: str | None = None,
     ancestor_id: str | None = None,
     modified_from: str | None = None,
     modified_to: str | None = None,
+    include_descendants: bool = False,
+    max_depth: int | None = None,
     include_comments: bool = True,
     include_attachments: bool = True,
     include_image_metadata: bool = True,
@@ -187,10 +196,13 @@ def run_sync_health(
         updated_to=updated_to,
         page_id=page_id,
         page_ids=page_ids,
+        root_page_id=root_page_id,
         title=title,
         ancestor_id=ancestor_id,
         modified_from=modified_from,
         modified_to=modified_to,
+        include_descendants=include_descendants,
+        max_depth=max_depth,
         include_comments=include_comments,
         include_attachments=include_attachments,
         include_image_metadata=include_image_metadata,
@@ -252,10 +264,13 @@ def run_multi_sync_health(profile: dict) -> dict:
             updated_to=config.get("updated_to"),
             page_id=config.get("page_id"),
             page_ids=config.get("page_ids"),
+            root_page_id=config.get("root_page_id"),
             title=config.get("title"),
             ancestor_id=config.get("ancestor_id"),
             modified_from=config.get("modified_from"),
             modified_to=config.get("modified_to"),
+            include_descendants=config.get("include_descendants", False),
+            max_depth=config.get("max_depth"),
             include_comments=config.get("include_comments", True),
             include_attachments=config.get("include_attachments", True),
             include_image_metadata=config.get("include_image_metadata", True),
@@ -298,6 +313,14 @@ def _resolve_source_cursor(manifest: dict, config: dict) -> str | None:
     return source_manifest.get("cursor")
 
 
+def configured_sources(profile: dict) -> list[dict]:
+    return [
+        config
+        for config in profile["sources"]
+        if config.get("live") or config.get("path")
+    ]
+
+
 def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
     snapshot_dir = profile["snapshot_dir"]
     ensure_snapshot(snapshot_dir, profile["corpus"])
@@ -305,7 +328,7 @@ def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
     incoming_documents = []
     refresh_reports = []
 
-    for config in profile["sources"]:
+    for config in configured_sources(profile):
         sync_payload = load_source_payload(
             kind=config["kind"],
             path=config["path"],
@@ -333,10 +356,13 @@ def run_sync_export(profile: dict, *, export_scope: str = "incoming") -> dict:
             updated_to=config.get("updated_to"),
             page_id=config.get("page_id"),
             page_ids=config.get("page_ids"),
+            root_page_id=config.get("root_page_id"),
             title=config.get("title"),
             ancestor_id=config.get("ancestor_id"),
             modified_from=config.get("modified_from"),
             modified_to=config.get("modified_to"),
+            include_descendants=config.get("include_descendants", False),
+            max_depth=config.get("max_depth"),
             include_comments=config.get("include_comments", True),
             include_attachments=config.get("include_attachments", True),
             include_image_metadata=config.get("include_image_metadata", True),

@@ -249,6 +249,47 @@ def _fetch_page_by_id(client, page_id: str) -> dict:
     )
 
 
+def _fetch_child_pages(client, *, page_id: str, start: int = 0, limit: int = 100) -> dict:
+    return _confluence_get(
+        client,
+        f"rest/api/content/{page_id}/child/page",
+        params={"start": start, "limit": limit, "expand": "body.storage,version,space"},
+    )
+
+
+def _fetch_page_tree_by_root_id(client, *, root_page_id: str, max_depth: int | None = None) -> list[dict]:
+    root_page = _fetch_page_by_id(client, root_page_id)
+    seen_page_ids = {str(root_page["id"])}
+    ordered_pages = [root_page]
+    queue: list[tuple[dict, int]] = [(root_page, 0)]
+
+    while queue:
+        current_page, depth = queue.pop(0)
+        if max_depth is not None and depth >= max_depth:
+            continue
+
+        start = 0
+        size = None
+        while size is None or size > 0:
+            payload = _fetch_child_pages(client, page_id=str(current_page["id"]), start=start, limit=100)
+            children = payload.get("results", [])
+            size = len(children)
+            if not children:
+                break
+
+            for child in children:
+                child_id = str(child["id"])
+                if child_id in seen_page_ids:
+                    continue
+                seen_page_ids.add(child_id)
+                ordered_pages.append(child)
+                queue.append((child, depth + 1))
+
+            start += size
+
+    return ordered_pages
+
+
 def fetch_confluence_page_sync_atlassian_api(
     *,
     base_url: str,
@@ -263,11 +304,14 @@ def fetch_confluence_page_sync_atlassian_api(
     verify_ssl: bool = True,
     page_id: str | None = None,
     page_ids: str | None = None,
+    root_page_id: str | None = None,
     title: str | None = None,
     label: str | None = None,
     ancestor_id: str | None = None,
     modified_from: str | None = None,
     modified_to: str | None = None,
+    include_descendants: bool = False,
+    max_depth: int | None = None,
     include_attachments: bool = True,
     include_image_metadata: bool = True,
     download_images: bool = False,
@@ -303,7 +347,13 @@ def fetch_confluence_page_sync_atlassian_api(
         exact_page_ids.append(page_id)
     exact_page_ids.extend(_parse_csv_values(page_ids))
 
-    if exact_page_ids:
+    if root_page_id and include_descendants:
+        raw_pages = _fetch_page_tree_by_root_id(
+            client,
+            root_page_id=root_page_id,
+            max_depth=max_depth,
+        )
+    elif exact_page_ids:
         raw_pages = [_fetch_page_by_id(client, current_page_id) for current_page_id in exact_page_ids]
     else:
         raw_pages = []
@@ -351,10 +401,13 @@ def fetch_confluence_page_sync_atlassian_api(
             "cql": effective_cql,
             "page_id": page_id,
             "page_ids": _parse_csv_values(page_ids),
+            "root_page_id": root_page_id,
             "space_key": space_key,
             "title": title,
             "label": label,
             "ancestor_id": ancestor_id,
+            "include_descendants": include_descendants,
+            "max_depth": max_depth,
             "modified_from": modified_from or cursor,
             "modified_to": modified_to,
             "include_attachments": include_attachments,

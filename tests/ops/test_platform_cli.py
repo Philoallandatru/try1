@@ -525,6 +525,32 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("Source Traceability", detail_html)
             self.assertIn("Version", detail_html)
 
+    def test_cli_build_spec_corpus_writes_document_and_corpus_json(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            result = self._run(
+                "build-spec-corpus",
+                "--spec-pdf",
+                "fixtures/corpus/pdf/sample.pdf",
+                "--output-dir",
+                temp_dir,
+                "--preferred-parser",
+                "pypdf",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["document_id"], "sample")
+            self.assertEqual(payload["preferred_parser"], "pypdf")
+            self.assertEqual(payload["parser_used"], "pypdf")
+            self.assertTrue((Path(temp_dir) / "spec-doc.json").exists())
+            self.assertTrue((Path(temp_dir) / "spec-corpus.json").exists())
+
+            spec_doc = json.loads((Path(temp_dir) / "spec-doc.json").read_text(encoding="utf-8"))
+            spec_corpus = json.loads((Path(temp_dir) / "spec-corpus.json").read_text(encoding="utf-8"))
+            self.assertEqual(spec_doc["document_id"], "sample")
+            self.assertEqual(spec_corpus["documents"][0]["document_id"], "sample")
+            self.assertGreaterEqual(payload["section_count"], 1)
+            self.assertGreaterEqual(payload["content_block_count"], 1)
+
     def test_cli_demo_orchestrate_generates_demo_output_tree(self) -> None:
         with TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir) / "demo"
@@ -562,6 +588,79 @@ class PlatformCliTest(unittest.TestCase):
             self.assertTrue((snapshot_dir / "manifest.json").exists())
             self.assertEqual(payload["jira_daily_md"], str(output_dir / "jira-daily.md"))
             self.assertEqual(payload["spec_section_md"], str(output_dir / "spec-section.md"))
+
+    def test_cli_build_wiki_site_generates_export_and_mkdocs_tree(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "wiki-demo"
+            snapshot_dir = Path(temp_dir) / "snapshot"
+            result = self._run(
+                "build-wiki-site",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--snapshot-dir",
+                str(snapshot_dir),
+                "--spec-corpus",
+                "fixtures/retrieval/pageindex_corpus.json",
+                "--spec-document-id",
+                "nvme-spec-v1",
+                "--clause",
+                "1.1",
+                "--reference-date",
+                "2026-04-05",
+                "--output-dir",
+                str(output_dir),
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock wiki answer",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            export_root = output_dir / "export"
+            wiki_site_root = output_dir / "wiki_site"
+
+            self.assertTrue((export_root / "manifest.json").exists())
+            self.assertTrue((export_root / "changes.json").exists())
+            self.assertTrue((export_root / "page_index.json").exists())
+            self.assertTrue((wiki_site_root / "mkdocs.yml").exists())
+            self.assertTrue((wiki_site_root / "docs" / "index.md").exists())
+            self.assertTrue((wiki_site_root / "docs" / "analysis" / "demo-overview.md").exists())
+            self.assertEqual(payload["source_counts"]["jira"], 1)
+            self.assertEqual(payload["source_counts"]["confluence"], 1)
+            self.assertGreaterEqual(payload["source_counts"]["spec"], 1)
+
+    def test_cli_build_wiki_site_can_build_spec_from_pdf(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "wiki-demo"
+            snapshot_dir = Path(temp_dir) / "snapshot"
+            result = self._run(
+                "build-wiki-site",
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--confluence-path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--snapshot-dir",
+                str(snapshot_dir),
+                "--spec-pdf",
+                "fixtures/corpus/pdf/sample.pdf",
+                "--preferred-parser",
+                "pypdf",
+                "--reference-date",
+                "2026-04-05",
+                "--output-dir",
+                str(output_dir),
+                "--llm-backend",
+                "mock",
+                "--llm-mock-response",
+                "Mock wiki answer",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue((output_dir / "spec_build" / "spec-corpus.json").exists())
+            self.assertTrue((output_dir / "wiki_site" / "mkdocs.yml").exists())
+            self.assertGreaterEqual(payload["source_counts"]["spec"], 1)
 
     def test_cli_live_connector_requires_base_url(self) -> None:
         result = self._run("connector", "jira", "--live")
@@ -762,6 +861,37 @@ class PlatformCliTest(unittest.TestCase):
             self.assertIn("SSD-102", written_markdown)
             self.assertIn("Latency Budget Update", written_markdown)
             self.assertIn("NVMe Flush Command", written_markdown)
+
+    def test_cli_sync_export_supports_single_jira_source(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            output_md = Path(temp_dir) / "jira-only-export.md"
+
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+                "--jira-path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--output-md",
+                str(output_md),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["document_count"], 1)
+            self.assertEqual([document["source_type"] for document in payload["documents"]], ["jira"])
+            self.assertIn("SSD-102", output_md.read_text(encoding="utf-8"))
+
+    def test_cli_sync_export_requires_at_least_one_source(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            result = self._run(
+                "sync-export",
+                "--snapshot-dir",
+                temp_dir,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("At least one source is required for sync-export", result.stderr)
 
     def test_cli_multi_sync_health_validates_live_jira_base_url(self) -> None:
         result = self._run(
