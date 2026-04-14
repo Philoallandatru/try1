@@ -12,18 +12,27 @@ if str(ROOT) not in sys.path:
 from services.analysis.llm_backends import build_llm_backend
 from services.workspace import (
     build_workspace,
+    build_workspace_site,
+    compile_workspace_wiki,
     export_workspace,
     fetch_workspace_spec,
+    inbox_workspace,
     init_workspace,
     lint_workspace,
+    publish_workspace_wiki,
     query_workspace,
+    route_workspace,
     status_workspace,
     watch_workspace,
 )
 
 
 def _print_json(payload: dict | list) -> int:
-    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    text = json.dumps(payload, indent=2, ensure_ascii=False)
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write((text + "\n").encode("utf-8", errors="replace"))
     return 0
 
 
@@ -95,6 +104,29 @@ def main() -> int:
     status_parser = subparsers.add_parser("status")
     status_parser.add_argument("workspace")
 
+    inbox_parser = subparsers.add_parser("inbox")
+    inbox_parser.add_argument("workspace")
+
+    route_parser = subparsers.add_parser("route")
+    route_parser.add_argument("workspace")
+    route_parser.add_argument("--manifest", required=True)
+
+    compile_wiki_parser = subparsers.add_parser("compile-wiki")
+    compile_wiki_parser.add_argument("workspace")
+    _add_llm_backend_args(compile_wiki_parser)
+
+    build_site_parser = subparsers.add_parser("build-site")
+    build_site_parser.add_argument("workspace")
+    build_site_parser.add_argument("--renderer", choices=["vitepress"], default="vitepress")
+
+    publish_wiki_parser = subparsers.add_parser("publish-wiki")
+    publish_wiki_parser.add_argument("workspace")
+    publish_wiki_parser.add_argument("--manifest", required=True)
+    publish_wiki_parser.add_argument("--renderer", choices=["vitepress"], default="vitepress")
+    publish_wiki_parser.add_argument("--verify-site-build", action="store_true")
+    publish_wiki_parser.add_argument("--site-build-command", action="append")
+    _add_llm_backend_args(publish_wiki_parser)
+
     lint_parser = subparsers.add_parser("lint")
     lint_parser.add_argument("workspace")
 
@@ -129,6 +161,37 @@ def main() -> int:
         return _print_json(payload)
     if args.command == "status":
         return _print_json(status_workspace(args.workspace))
+    if args.command == "inbox":
+        return _print_json(inbox_workspace(args.workspace))
+    if args.command == "route":
+        return _print_json(route_workspace(args.workspace, args.manifest))
+    if args.command == "compile-wiki":
+        return _print_json(
+            compile_workspace_wiki(
+                args.workspace,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=_build_llm_backend_from_args(parser, args),
+            )
+        )
+    if args.command == "build-site":
+        return _print_json(
+            build_workspace_site(
+                args.workspace,
+                renderer=args.renderer,
+            )
+        )
+    if args.command == "publish-wiki":
+        return _print_json(
+            publish_workspace_wiki(
+                args.workspace,
+                manifest_path=args.manifest,
+                renderer=args.renderer,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=_build_llm_backend_from_args(parser, args),
+                verify_site_build=args.verify_site_build,
+                site_build_command=args.site_build_command,
+            )
+        )
     if args.command == "lint":
         return _print_json(lint_workspace(args.workspace))
     if args.command == "watch":
