@@ -16,6 +16,7 @@ The workspace is an orchestration layer only:
 - snapshots remain the stable runtime state
 - PageIndex remains the retrieval projection
 - workspace exports and wiki outputs remain derived artifacts
+- `wiki/topics.json`, `wiki/routes.json`, and `wiki/compilation-manifest.json` are operator-facing control-plane artifacts for curated wiki routing
 
 ## 1. Environment Setup From Zero
 
@@ -68,6 +69,12 @@ This creates:
   exports/latest/
   runs/
   wiki/
+    topics.json
+    routes.json
+    compilation-manifest.json
+    compiled/
+    summaries/
+    reports/
 ```
 
 ### `config.json`
@@ -370,7 +377,101 @@ Behavior:
   - payload counts
   - current snapshot manifest
   - current export manifest
+  - current wiki control-plane counts
   - latest run directory
+
+### `inbox`
+
+```powershell
+python scripts/workspace_cli.py inbox <workspace>
+```
+
+Behavior:
+
+- lists current Jira and Confluence candidate documents from the workspace snapshot
+- shows whether each item is already routed into the curated wiki control plane
+- shows topic assignment, route mode, and publish state when present
+
+### `route`
+
+```powershell
+python scripts/workspace_cli.py route <workspace> --manifest <path>
+```
+
+Behavior:
+
+- validates the operator route manifest against current snapshot documents
+- writes:
+  - `wiki/topics.json`
+  - `wiki/routes.json`
+  - `wiki/compilation-manifest.json`
+- initializes routed items with publish state `unprocessed`
+
+### `compile-wiki`
+
+```powershell
+python scripts/workspace_cli.py compile-wiki <workspace> [--llm-backend ...]
+```
+
+Behavior:
+
+- reads the current topic registry, route manifest, and compilation manifest
+- currently processes:
+  - routed Confluence `summarize`
+  - routed Jira `analyze`
+- writes Confluence summary pages under `wiki/summaries/confluence/`
+- writes Jira analysis pages under `wiki/compiled/analyses/jira/`
+- writes compiled topic pages under `wiki/compiled/topics/`
+- updates `wiki/compilation-manifest.json`
+- includes Confluence summaries in topic pages
+- includes Jira analysis in topic pages only when the route entry requests `promote: true`
+- keeps non-promoted Jira items as analysis-only records
+
+### `build-site`
+
+```powershell
+python scripts/workspace_cli.py build-site <workspace> --renderer vitepress
+```
+
+Behavior:
+
+- reads the compiled topic-routed wiki artifacts
+- emits a VitePress-ready site tree under `wiki/vitepress_site/`
+- writes:
+  - `wiki/vitepress_site/docs/index.md`
+  - `wiki/vitepress_site/docs/topics/*.md`
+  - `wiki/vitepress_site/docs/summaries/confluence/*.md`
+  - `wiki/vitepress_site/docs/analyses/jira/*.md`
+  - `wiki/vitepress_site/.vitepress/config.mts`
+  - `wiki/vitepress_site/package.json`
+  - `wiki/vitepress_site/README.md`
+- does not run VitePress itself; it prepares renderer-ready content only
+- after generation, the local preview path is:
+
+```powershell
+Set-Location .tmp\workspace\wiki\vitepress_site
+npm install
+npm run docs:dev
+```
+
+### `publish-wiki`
+
+```powershell
+python scripts/workspace_cli.py publish-wiki <workspace> --manifest <path> --renderer vitepress [--verify-site-build] [--llm-backend ...]
+```
+
+Behavior:
+
+- runs the curated wiki flow as one operator command:
+  - `route`
+  - `compile-wiki`
+  - `build-site`
+- writes or refreshes the compilation report under `wiki/reports/compilation-report.json`
+- when `--verify-site-build` is set, also runs the site build command and writes `wiki/reports/vitepress-build-report.json`
+- records:
+  - empty topics
+  - unpromoted Jira document IDs
+  - topic/summary/analysis counts
 
 ### `lint`
 
@@ -448,6 +549,12 @@ Role split:
   - staged source preparation
   - payload capture
   - snapshot/query iteration
+  - wiki routing control plane
+  - Confluence summary compilation for curated wiki intake
+  - Jira deep analysis before future topic promotion
+  - topic page synthesis from curated Confluence and Jira inputs
+  - VitePress-ready site assembly from compiled wiki artifacts
+  - one-command wiki publish flow plus compilation reports
 - `platform_cli.py build-wiki-site`
   - export package generation
   - MkDocs-compatible site assembly

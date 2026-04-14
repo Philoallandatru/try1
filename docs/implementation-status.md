@@ -15,6 +15,7 @@ The current foundation is now largely in place against that narrower roadmap:
 - `scripts/retrieval/toolkit_cli.py` and `scripts/platform_cli.py` search/citation can now consume exported PageIndex artifacts directly via `--page-index`; corpus-oriented document loading remains the default.
 - `scripts/platform_cli.py` and `scripts/retrieval/toolkit_cli.py` can now also reuse snapshot-managed `page_index.json` via `--snapshot-dir`, and `retrieval-consume` can reuse snapshot-managed `documents.json`.
 - Local LLM consumption now has a source-generic retrieval-consumption seam plus a generic CLI surface; the remaining work is mainly profile cleanup and fidelity expansion.
+- The workspace layer now includes a curated topic-routed derived wiki flow with topic registry, route manifest, compilation ledger, topic synthesis, VitePress-ready output, and optional real-site build verification.
 
 ## Completed
 
@@ -102,6 +103,7 @@ Current validation entrypoints:
 - Replace minimal offline PDF parsing with the target production parser stack.
 - Add production OCR and local vision caption backends for image assets; current visual asset support indexes image references and provided OCR/caption metadata.
 - Defer hosted portal, persistent storage, real indexing backends, and request-scoped ACL identity handling until the current foundation chain is stable.
+- Improve topic-page synthesis quality, freshness/conflict signaling, and richer cross-page knowledge relationships in the curated wiki flow.
 
 ## Reusable Components
 
@@ -193,4 +195,8 @@ Current validation entrypoints:
 - `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-prompt-mode strict|balanced|exploratory`, defaulting to `strict`.
 - `jira-batch-spec-report` now forwards `--prompt-template` into each per-issue QA payload instead of treating it as a report-summary template.
 - `tests/ops/test_platform_cli_live_orchestration.py` validates the live dual-source orchestration path without introducing network dependencies.
+- `scripts/workspace_cli.py` now supports curated wiki operations through `inbox`, `route`, `compile-wiki`, `build-site --renderer vitepress`, and `publish-wiki --verify-site-build`.
+- `services/workspace/workspace.py` now maintains curated wiki control-plane state in `wiki/topics.json`, `wiki/routes.json`, `wiki/compilation-manifest.json`, `wiki/reports/compilation-report.json`, and `wiki/reports/vitepress-build-report.json`.
+- `services/wiki_site/vitepress_builder.py` now emits a topic-first VitePress-ready site with section indexes, custom theme scaffolding, and local `package.json` / `README.md` for preview and build flows.
+- `publish-wiki --verify-site-build` now performs a real local VitePress build check and records the result in `vitepress-build-report.json`.
 - `agent.md` now defines a bounded self-loop entry rule for `continue` and `继续`, with explicit stop conditions and per-iteration validation expectations.

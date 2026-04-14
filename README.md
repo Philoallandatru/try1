@@ -173,6 +173,46 @@ The workspace keeps operator-oriented state under:
 
 This layer is workflow-oriented only. Canonical documents and snapshot/PageIndex contracts remain the source of truth.
 
+## Curated Topic-Routed Wiki Flow
+
+The workspace CLI now supports a curated, OpenKB-inspired derived wiki flow on top of the existing snapshot/export foundation.
+
+This flow keeps canonical documents and PageIndex artifacts as the evidence layer, but changes the browse surface:
+
+- Confluence enters the wiki through derived summary pages
+- Jira enters the wiki through derived issue analysis pages
+- only Jira routes with `promote: true` are folded into topic hubs
+- topic pages become the primary navigation surface
+- VitePress-ready site output is written under `wiki/vitepress_site/`
+
+Core operator artifacts:
+
+- `wiki/topics.json`
+- `wiki/routes.json`
+- `wiki/compilation-manifest.json`
+- `wiki/reports/compilation-report.json`
+- `wiki/reports/vitepress-build-report.json`
+
+Typical curated wiki flow:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\workspace
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\one-issue.json
+python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\one-page.json
+python scripts/workspace_cli.py build .tmp\workspace
+python scripts/workspace_cli.py inbox .tmp\workspace
+python scripts/workspace_cli.py route .tmp\workspace --manifest .tmp\workspace\route-manifest.json
+python scripts/workspace_cli.py publish-wiki .tmp\workspace --manifest .tmp\workspace\route-manifest.json --renderer vitepress --verify-site-build --llm-backend mock --llm-mock-response "Mock wiki content"
+```
+
+The generated VitePress-ready output can also be inspected directly:
+
+```powershell
+Set-Location .tmp\workspace\wiki\vitepress_site
+npm install
+npm run docs:dev
+```
+
 ## Decoupled Wiki Demo
 
 The repository can now build a decoupled wiki demo in two layers:
