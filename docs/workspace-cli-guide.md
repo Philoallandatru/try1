@@ -303,6 +303,25 @@ Behavior:
 - copies snapshot `page_index.json` to `exports/latest/page_index.json`
 - writes export metadata to `exports/latest/manifest.json`
 
+### `ingest-spec-asset`
+
+```powershell
+python scripts/workspace_cli.py ingest-spec-asset <workspace> --spec-pdf <pdf-path> [--asset-id <id>] [--display-name <name>] [--preferred-parser auto|mineru|pypdf] [--mineru-python-exe <python>]
+```
+
+Behavior:
+
+- ingests one PDF spec as a reusable workspace asset
+- writes versioned outputs under `raw/files/spec_assets/<asset-id>/<version>/`
+- writes:
+  - `spec-doc.json`
+  - `spec-corpus.json`
+  - `page_index.json`
+  - `document.md`
+  - `metadata.json`
+- updates `raw/files/spec_assets/registry.json`
+- increments version on repeat ingestion for the same asset id
+
 ### `query`
 
 ```powershell
@@ -362,6 +381,126 @@ python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backen
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend openai-compatible --llm-model local-model --llm-base-url http://localhost:1234/v1
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --output-answer-md .tmp\workspace-answer.md
+```
+
+### `deep-analyze`
+
+```powershell
+python scripts/workspace_cli.py deep-analyze <workspace> <issue-key> [--top-k N] [--policies ...] [--llm-backend ...]
+```
+
+Parameters:
+
+- `<workspace>`
+  - required
+- `<issue-key>`
+  - required
+- `--top-k`
+  - optional
+  - default: `5`
+- `--policies`
+  - optional
+  - default: `team:ssd public`
+- `--output-answer-md`
+  - optional
+  - writes the selected answer text to a Markdown file
+- `--llm-backend`
+  - optional
+  - `none`, `mock`, `ollama`, `openai-compatible`
+- `--llm-prompt-mode`
+  - optional
+  - `strict`, `balanced`, `exploratory`
+  - default: `strict`
+
+Behavior:
+
+- reads `snapshots/current/documents.json`
+- locates one Jira issue by `document_id`
+- runs cross-source deep analysis against workspace Confluence and spec documents
+- writes `result.json` and `run_manifest.json` under `runs/<timestamp>-workspace-deep-analyze/`
+- returns the analysis payload and optional answer Markdown output path
+
+Examples:
+
+```powershell
+python scripts/workspace_cli.py deep-analyze .tmp\workspace SSD-102
+python scripts/workspace_cli.py deep-analyze .tmp\workspace SSD-102 --llm-backend mock --llm-mock-response "Mock deep analysis"
+python scripts/workspace_cli.py deep-analyze .tmp\workspace SSD-102 --output-answer-md .tmp\deep-analysis-answer.md
+```
+
+### `smoke-deep-analysis`
+
+```powershell
+python scripts/workspace_cli.py smoke-deep-analysis <workspace> --jira-spec <spec> --confluence-spec <spec> --issue-key <issue-key> [--spec-pdf <pdf-path>] [--portal-state-output <path>]
+```
+
+Behavior:
+
+- initializes the workspace if needed
+- fetches one Jira spec and one Confluence spec
+- optionally ingests one PDF as a reusable spec asset
+- builds the workspace snapshot
+- runs `deep-analyze`
+- writes a portal state JSON from real workspace run artifacts
+
+This command is intended for real Jira / Confluence / PDF smoke testing. Use live source specs for Jira and Confluence, and pass the local PDF path with `--spec-pdf`.
+
+Example with fixture sources:
+
+```powershell
+python scripts/workspace_cli.py smoke-deep-analysis .tmp\workspace `
+  --jira-spec project-slice `
+  --confluence-spec page-tree `
+  --issue-key SSD-102 `
+  --spec-pdf fixtures/corpus/pdf/sample.pdf `
+  --preferred-parser pypdf
+```
+
+Example shape for live testing:
+
+```powershell
+python scripts/workspace_cli.py init .tmp\real-workspace
+# edit .tmp\real-workspace\raw\jira\specs\one-issue.json
+# edit .tmp\real-workspace\raw\confluence\specs\page-tree.json
+python scripts/workspace_cli.py smoke-deep-analysis .tmp\real-workspace `
+  --jira-spec one-issue `
+  --confluence-spec page-tree `
+  --issue-key SSD-777 `
+  --spec-pdf C:\path\to\spec.pdf `
+  --preferred-parser pypdf `
+  --portal-state-output .tmp\real-workspace\portal_state.json
+```
+
+### Optional Prefect runtime
+
+Install the optional Prefect dependency only when you want real Prefect deployment/runtime support:
+
+```powershell
+uv pip install -e ".[prefect]"
+```
+
+The Prefect flow factory lives at:
+
+```text
+services.workspace.prefect_flows:build_jira_deep_analysis_flow
+```
+
+It creates a real Prefect flow named `jira_deep_analysis` when Prefect is installed. The flow calls the same workspace `deep_analyze_issue` path used by the CLI, so business artifacts remain file-backed and dict-first.
+
+Submit an existing workspace run to a Prefect deployment:
+
+```powershell
+python scripts/workspace_cli.py submit-prefect-run .tmp\workspace <run-id> `
+  --deployment-name jira_deep_analysis/analysis-prod `
+  --timeout-seconds 0
+```
+
+Synchronize a Prefect state back into the workspace run manifest:
+
+```powershell
+python scripts/workspace_cli.py sync-prefect-state .tmp\workspace <run-id> `
+  --prefect-state Completed `
+  --flow-run-id <prefect-flow-run-id>
 ```
 
 ### `status`

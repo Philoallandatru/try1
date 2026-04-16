@@ -3,10 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
 from services.ops.profile import build_multi_sync_profile, load_json_file, validate_multi_sync_profile
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class OpsProfileModuleTest(unittest.TestCase):

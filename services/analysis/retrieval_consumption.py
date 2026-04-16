@@ -122,8 +122,12 @@ def build_retrieval_consumption_payload(
     context_heading: str | None = None,
     context_markdown: str | None = None,
     extra_template_values: dict[str, object] | None = None,
+    retrieval_bundle: dict | None = None,
 ) -> dict:
-    results = search_page_index(build_page_index(documents), question, allowed_policies, top_k=top_k)
+    if retrieval_bundle is not None:
+        results = list(retrieval_bundle.get("results", []))
+    else:
+        results = search_page_index(build_page_index(documents), question, allowed_policies, top_k=top_k)
     citations = [assemble_citation(result) for result in results]
     evidence_text = _build_evidence_text(citations)
 

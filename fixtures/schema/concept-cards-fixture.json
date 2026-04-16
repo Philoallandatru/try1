@@ -1,0 +1,38 @@
+{
+  "cards": [
+    {
+      "card_id": "card-nand-write-telemetry",
+      "label": "NAND Write Telemetry",
+      "category": "terminology",
+      "summary": "Tracks how NAND write volume is collected and validated in the firmware telemetry path.",
+      "evidence": [
+        {
+          "document": "SSD-102",
+          "version": "2026.04.05",
+          "page": null,
+          "section": "Summary",
+          "evidence_span": [
+            "LNDF(224)获取NAND写入量异常"
+          ]
+        }
+      ]
+    },
+    {
+      "card_id": "card-telemetry-pipeline",
+      "label": "Telemetry Pipeline",
+      "category": "module",
+      "summary": "Confluence evidence describing the telemetry architecture and page-level guidance.",
+      "evidence": [
+        {
+          "document": "CONF-201",
+          "version": "3",
+          "page": null,
+          "section": "Telemetry Pipeline",
+          "evidence_span": [
+            "Telemetry Architecture"
+          ]
+        }
+      ]
+    }
+  ]
+}

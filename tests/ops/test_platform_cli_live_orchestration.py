@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from contextlib import redirect_stdout
 from io import StringIO
-from tempfile import TemporaryDirectory
 import json
 import unittest
 from unittest.mock import patch
 
 from scripts import platform_cli
 from services.ingest.normalizer import normalize_markdown_text
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class PlatformCliLiveOrchestrationTest(unittest.TestCase):

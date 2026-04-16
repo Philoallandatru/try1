@@ -15,6 +15,29 @@
     </header>
 
     <section class="grid" aria-label="Portal workspace">
+      <article class="panel wide" id="new-task-panel">
+        <h2>New Task</h2>
+        <p id="new-task-entry"></p>
+      </article>
+
+      <article class="panel" id="task-workbench-panel">
+        <h2>Task Workbench</h2>
+        <p id="task-filters"></p>
+        <div id="task-list"></div>
+      </article>
+
+      <article class="panel" id="task-details-panel">
+        <h2>Task Details</h2>
+        <div id="task-controls"></div>
+        <div id="task-detail-tabs"></div>
+        <h3>Report</h3>
+        <div id="report-tabs"></div>
+        <h3>Knowledge</h3>
+        <div id="knowledge-panels"></div>
+        <h3>Retrieval Comparison</h3>
+        <pre id="retrieval-comparison"></pre>
+      </article>
+
       <article class="panel" id="ingestion-status-panel">
         <h2>Ingestion Status</h2>
         <ul id="ingestion-status-list"></ul>
@@ -57,4 +80,3 @@
   <script src="./app.js"></script>
 </body>
 </html>
-

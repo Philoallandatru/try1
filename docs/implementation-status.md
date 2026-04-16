@@ -16,6 +16,24 @@ The current foundation is now largely in place against that narrower roadmap:
 - `scripts/platform_cli.py` and `scripts/retrieval/toolkit_cli.py` can now also reuse snapshot-managed `page_index.json` via `--snapshot-dir`, and `retrieval-consume` can reuse snapshot-managed `documents.json`.
 - Local LLM consumption now has a source-generic retrieval-consumption seam plus a generic CLI surface; the remaining work is mainly profile cleanup and fidelity expansion.
 - The workspace layer now includes a curated topic-routed derived wiki flow with topic registry, route manifest, compilation ledger, topic synthesis, VitePress-ready output, and optional real-site build verification.
+- Jira Analysis Task Platform foundation work now includes dict-first task-run manifest and artifact metadata helpers plus workspace-scoped deep-analysis execution.
+- Jira Analysis Task Platform foundation work now also includes schema fixtures for Confluence update proposals and concept cards.
+- Workspace flows now support versioned reusable spec PDF assets with canonical document, markdown, corpus, page-index, and metadata outputs.
+- Retrieval now also has a lightweight engine seam through a `PageIndexEngine` adapter and shared comparison baseline payload for future engine experiments.
+- Deep analysis now emits a shared retrieval bundle baseline plus empty section follow-up retrieval hooks so later section runners can build on one stable retrieval pass.
+- Deep analysis now runs deterministic search enhancement and bounded section follow-up retrieval for RCA, Spec Impact, Decision Brief, and General Summary while preserving PageIndex/ACL/citation paths.
+- Deep analysis now also emits four baseline section outputs plus a composite markdown report so the later section-analysis kernel has a stable output contract.
+- Deep analysis now includes image evidence enrichment status derived from canonical visual assets, including indexed OCR/caption fields and degraded missing-state gaps.
+- Deep analysis now emits baseline knowledge artifacts: Confluence update proposal, concept cards, and wiki draft markdown.
+- Workspace task control now has a dependency-free adapter baseline for stop, resume, rerun, adapter state mapping, nearest-checkpoint resume planning, and append-only control-event logs.
+- Workspace task control now includes a Prefect-shaped adapter state sync layer and `sync-prefect-state` CLI without requiring Prefect as an installed dependency.
+- Optional Prefect runtime support now includes a lazy Prefect flow factory for `jira_deep_analysis` plus an optional `prefect` dependency group.
+- Workspace task control now also supports section-level rerun invalidation, marking the target section stale and propagating staleness to dependent composite/knowledge artifacts.
+- Workspace task control can now execute a section rerun in-place, rewriting the target section, composite report, knowledge artifacts, and result payload while clearing stale flags for rebuilt artifacts.
+- Workspace run artifacts can now be queried through read-only `runs`, `run-detail`, and `run-artifact` CLI surfaces for dynamic portal/API groundwork.
+- Real-source smoke testing is now available through `workspace_cli.py smoke-deep-analysis`, which chains Jira fetch, Confluence fetch, optional PDF spec ingestion, snapshot build, deep analysis, and portal-state generation.
+- The static portal now includes a task-list-driven Jira Analysis workbench baseline with new-task copy, task filters, task detail tabs, report tabs, knowledge panels, retrieval comparison, and stop/resume/rerun control placeholders.
+- Portal state can now derive its task workbench from real workspace run manifests and artifact inventories when a workspace directory is supplied.
 
 ## Completed
 
@@ -196,6 +214,9 @@ Current validation entrypoints:
 - `jira-batch-spec-report` now forwards `--prompt-template` into each per-issue QA payload instead of treating it as a report-summary template.
 - `tests/ops/test_platform_cli_live_orchestration.py` validates the live dual-source orchestration path without introducing network dependencies.
 - `scripts/workspace_cli.py` now supports curated wiki operations through `inbox`, `route`, `compile-wiki`, `build-site --renderer vitepress`, and `publish-wiki --verify-site-build`.
+- `services/workspace/task_manifest.py` now defines the Phase 1 task-run manifest, business checkpoint, artifact metadata, and stale-propagation helper contract for Jira Analysis Task Platform work.
+- `services/workspace/task_control.py` now defines the task-control adapter baseline used by `scripts/workspace_cli.py control-run` for stop/resume/rerun without introducing a Prefect dependency.
+- `scripts/workspace_cli.py deep-analyze` now reads a workspace snapshot, runs cross-source Jira deep analysis, and persists the result under the workspace run log.
 - `services/workspace/workspace.py` now maintains curated wiki control-plane state in `wiki/topics.json`, `wiki/routes.json`, `wiki/compilation-manifest.json`, `wiki/reports/compilation-report.json`, and `wiki/reports/vitepress-build-report.json`.
 - `services/wiki_site/vitepress_builder.py` now emits a topic-first VitePress-ready site with section indexes, custom theme scaffolding, and local `package.json` / `README.md` for preview and build flows.
 - `publish-wiki --verify-site-build` now performs a real local VitePress build check and records the result in `vitepress-build-report.json`.

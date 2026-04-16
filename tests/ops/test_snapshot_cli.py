@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import json
 import subprocess
 import sys
-from tempfile import TemporaryDirectory
 import unittest
+
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class SnapshotCliTest(unittest.TestCase):

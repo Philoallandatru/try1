@@ -92,7 +92,17 @@
         "section": "Overview",
         "clause": "1",
         "table_id": "table-1",
+        "table": {
+          "id": "table-1",
+          "title": "Telemetry Fields",
+          "page": 1
+        },
         "figure_id": "figure-1",
+        "figure": {
+          "id": "figure-1",
+          "title": "Controller Flow",
+          "page": 1
+        },
         "content_blocks": [
           {
             "id": "block-1",
@@ -137,7 +147,9 @@
         "section": "Flush Semantics",
         "clause": "1.1",
         "table_id": null,
+        "table": null,
         "figure_id": null,
+        "figure": null,
         "content_blocks": [
           {
             "id": "block-2",
@@ -182,7 +194,9 @@
         "section": "Marketing Summary",
         "clause": null,
         "table_id": null,
+        "table": null,
         "figure_id": null,
+        "figure": null,
         "content_blocks": [
           {
             "id": "block-1",
@@ -203,7 +217,17 @@
     "section": "Overview",
     "clause": "1",
     "table_id": "table-1",
+    "table": {
+      "id": "table-1",
+      "title": "Telemetry Fields",
+      "page": 1
+    },
     "figure_id": "figure-1",
+    "figure": {
+      "id": "figure-1",
+      "title": "Controller Flow",
+      "page": 1
+    },
     "content_blocks": [
       {
         "id": "block-1",
@@ -216,5 +240,140 @@
     "recall@10": 1.0,
     "ndcg@10": 1.0,
     "citation_fidelity": 1.0
+  },
+  "task_workbench": {
+    "new_task_entry": {
+      "default_task_type": "jira_deep_analysis",
+      "input_hint": "Enter a Jira issue key and select reusable spec assets before running.",
+      "available_task_types": [
+        "jira_deep_analysis"
+      ]
+    },
+    "filters": {
+      "status": [
+        "queued",
+        "running",
+        "completed",
+        "stopped",
+        "failed"
+      ],
+      "owner": [
+        "alice",
+        "ssd-team"
+      ],
+      "project": [
+        "SSD"
+      ],
+      "issue_key": "SSD-102",
+      "updated_time": "last_7_days"
+    },
+    "selected_task_id": "run-ssd-102-v1",
+    "tasks": [
+      {
+        "task_id": "run-ssd-102-v1",
+        "task_type": "jira_deep_analysis",
+        "issue_key": "SSD-102",
+        "project": "SSD",
+        "owner": "alice",
+        "status": "completed",
+        "updated_at": "2026-04-15T00:00:00Z",
+        "selected": true,
+        "summary": "Cross-source analysis completed with reusable spec and Confluence evidence."
+      },
+      {
+        "task_id": "run-ssd-103-v1",
+        "task_type": "jira_deep_analysis",
+        "issue_key": "SSD-103",
+        "project": "SSD",
+        "owner": "ssd-team",
+        "status": "stopped",
+        "updated_at": "2026-04-14T18:15:00Z",
+        "selected": false,
+        "summary": "Stopped after retrieval; partial artifacts are preserved for resume."
+      }
+    ],
+    "detail_tabs": [
+      {
+        "id": "overview",
+        "label": "Overview",
+        "content": "Jira deep analysis run with checkpointed retrieval, analysis, and knowledge outputs."
+      },
+      {
+        "id": "logs",
+        "label": "Logs",
+        "content": "retrieval_ready -> analysis_ready -> knowledge_ready"
+      },
+      {
+        "id": "evidence",
+        "label": "Evidence",
+        "content": "Top evidence: nvme-spec-v1"
+      },
+      {
+        "id": "report",
+        "label": "Report",
+        "content": "Composite report is available with four section tabs."
+      },
+      {
+        "id": "knowledge",
+        "label": "Knowledge",
+        "content": "Draft Confluence update proposal, wiki draft, and concept cards are ready for review."
+      }
+    ],
+    "report_tabs": [
+      {
+        "id": "rca",
+        "label": "RCA",
+        "status": "ready"
+      },
+      {
+        "id": "spec_impact",
+        "label": "Spec Impact",
+        "status": "ready"
+      },
+      {
+        "id": "decision_brief",
+        "label": "Decision Brief",
+        "status": "ready"
+      },
+      {
+        "id": "general_summary",
+        "label": "General Summary",
+        "status": "ready"
+      }
+    ],
+    "knowledge_panels": [
+      {
+        "id": "confluence_update_proposal",
+        "label": "Confluence Update Proposal",
+        "status": "draft"
+      },
+      {
+        "id": "wiki_draft",
+        "label": "Wiki Draft",
+        "status": "draft"
+      },
+      {
+        "id": "concept_cards",
+        "label": "Concept Cards",
+        "status": "draft"
+      }
+    ],
+    "retrieval_comparison": {
+      "engine": "pageindex",
+      "query": "SSD-102 NAND write telemetry",
+      "top_hits": [
+        "nvme-spec-v1",
+        "nvme-spec-v1",
+        "press-release"
+      ],
+      "hit_quality": null,
+      "readability": null,
+      "citation_fidelity": 1.0
+    },
+    "controls": [
+      "stop",
+      "resume",
+      "rerun"
+    ]
   }
 }

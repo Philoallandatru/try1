@@ -1,21 +1,44 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
 import json
 import subprocess
 import shutil
 import time
+from uuid import uuid4
 
 from services.analysis.llm_backends import LLMBackend
+from services.analysis.deep_analysis import build_deep_analysis_from_documents
 from services.analysis.demo_profiles import build_confluence_wiki_summary_prompt
 from services.analysis.jira_issue_analysis import build_confluence_wiki_summary_payload
 from services.analysis.jira_issue_analysis import summarize_jira_issue_markdown
+from services.analysis.knowledge_compiler import build_knowledge_artifacts
 from services.analysis.retrieval_consumption import build_retrieval_consumption_payload
+from services.analysis.section_analysis import build_composite_report_markdown, build_section_outputs
 from services.ingest.markdown_export import documents_to_markdown, write_documents_markdown_tree
 from services.ops.orchestration import load_source_payload
 from services.retrieval.persistence.snapshot_store import load_snapshot, snapshot_paths, write_snapshot
+from services.retrieval.engine import PAGE_INDEX_ENGINE, build_shared_retrieval_bundle
 from services.retrieval.toolkit import citation_for_index, load_page_index_artifact, search_index
+from services.workspace.task_manifest import (
+    build_artifact_record,
+    build_run_manifest,
+    load_run_manifest,
+    update_checkpoint,
+    write_run_manifest,
+)
+from services.workspace.prefect_adapter import RealPrefectTaskAdapter, apply_prefect_state
+from services.workspace.task_control import (
+    append_control_event,
+    build_control_event,
+    build_rerun_manifest,
+    request_section_rerun,
+    request_resume,
+    request_stop,
+    write_controlled_manifest,
+)
 from services.wiki_site import build_vitepress_site
 
 
@@ -65,6 +88,13 @@ def _copy_file(source: str | Path, target: str | Path) -> str:
     return str(target_path)
 
 
+def _file_sha256(path: str | Path) -> str | None:
+    target = Path(path)
+    if not target.exists():
+        return None
+    return hashlib.sha256(target.read_bytes()).hexdigest()
+
+
 def _redact(payload: object) -> object:
     if isinstance(payload, dict):
         sanitized = {}
@@ -90,6 +120,8 @@ def workspace_paths(workspace_dir: str | Path) -> dict[str, Path]:
         "confluence_specs": root / "raw" / "confluence" / "specs",
         "confluence_payloads": root / "raw" / "confluence" / "payloads",
         "files": root / "raw" / "files",
+        "spec_assets_root": root / "raw" / "files" / "spec_assets",
+        "spec_assets_registry": root / "raw" / "files" / "spec_assets" / "registry.json",
         "snapshot_root": root / "snapshots" / "current",
         "export_root": root / "exports" / "latest",
         "runs": root / "runs",
@@ -201,6 +233,7 @@ def init_workspace(workspace_dir: str | Path) -> dict:
             "wiki_topics",
             "wiki_routes",
             "wiki_compilation_manifest",
+            "spec_assets_registry",
         }:
             continue
         path.mkdir(parents=True, exist_ok=True)
@@ -381,7 +414,18 @@ def _payload_output_path(workspace_dir: str | Path, kind: str, source_name: str)
 
 
 def _run_dir(paths: dict[str, Path], *, source_name: str, command: str) -> Path:
-    return paths["runs"] / f"{_utc_now().replace(':', '').replace('-', '')}-{source_name}-{command}"
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    return paths["runs"] / f"{timestamp}-{uuid4().hex[:8]}-{source_name}-{command}"
+
+
+def _resolve_run_dir(workspace_dir: str | Path, run_ref: str | Path) -> Path:
+    run_path = Path(run_ref)
+    if run_path.exists():
+        return run_path
+    candidate = workspace_paths(workspace_dir)["runs"] / run_path
+    if candidate.exists():
+        return candidate
+    raise ValueError(f"Unknown run: {run_ref}")
 
 
 def fetch_workspace_spec(workspace_dir: str | Path, spec_ref: str | Path) -> dict:
@@ -1463,8 +1507,11 @@ def build_workspace(workspace_dir: str | Path) -> dict:
     _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
     payload_files = _payload_files(workspace_dir)
-    if not payload_files:
-        raise ValueError("No workspace payloads found. Run fetch first.")
+    from services.workspace.spec_assets import load_latest_spec_asset_documents, load_spec_asset_registry
+
+    asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir)
+    if not payload_files and not asset_documents:
+        raise ValueError("No workspace payloads or spec assets found. Run fetch or ingest-spec-asset first.")
 
     merged_documents: dict[str, dict] = {}
     sources: dict[str, dict] = {}
@@ -1481,6 +1528,9 @@ def build_workspace(workspace_dir: str | Path) -> dict:
             "sync_type": payload.get("sync_type", "full"),
             "document_count": len(documents),
         }
+    for document in asset_documents:
+        merged_documents[document["document_id"]] = document
+    sources.update(asset_sources)
 
     existing_manifest = load_snapshot(paths["snapshot_root"]).get("manifest", {})
     created_at = existing_manifest.get("created_at")
@@ -1547,6 +1597,65 @@ def export_workspace(workspace_dir: str | Path) -> dict:
     return {"workspace_dir": str(paths["root"]), "export_root": str(export_root), **manifest, "run_dir": str(run_dir)}
 
 
+def smoke_deep_analysis_workspace(
+    workspace_dir: str | Path,
+    *,
+    jira_spec: str | Path,
+    confluence_spec: str | Path,
+    issue_key: str,
+    spec_pdf: str | Path | None = None,
+    spec_asset_id: str | None = None,
+    spec_display_name: str | None = None,
+    preferred_parser: str = "auto",
+    mineru_python_exe: str | None = None,
+    policies: list[str] | None = None,
+    top_k: int = 5,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
+) -> dict:
+    init_result = init_workspace(workspace_dir)
+    jira_fetch = fetch_workspace_spec(workspace_dir, jira_spec)
+    confluence_fetch = fetch_workspace_spec(workspace_dir, confluence_spec)
+    spec_asset = None
+    if spec_pdf:
+        from services.workspace.spec_assets import ingest_spec_asset
+
+        spec_asset = ingest_spec_asset(
+            workspace_dir,
+            spec_pdf=spec_pdf,
+            asset_id=spec_asset_id,
+            display_name=spec_display_name,
+            preferred_parser=preferred_parser,
+            mineru_python_exe=mineru_python_exe,
+        )
+    build_result = build_workspace(workspace_dir)
+    deep_analysis = deep_analyze_issue(
+        workspace_dir,
+        issue_key,
+        policies=policies,
+        top_k=top_k,
+        prompt_mode=prompt_mode,
+        llm_backend=llm_backend,
+    )
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "init": init_result,
+        "fetches": {
+            "jira": jira_fetch,
+            "confluence": confluence_fetch,
+        },
+        "spec_asset": spec_asset,
+        "build": build_result,
+        "deep_analysis": {
+            "issue_id": deep_analysis["issue_id"],
+            "analysis_profile": deep_analysis["analysis_profile"],
+            "run_dir": deep_analysis["run_dir"],
+            "run_manifest_path": deep_analysis["run_manifest_path"],
+            "answer": deep_analysis["answer"],
+        },
+    }
+
+
 def _write_text(path: str | Path, text: str) -> str:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1570,8 +1679,13 @@ def query_workspace(
     documents = snapshot.get("documents", {}).get("documents", [])
     entries = load_page_index_artifact(snapshot_paths(paths["snapshot_root"])["page_index"])
     effective_policies = set(policies or DEFAULT_POLICIES)
-    results = search_index(entries, question, effective_policies, top_k=top_k)
-    citation = citation_for_index(entries, question, effective_policies, top_k=top_k)
+    retrieval_bundle = build_shared_retrieval_bundle(
+        engine=PAGE_INDEX_ENGINE,
+        entries=entries,
+        query=question,
+        allowed_policies=effective_policies,
+        top_k=top_k,
+    )
     retrieval_payload = build_retrieval_consumption_payload(
         documents=documents,
         question=question,
@@ -1580,6 +1694,7 @@ def query_workspace(
         prompt_template=prompt_template,
         prompt_mode=prompt_mode,
         llm_backend=llm_backend,
+        retrieval_bundle=retrieval_bundle,
     )
 
     run_dir = _run_dir(paths, source_name="workspace", command="query")
@@ -1588,9 +1703,13 @@ def query_workspace(
         "question": question,
         "top_k": top_k,
         "policies": sorted(effective_policies),
-        "result_count": len(results),
-        "results": results,
-        "citation": citation,
+        "result_count": len(retrieval_bundle["results"]),
+        "results": retrieval_bundle["results"],
+        "citation": {
+            "citation": retrieval_bundle["citation"],
+            "inspection": retrieval_bundle["inspection"],
+        },
+        "comparison": retrieval_bundle["comparison"],
         "ai_prompt": retrieval_payload["ai_prompt"],
         "answer": retrieval_payload["answer"],
     }
@@ -1601,6 +1720,8 @@ def query_workspace(
 def status_workspace(workspace_dir: str | Path) -> dict:
     config = _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
+    from services.workspace.spec_assets import load_spec_asset_registry
+
     payload_files = _payload_files(workspace_dir)
     snapshot = load_snapshot(paths["snapshot_root"])
     export_manifest = _read_json(paths["export_root"] / "manifest.json") if (paths["export_root"] / "manifest.json").exists() else {}
@@ -1612,6 +1733,13 @@ def status_workspace(workspace_dir: str | Path) -> dict:
         "spec_counts": {
             "jira": len(list(paths["jira_specs"].glob("*.json"))),
             "confluence": len(list(paths["confluence_specs"].glob("*.json"))),
+            "spec_assets": len(
+                {
+                    entry.get("asset_id")
+                    for entry in load_spec_asset_registry(workspace_dir).get("assets", [])
+                    if entry.get("asset_id")
+                }
+            ),
         },
         "payload_counts": {
             "jira": len(list(paths["jira_payloads"].glob("*.json"))),
@@ -1752,3 +1880,583 @@ def watch_workspace(
         fetched_specs=all_fetched_specs,
         build_report=last_build_report,
     )
+
+
+def deep_analyze_issue(
+    workspace_dir: str | Path,
+    issue_key: str,
+    *,
+    policies: list[str] | None = None,
+    top_k: int = 5,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
+) -> dict:
+    """Deep-analyze a single Jira issue from the workspace snapshot."""
+    _load_workspace_config(workspace_dir)
+    paths = workspace_paths(workspace_dir)
+    snapshot = load_snapshot(paths["snapshot_root"])
+    documents = snapshot.get("documents", {}).get("documents", [])
+    snapshot_file_hashes = {
+        name: _file_sha256(path)
+        for name, path in snapshot_paths(paths["snapshot_root"]).items()
+    }
+    effective_policies = set(policies or DEFAULT_POLICIES)
+
+    run_dir = _run_dir(paths, source_name="workspace", command="deep-analyze")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    payload = build_deep_analysis_from_documents(
+        documents=documents,
+        issue_id=issue_key,
+        allowed_policies=effective_policies,
+        top_k=top_k,
+        prompt_mode=prompt_mode,
+        llm_backend=llm_backend,
+    )
+
+    result_path = run_dir / "result.json"
+    shared_retrieval_bundle_path = run_dir / "shared_retrieval_bundle.json"
+    section_outputs_dir = run_dir / "section_outputs"
+    report_dir = run_dir / "report"
+    report_markdown_path = report_dir / "report.md"
+    knowledge_dir = run_dir / "knowledge"
+    confluence_update_proposal_path = knowledge_dir / "confluence_update_proposal.json"
+    concept_cards_path = knowledge_dir / "concept_cards.json"
+    wiki_draft_path = knowledge_dir / "wiki_draft.md"
+    _write_json(result_path, payload)
+    _write_json(shared_retrieval_bundle_path, payload["shared_retrieval_bundle"])
+    section_outputs_dir.mkdir(parents=True, exist_ok=True)
+    for section_name, section_payload in payload["section_outputs"].items():
+        _write_json(section_outputs_dir / f"{section_name}.json", section_payload)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    _write_text(report_markdown_path, payload["composite_report"]["content"])
+    knowledge_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(confluence_update_proposal_path, payload["knowledge_artifacts"]["confluence_update_proposal"])
+    _write_json(concept_cards_path, payload["knowledge_artifacts"]["concept_cards"])
+    _write_text(wiki_draft_path, payload["knowledge_artifacts"]["wiki_draft"]["content"])
+
+    input_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "issue_key": issue_key,
+                "policies": sorted(effective_policies),
+                "top_k": top_k,
+                "prompt_mode": prompt_mode,
+                "snapshot_files": snapshot_file_hashes,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+    manifest_path = run_dir / "run_manifest.json"
+    artifacts = [
+        build_artifact_record(
+            artifact_type="deep_analysis_result",
+            path=str(result_path),
+            step_name="deep_analyze",
+            step_version="v1",
+            input_hash=input_hash,
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        build_artifact_record(
+            artifact_type="shared_retrieval_bundle",
+            path=str(shared_retrieval_bundle_path),
+            step_name="shared_retrieval",
+            step_version="v1",
+            input_hash=input_hash,
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        *[
+            build_artifact_record(
+                artifact_type=f"section_output_{section_name}",
+                path=str(section_outputs_dir / f"{section_name}.json"),
+                step_name=f"section_runner_{section_name}",
+                step_version=payload["section_outputs"][section_name]["runner_version"],
+                input_hash=input_hash,
+                depends_on=["shared_retrieval_bundle"],
+                engine="pageindex",
+                prompt_version=prompt_mode,
+            )
+            for section_name in sorted(payload["section_outputs"])
+        ],
+        build_artifact_record(
+            artifact_type="composite_report",
+            path=str(report_markdown_path),
+            step_name="composite_report_builder",
+            step_version="v1",
+            input_hash=input_hash,
+            depends_on=[f"section_output_{section_name}" for section_name in sorted(payload["section_outputs"])],
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        build_artifact_record(
+            artifact_type="confluence_update_proposal",
+            path=str(confluence_update_proposal_path),
+            step_name="knowledge_compiler",
+            step_version="v1",
+            input_hash=input_hash,
+            depends_on=["shared_retrieval_bundle", "composite_report"],
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        build_artifact_record(
+            artifact_type="concept_cards",
+            path=str(concept_cards_path),
+            step_name="knowledge_compiler",
+            step_version="v1",
+            input_hash=input_hash,
+            depends_on=["shared_retrieval_bundle", "composite_report"],
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        build_artifact_record(
+            artifact_type="wiki_draft",
+            path=str(wiki_draft_path),
+            step_name="knowledge_compiler",
+            step_version="v1",
+            input_hash=input_hash,
+            depends_on=["composite_report", "confluence_update_proposal", "concept_cards"],
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+        build_artifact_record(
+            artifact_type="run_manifest",
+            path=str(manifest_path),
+            step_name="deep_analyze_manifest",
+            step_version="v1",
+            input_hash=input_hash,
+            depends_on=["deep_analysis_result", "wiki_draft"],
+            engine="pageindex",
+            prompt_version=prompt_mode,
+        ),
+    ]
+    manifest = build_run_manifest(
+        task_type="jira_deep_analysis",
+        owner="workspace-operator",
+        input_config={
+            "issue_key": issue_key,
+            "policies": sorted(effective_policies),
+            "top_k": top_k,
+            "prompt_mode": prompt_mode,
+            "snapshot_files": snapshot_file_hashes,
+        },
+        run_id=run_dir.name,
+        status="completed",
+        artifacts=artifacts,
+    )
+    manifest = update_checkpoint(
+        manifest,
+        "retrieval_ready",
+        reached=True,
+        artifact_types=["shared_retrieval_bundle"],
+    )
+    manifest = update_checkpoint(
+        manifest,
+        "analysis_ready",
+        reached=True,
+        artifact_types=[f"section_output_{section_name}" for section_name in sorted(payload["section_outputs"])],
+    )
+    manifest = update_checkpoint(
+        manifest,
+        "knowledge_ready",
+        reached=True,
+        artifact_types=["confluence_update_proposal", "concept_cards", "wiki_draft"],
+    )
+    write_run_manifest(manifest_path, manifest)
+    return payload | {"run_dir": str(run_dir), "run_manifest_path": str(manifest_path)}
+
+
+def control_workspace_run(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    *,
+    action: str,
+    requested_by: str = "workspace-operator",
+    step_name: str | None = None,
+    reason: str | None = None,
+    execute: bool = False,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    paths = workspace_paths(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+
+    if action == "stop":
+        updated, event = request_stop(
+            manifest,
+            requested_by=requested_by,
+            step_name=step_name or "manual",
+            reason=reason,
+        )
+        return write_controlled_manifest(run_dir, updated, event)
+
+    if action == "resume":
+        updated, event = request_resume(
+            manifest,
+            requested_by=requested_by,
+            reason=reason,
+        )
+        return write_controlled_manifest(run_dir, updated, event)
+
+    if action == "rerun":
+        rerun_manifest, event = build_rerun_manifest(
+            manifest,
+            requested_by=requested_by,
+            reason=reason,
+        )
+        rerun_dir = paths["runs"] / rerun_manifest["run_id"]
+        return write_controlled_manifest(rerun_dir, rerun_manifest, event) | {
+            "source_run_dir": str(run_dir),
+            "run_dir": str(rerun_dir),
+        }
+
+    if action == "rerun-section":
+        if not step_name:
+            raise ValueError("step_name is required when action=rerun-section")
+        if execute:
+            return execute_workspace_section_rerun(
+                workspace_dir,
+                run_dir,
+                section_name=step_name,
+                requested_by=requested_by,
+                reason=reason,
+            )
+        updated, event = request_section_rerun(
+            manifest,
+            section_name=step_name,
+            requested_by=requested_by,
+            reason=reason,
+        )
+        return write_controlled_manifest(run_dir, updated, event)
+
+    raise ValueError("action must be one of: stop, resume, rerun, rerun-section")
+
+
+def sync_workspace_run_prefect_state(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    *,
+    prefect_state: str,
+    requested_by: str = "workspace-operator",
+    flow_run_id: str | None = None,
+    flow_name: str = "jira_deep_analysis",
+    deployment_name: str | None = None,
+    error: dict | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    updated, event = apply_prefect_state(
+        manifest,
+        prefect_state=prefect_state,
+        requested_by=requested_by,
+        flow_run_id=flow_run_id,
+        flow_name=flow_name,
+        deployment_name=deployment_name,
+        error=error,
+    )
+    return write_controlled_manifest(run_dir, updated, event)
+
+
+def submit_workspace_run_to_prefect(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    *,
+    deployment_name: str,
+    flow_name: str = "jira_deep_analysis",
+    requested_by: str = "workspace-operator",
+    parameters: dict | None = None,
+    timeout_seconds: float = 0,
+    flow_run_name: str | None = None,
+    tags: list[str] | None = None,
+    idempotency_key: str | None = None,
+    work_queue_name: str | None = None,
+    job_variables: dict | None = None,
+    adapter: RealPrefectTaskAdapter | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    prefect_adapter = adapter or RealPrefectTaskAdapter(
+        flow_name=flow_name,
+        deployment_name=deployment_name,
+    )
+    updated, event = prefect_adapter.submit(
+        manifest,
+        requested_by=requested_by,
+        parameters=parameters,
+        timeout_seconds=timeout_seconds,
+        flow_run_name=flow_run_name,
+        tags=tags,
+        idempotency_key=idempotency_key,
+        work_queue_name=work_queue_name,
+        job_variables=job_variables,
+    )
+    return write_controlled_manifest(run_dir, updated, event)
+
+
+def _artifact_path_by_type(run_dir: Path, manifest: dict) -> dict[str, Path]:
+    paths: dict[str, Path] = {}
+    for artifact in manifest.get("artifacts", []):
+        artifact_path = artifact.get("path")
+        if artifact_path:
+            path = Path(artifact_path)
+            if path.is_absolute() or path.exists():
+                paths[artifact["artifact_type"]] = path
+            else:
+                paths[artifact["artifact_type"]] = run_dir / path
+    return paths
+
+
+def _read_control_events(run_dir: Path) -> list[dict]:
+    path = run_dir / "control-events.jsonl"
+    if not path.exists():
+        return []
+    events: list[dict] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            events.append(json.loads(line))
+    return events
+
+
+def _artifact_inventory(run_dir: Path, manifest: dict) -> list[dict]:
+    artifact_paths = _artifact_path_by_type(run_dir, manifest)
+    rows: list[dict] = []
+    for artifact in manifest.get("artifacts", []):
+        artifact_type = artifact["artifact_type"]
+        path = artifact_paths.get(artifact_type)
+        rows.append(
+            {
+                "artifact_type": artifact_type,
+                "path": str(path) if path else artifact.get("path"),
+                "exists": bool(path and path.exists()),
+                "status": artifact.get("status"),
+                "stale": bool(artifact.get("stale", False)),
+                "step_name": artifact.get("step_name"),
+                "step_version": artifact.get("step_version"),
+                "depends_on": list(artifact.get("depends_on", [])),
+            }
+        )
+    return rows
+
+
+def _run_summary(run_dir: Path, manifest: dict) -> dict:
+    checkpoints = manifest.get("checkpoints", {})
+    reached_checkpoints = [
+        name
+        for name, checkpoint in checkpoints.items()
+        if checkpoint.get("reached", False)
+    ]
+    artifacts = manifest.get("artifacts", [])
+    input_config = manifest.get("input_config", {})
+    return {
+        "run_id": manifest["run_id"],
+        "run_version": manifest["run_version"],
+        "task_type": manifest["task_type"],
+        "owner": manifest["owner"],
+        "status": manifest["status"],
+        "issue_key": input_config.get("issue_key") or input_config.get("jira_issue_key"),
+        "updated_at": manifest.get("updated_at"),
+        "run_dir": str(run_dir),
+        "checkpoint_summary": {
+            "reached": reached_checkpoints,
+            "reached_count": len(reached_checkpoints),
+            "total_count": len(checkpoints),
+        },
+        "artifact_count": len(artifacts),
+        "stale_artifact_count": len([artifact for artifact in artifacts if artifact.get("stale", False)]),
+    }
+
+
+def list_workspace_runs(workspace_dir: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    paths = workspace_paths(workspace_dir)
+    runs: list[dict] = []
+    if paths["runs"].exists():
+        for run_dir in sorted(paths["runs"].iterdir()):
+            manifest_path = run_dir / "run_manifest.json"
+            if run_dir.is_dir() and manifest_path.exists():
+                runs.append(_run_summary(run_dir, load_run_manifest(run_dir)))
+    runs.sort(key=lambda run: run.get("updated_at") or "", reverse=True)
+    return {
+        "workspace_dir": str(paths["root"]),
+        "run_count": len(runs),
+        "runs": runs,
+    }
+
+
+def inspect_workspace_run(workspace_dir: str | Path, run_ref: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    result_path = run_dir / "result.json"
+    result = _read_json(result_path) if result_path.exists() else {}
+    return {
+        "run": _run_summary(run_dir, manifest),
+        "manifest": manifest,
+        "control_events": _read_control_events(run_dir),
+        "artifact_inventory": _artifact_inventory(run_dir, manifest),
+        "result_summary": {
+            "exists": result_path.exists(),
+            "issue_id": result.get("issue_id"),
+            "title": result.get("title"),
+            "analysis_profile": result.get("analysis_profile"),
+            "section_names": sorted(result.get("section_outputs", {}).keys()),
+            "knowledge_artifacts": sorted(result.get("knowledge_artifacts", {}).keys()),
+        },
+    }
+
+
+def load_workspace_run_artifact(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    artifact_type: str,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    artifact_paths = _artifact_path_by_type(run_dir, manifest)
+    if artifact_type not in artifact_paths:
+        raise ValueError(f"Unknown artifact type for run {manifest['run_id']}: {artifact_type}")
+    path = artifact_paths[artifact_type]
+    if not path.exists():
+        raise ValueError(f"Artifact path does not exist for {artifact_type}: {path}")
+    if path.suffix.lower() == ".json":
+        return {
+            "artifact_type": artifact_type,
+            "path": str(path),
+            "format": "json",
+            "payload": _read_json(path),
+        }
+    return {
+        "artifact_type": artifact_type,
+        "path": str(path),
+        "format": "text",
+        "content": path.read_text(encoding="utf-8"),
+    }
+
+
+def _clear_rebuilt_artifact_staleness(manifest: dict, artifact_types: set[str]) -> dict:
+    updated = json.loads(json.dumps(manifest))
+    for artifact in updated.get("artifacts", []):
+        if artifact.get("artifact_type") in artifact_types:
+            artifact["stale"] = False
+            artifact["status"] = "ready"
+            artifact["created_at"] = _utc_now()
+    updated["status"] = "completed"
+    updated["updated_at"] = _utc_now()
+    return updated
+
+
+def execute_workspace_section_rerun(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    *,
+    section_name: str,
+    requested_by: str = "workspace-operator",
+    reason: str | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    invalidated_manifest, invalidation_event = request_section_rerun(
+        manifest,
+        section_name=section_name,
+        requested_by=requested_by,
+        reason=reason,
+    )
+
+    result_path = run_dir / "result.json"
+    if not result_path.exists():
+        raise ValueError(f"Cannot execute section rerun without result.json: {result_path}")
+    payload = _read_json(result_path)
+    section_retrieval_hooks = payload.get("section_retrieval_hooks", {})
+    if section_name not in section_retrieval_hooks:
+        raise ValueError(f"Unknown section in run payload: {section_name}")
+
+    rebuilt_sections = build_section_outputs(
+        issue_summary=payload["issue_summary"],
+        shared_citations=payload["shared_retrieval_bundle"].get("citations", []),
+        section_retrieval_hooks=section_retrieval_hooks,
+        llm_backend=None,
+    )
+    section_outputs = dict(payload.get("section_outputs", {}))
+    section_outputs[section_name] = rebuilt_sections[section_name]
+    composite_content = build_composite_report_markdown(
+        issue_id=payload["issue_id"],
+        title=payload.get("title", payload["issue_id"]),
+        section_outputs=section_outputs,
+    )
+    composite_report = {
+        "format": "markdown",
+        "content": composite_content,
+    }
+    knowledge_artifacts = build_knowledge_artifacts(
+        jira_document={
+            "document_id": payload["issue_id"],
+            "title": payload.get("title", payload["issue_id"]),
+        },
+        shared_citations=payload["shared_retrieval_bundle"].get("citations", []),
+        confluence_citations=payload.get("confluence_evidence", {}).get("citations", []),
+        composite_report=composite_report,
+    )
+
+    artifact_paths = _artifact_path_by_type(run_dir, invalidated_manifest)
+    target_section_path = artifact_paths.get(f"section_output_{section_name}") or (
+        run_dir / "section_outputs" / f"{section_name}.json"
+    )
+    composite_report_path = artifact_paths.get("composite_report") or (run_dir / "report" / "report.md")
+    confluence_update_proposal_path = artifact_paths.get("confluence_update_proposal") or (
+        run_dir / "knowledge" / "confluence_update_proposal.json"
+    )
+    concept_cards_path = artifact_paths.get("concept_cards") or (run_dir / "knowledge" / "concept_cards.json")
+    wiki_draft_path = artifact_paths.get("wiki_draft") or (run_dir / "knowledge" / "wiki_draft.md")
+
+    _write_json(target_section_path, section_outputs[section_name])
+    _write_text(composite_report_path, composite_report["content"])
+    _write_json(confluence_update_proposal_path, knowledge_artifacts["confluence_update_proposal"])
+    _write_json(concept_cards_path, knowledge_artifacts["concept_cards"])
+    _write_text(wiki_draft_path, knowledge_artifacts["wiki_draft"]["content"])
+
+    payload["section_outputs"] = section_outputs
+    payload["composite_report"] = composite_report
+    payload["knowledge_artifacts"] = knowledge_artifacts
+    _write_json(result_path, payload)
+
+    rebuilt_artifact_types = {
+        "deep_analysis_result",
+        f"section_output_{section_name}",
+        "composite_report",
+        "confluence_update_proposal",
+        "concept_cards",
+        "wiki_draft",
+        "run_manifest",
+    }
+    completed_manifest = _clear_rebuilt_artifact_staleness(
+        invalidated_manifest,
+        rebuilt_artifact_types,
+    )
+    execution_event = build_control_event(
+        manifest=completed_manifest,
+        action="rerun_section",
+        requested_by=requested_by,
+        step_name=f"section_runner_{section_name}",
+        reason=reason,
+        result={
+            **invalidation_event["result"],
+            "executed": True,
+            "rewritten_artifact_types": sorted(rebuilt_artifact_types - {"run_manifest"}),
+        },
+    )
+    manifest_path = write_run_manifest(run_dir, completed_manifest)
+    event_log_path = append_control_event(run_dir, execution_event)
+    return {
+        "run_id": completed_manifest["run_id"],
+        "run_version": completed_manifest["run_version"],
+        "status": completed_manifest["status"],
+        "manifest_path": manifest_path,
+        "control_event": execution_event,
+        "control_event_log": event_log_path,
+        "run_dir": str(run_dir),
+    }

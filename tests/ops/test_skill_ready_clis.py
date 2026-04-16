@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import json
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
+
+from tests.temp_utils import temporary_directory
 
 
 class SkillReadyCliTest(unittest.TestCase):
@@ -35,7 +38,7 @@ class SkillReadyCliTest(unittest.TestCase):
             ("pptx", "fixtures/corpus/office/sample.pptx", "## Slide 1", "pptx"),
             ("pdf", "fixtures/corpus/pdf/sample.pdf", "## Page 1", "pdf"),
         ]
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with temporary_directory("skill-ready") as temp_dir:
             for kind, source_path, expected_markdown, expected_source_type in cases:
                 with self.subTest(kind=kind):
                     markdown_path = Path(temp_dir) / f"{kind}.md"
@@ -61,7 +64,7 @@ class SkillReadyCliTest(unittest.TestCase):
                     )
 
     def test_normalize_cli_can_write_markdown_tree(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with temporary_directory("skill-ready") as temp_dir:
             output_dir = Path(temp_dir) / "docs"
             result = self._run(
                 "scripts/ingest/normalize_cli.py",
@@ -91,7 +94,7 @@ class SkillReadyCliTest(unittest.TestCase):
         self.assertEqual(payload[0]["document_id"], "nvme-spec-v1")
 
     def test_retrieval_toolkit_search_can_read_page_index_artifact(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with temporary_directory("skill-ready") as temp_dir:
             index_path = Path(temp_dir) / "page_index.json"
             index_result = self._run(
                 "scripts/retrieval/toolkit_cli.py",
@@ -116,7 +119,7 @@ class SkillReadyCliTest(unittest.TestCase):
             self.assertEqual(payload[0]["document_id"], "nvme-spec-v1")
 
     def test_retrieval_toolkit_search_can_read_snapshot_page_index(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with temporary_directory("skill-ready") as temp_dir:
             snapshot_result = self._run(
                 "scripts/retrieval/snapshot_cli.py",
                 "create",

@@ -5,6 +5,7 @@
   --panel: #ffffff;
   --bg: linear-gradient(180deg, #eef5fb 0%, #f8fbfd 100%);
   --accent: #0f766e;
+  --warn: #9f5f00;
 }
 
 * {
@@ -50,7 +51,7 @@ body {
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 18px;
   box-shadow: 0 12px 30px rgba(17, 35, 56, 0.06);
 }
@@ -77,11 +78,63 @@ th, td {
   margin-bottom: 12px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 8px;
   background: #f9fcff;
   color: var(--ink);
   text-align: left;
   cursor: pointer;
+}
+
+.task-card,
+.task-control,
+.status-pill {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fcff;
+  color: var(--ink);
+}
+
+.task-card {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 12px;
+  text-align: left;
+}
+
+.task-card.selected {
+  border-color: var(--accent);
+  background: #edf8f6;
+}
+
+#task-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.task-control {
+  padding: 8px 12px;
+  text-transform: capitalize;
+}
+
+.detail-tab {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.status-pill {
+  display: inline-grid;
+  gap: 2px;
+  min-width: 140px;
+  margin: 0 8px 8px 0;
+  padding: 10px;
+}
+
+.status-pill span {
+  color: var(--warn);
 }
 
 pre {
@@ -100,4 +153,3 @@ pre {
     grid-column: span 1;
   }
 }
-
