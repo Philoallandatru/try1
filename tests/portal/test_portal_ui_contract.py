@@ -33,6 +33,7 @@ class PortalUiContractTest(unittest.TestCase):
             "report-tabs",
             "knowledge-panels",
             "task-control",
+            "row.preview",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

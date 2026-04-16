@@ -74,6 +74,9 @@ class PortalStateTest(unittest.TestCase):
             self.assertIn("rerun-section", workbench["controls"])
             self.assertEqual(workbench["report_tabs"][0]["status"], "ready")
             self.assertEqual(workbench["knowledge_panels"][0]["status"], "ready")
+            self.assertIn("Action:", workbench["knowledge_panels"][0]["preview"])
+            self.assertIn("section_outputs/rca.json", workbench["detail_tabs"][3]["content"])
+            self.assertIn("checkpoints", workbench["detail_tabs"][0]["content"].lower())
 
 
 if __name__ == "__main__":

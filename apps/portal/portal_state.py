@@ -7,7 +7,7 @@ from services.eval.harness import evaluate_dataset
 from services.retrieval.citations.assembler import assemble_citation, build_source_inspection
 from services.retrieval.indexing.page_index import build_page_index, load_documents
 from services.retrieval.search.hybrid_search import search_page_index
-from services.workspace.workspace import inspect_workspace_run, list_workspace_runs
+from services.workspace.workspace import inspect_workspace_run, list_workspace_runs, load_workspace_run_artifact
 
 
 DEFAULT_POLICIES = {"team:ssd", "public"}
@@ -117,6 +117,40 @@ def _artifact_status(rows: list[dict], artifact_type: str) -> str:
     return "ready" if match.get("exists") else "missing"
 
 
+def _artifact_path(rows: list[dict], artifact_type: str) -> str | None:
+    match = next((row for row in rows if row["artifact_type"] == artifact_type), None)
+    if not match:
+        return None
+    path = match.get("path")
+    return str(path).replace("\\", "/") if path else None
+
+
+def _artifact_preview(workspace_dir: str | Path, run_id: str, artifact_type: str) -> str | None:
+    try:
+        artifact = load_workspace_run_artifact(workspace_dir, run_id, artifact_type)
+    except ValueError:
+        return None
+
+    if artifact["format"] == "text":
+        content = str(artifact["content"]).strip()
+        return "\n".join(content.splitlines()[:6]).strip() or None
+
+    payload = artifact["payload"]
+    if artifact_type.startswith("section_output_"):
+        answer = payload.get("answer", {}).get("text", "")
+        return answer.strip() or None
+    if artifact_type == "confluence_update_proposal":
+        action = payload.get("knowledge_action", "unknown")
+        delta = payload.get("proposed_delta", "")
+        return f"Action: {action} — {delta}".strip()
+    if artifact_type == "concept_cards":
+        cards = payload.get("cards", [])
+        if not cards:
+            return "No concept cards generated."
+        return f"{len(cards)} card(s): {cards[0].get('summary', '')}".strip()
+    return json.dumps(payload, ensure_ascii=False)[:240]
+
+
 def _run_task_workbench(
     *,
     workspace_dir: str | Path,
@@ -132,7 +166,14 @@ def _run_task_workbench(
     detail = inspect_workspace_run(workspace_dir, selected["run_id"])
     artifacts = detail["artifact_inventory"]
     result_summary = detail["result_summary"]
+    control_events = detail["control_events"]
+    reached_checkpoints = selected["checkpoint_summary"]["reached"]
     top_result = search_workspace[0] if search_workspace else {}
+    shared_retrieval_preview = _artifact_preview(workspace_dir, selected["run_id"], "shared_retrieval_bundle")
+    report_preview = _artifact_preview(workspace_dir, selected["run_id"], "composite_report")
+    proposal_preview = _artifact_preview(workspace_dir, selected["run_id"], "confluence_update_proposal")
+    wiki_draft_preview = _artifact_preview(workspace_dir, selected["run_id"], "wiki_draft")
+    concept_card_preview = _artifact_preview(workspace_dir, selected["run_id"], "concept_cards")
     tasks = [
         {
             "task_id": run["run_id"],
@@ -169,39 +210,91 @@ def _run_task_workbench(
             {
                 "id": "overview",
                 "label": "Overview",
-                "content": f"{selected['task_type']} for {selected.get('issue_key') or result_summary.get('issue_id')}.",
+                "content": (
+                    f"{selected['task_type']} for {selected.get('issue_key') or result_summary.get('issue_id')}.\n"
+                    f"Checkpoints reached: {', '.join(reached_checkpoints) or 'none'}."
+                ),
             },
             {
                 "id": "logs",
                 "label": "Logs",
-                "content": f"{len(detail['control_events'])} control event(s) recorded.",
+                "content": (
+                    f"{len(control_events)} control event(s) recorded."
+                    + (
+                        f" Last event: {control_events[-1]['action']} by {control_events[-1]['requested_by']}."
+                        if control_events
+                        else ""
+                    )
+                ),
             },
             {
                 "id": "evidence",
                 "label": "Evidence",
-                "content": f"Top evidence: {top_result.get('document_id', 'none')}",
+                "content": shared_retrieval_preview or f"Top evidence: {top_result.get('document_id', 'none')}",
             },
             {
                 "id": "report",
                 "label": "Report",
-                "content": f"Composite report is {_artifact_status(artifacts, 'composite_report')}.",
+                "content": (
+                    (report_preview or f"Composite report is {_artifact_status(artifacts, 'composite_report')}.")
+                    + (
+                        f"\nArtifact: {_artifact_path(artifacts, 'section_output_rca')}"
+                        if _artifact_path(artifacts, "section_output_rca")
+                        else ""
+                    )
+                ),
             },
             {
                 "id": "knowledge",
                 "label": "Knowledge",
-                "content": f"Knowledge proposal is {_artifact_status(artifacts, 'confluence_update_proposal')}.",
+                "content": proposal_preview or f"Knowledge proposal is {_artifact_status(artifacts, 'confluence_update_proposal')}.",
             },
         ],
         "report_tabs": [
-            {"id": "rca", "label": "RCA", "status": _artifact_status(artifacts, "section_output_rca")},
-            {"id": "spec_impact", "label": "Spec Impact", "status": _artifact_status(artifacts, "section_output_spec_impact")},
-            {"id": "decision_brief", "label": "Decision Brief", "status": _artifact_status(artifacts, "section_output_decision_brief")},
-            {"id": "general_summary", "label": "General Summary", "status": _artifact_status(artifacts, "section_output_general_summary")},
+            {
+                "id": "rca",
+                "label": "RCA",
+                "status": _artifact_status(artifacts, "section_output_rca"),
+                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_rca"),
+            },
+            {
+                "id": "spec_impact",
+                "label": "Spec Impact",
+                "status": _artifact_status(artifacts, "section_output_spec_impact"),
+                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_spec_impact"),
+            },
+            {
+                "id": "decision_brief",
+                "label": "Decision Brief",
+                "status": _artifact_status(artifacts, "section_output_decision_brief"),
+                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_decision_brief"),
+            },
+            {
+                "id": "general_summary",
+                "label": "General Summary",
+                "status": _artifact_status(artifacts, "section_output_general_summary"),
+                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_general_summary"),
+            },
         ],
         "knowledge_panels": [
-            {"id": "confluence_update_proposal", "label": "Confluence Update Proposal", "status": _artifact_status(artifacts, "confluence_update_proposal")},
-            {"id": "wiki_draft", "label": "Wiki Draft", "status": _artifact_status(artifacts, "wiki_draft")},
-            {"id": "concept_cards", "label": "Concept Cards", "status": _artifact_status(artifacts, "concept_cards")},
+            {
+                "id": "confluence_update_proposal",
+                "label": "Confluence Update Proposal",
+                "status": _artifact_status(artifacts, "confluence_update_proposal"),
+                "preview": proposal_preview,
+            },
+            {
+                "id": "wiki_draft",
+                "label": "Wiki Draft",
+                "status": _artifact_status(artifacts, "wiki_draft"),
+                "preview": wiki_draft_preview,
+            },
+            {
+                "id": "concept_cards",
+                "label": "Concept Cards",
+                "status": _artifact_status(artifacts, "concept_cards"),
+                "preview": concept_card_preview,
+            },
         ],
         "retrieval_comparison": {
             "engine": "pageindex",

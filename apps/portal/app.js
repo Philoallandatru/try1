@@ -59,6 +59,11 @@ function renderBadgeGrid(target, rows, className) {
     const status = document.createElement("span");
     status.textContent = row.status;
     item.append(label, status);
+    if (row.preview) {
+      const preview = document.createElement("small");
+      preview.textContent = row.preview;
+      item.append(preview);
+    }
     target.appendChild(item);
   });
 }
