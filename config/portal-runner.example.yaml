@@ -1,0 +1,31 @@
+server:
+  runner_token: "change-me"
+  max_upload_mb: 100
+
+jira:
+  base_url: "https://jira.example.com"
+  token: "change-me"
+  auth_mode: "auto"
+
+confluence:
+  base_url: "https://confluence.example.com"
+  token: "change-me"
+  auth_mode: "auto"
+
+workspace:
+  root: ".tmp/portal-runner/workspaces"
+  uploads_root: ".tmp/portal-runner/uploads"
+  runs_root: ".tmp/portal-runner/runs"
+
+pipelines:
+  jira_live_smoke:
+    enabled: true
+  confluence_live_smoke:
+    enabled: true
+  pdf_ingest_smoke:
+    enabled: true
+    preferred_parser: "pypdf"
+  full_real_data_smoke:
+    enabled: true
+    preferred_parser: "pypdf"
+    publish_wiki: true

@@ -20,6 +20,72 @@
         <p id="new-task-entry"></p>
       </article>
 
+      <article class="panel wide" id="pipeline-runner-panel">
+        <h2>Pipeline Runner</h2>
+        <p class="runner-copy">Run real-source smoke pipelines from this local portal runner.</p>
+        <div id="runner-status"></div>
+        <form id="runner-auth-form" class="runner-form">
+          <label>
+            Runner token
+            <input id="runner-token" type="password" autocomplete="current-password" placeholder="Shared runner token">
+          </label>
+          <button type="submit">Connect</button>
+        </form>
+        <form id="runner-run-form" class="runner-form runner-grid" hidden>
+          <label>
+            Pipeline
+            <select id="runner-pipeline"></select>
+          </label>
+          <label data-runner-field="jira_issue_key">
+            Jira issue key
+            <input id="runner-jira-issue" type="text" placeholder="SSD-777">
+          </label>
+          <label data-runner-field="confluence_page_id">
+            Confluence page id
+            <input id="runner-confluence-page" type="text" placeholder="123456">
+          </label>
+          <label>
+            Preferred parser
+            <select id="runner-parser">
+              <option value="pypdf">pypdf</option>
+              <option value="auto">auto</option>
+              <option value="mineru">mineru</option>
+            </select>
+          </label>
+          <label data-runner-field="topic">
+            Topic slug
+            <input id="runner-topic-slug" type="text" value="real-source-smoke">
+          </label>
+          <label data-runner-field="topic">
+            Topic title
+            <input id="runner-topic-title" type="text" value="Real Source Smoke">
+          </label>
+          <label data-runner-field="mock_response">
+            Mock response
+            <input id="runner-mock-response" type="text" value="Portal runner smoke content">
+          </label>
+          <label data-runner-field="pdf">
+            PDF upload
+            <input id="runner-pdf" type="file" accept="application/pdf,.pdf">
+          </label>
+          <label class="runner-checkbox" data-runner-field="publish_wiki">
+            <input id="runner-publish-wiki" type="checkbox" checked>
+            Publish wiki
+          </label>
+          <button type="submit">Run Pipeline</button>
+        </form>
+        <div class="runner-layout">
+          <section>
+            <h3>Runs</h3>
+            <div id="runner-runs"></div>
+          </section>
+          <section>
+            <h3>Run Detail</h3>
+            <div id="runner-detail"></div>
+          </section>
+        </div>
+      </article>
+
       <article class="panel" id="task-workbench-panel">
         <h2>Task Workbench</h2>
         <p id="task-filters"></p>
@@ -38,6 +104,8 @@
         <div id="control-events"></div>
         <h3>Artifact Inventory</h3>
         <div id="artifact-inventory"></div>
+        <h3>Command Recipes</h3>
+        <div id="command-recipes"></div>
         <h3>Retrieval Comparison</h3>
         <pre id="retrieval-comparison"></pre>
       </article>

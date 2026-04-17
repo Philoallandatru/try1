@@ -8,6 +8,8 @@ class PortalUiContractTest(unittest.TestCase):
         for marker in [
             "New Task",
             "Task Workbench",
+            "Pipeline Runner",
+            "data-runner-field",
             "Task Details",
             "Ingestion Status",
             "Corpus Inventory",
@@ -34,6 +36,7 @@ class PortalUiContractTest(unittest.TestCase):
             "knowledge-panels",
             "control-events",
             "artifact-inventory",
+            "command-recipes",
             "task-control",
             "row.preview",
             "taskDetailsById",
@@ -41,6 +44,22 @@ class PortalUiContractTest(unittest.TestCase):
             "renderSelectedTask",
             "renderEventList",
             "renderArtifactInventory",
+            "renderCommandRecipes",
+        ]:
+            with self.subTest(marker=marker):
+                self.assertIn(marker, text)
+
+    def test_app_js_supports_pipeline_runner_rendering(self) -> None:
+        text = Path("apps/portal/app.js").read_text(encoding="utf-8")
+        for marker in [
+            "portalRunnerToken",
+            "runnerFetch",
+            "renderPipelineOptions",
+            "renderRunnerRuns",
+            "renderRunnerDetail",
+            "updateRunnerFormForPipeline",
+            "/api/pipelines",
+            "/api/runs",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

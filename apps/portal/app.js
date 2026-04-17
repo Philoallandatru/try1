@@ -98,6 +98,248 @@ function renderArtifactInventory(target, rows) {
   });
 }
 
+function renderCommandRecipes(target, rows) {
+  target.innerHTML = "";
+  rows.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "command-row";
+    item.innerHTML = `
+      <strong>${row.label}</strong>
+      <code>${row.command}</code>
+    `;
+    target.appendChild(item);
+  });
+}
+
+const runnerState = {
+  token: localStorage.getItem("portalRunnerToken") || "",
+  selectedRunId: null,
+  pollTimer: null,
+};
+
+function runnerHeaders() {
+  return runnerState.token ? { Authorization: `Bearer ${runnerState.token}` } : {};
+}
+
+async function runnerFetch(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      ...runnerHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const payload = await response.json();
+      detail = payload.detail || detail;
+    } catch (_) {
+      // Keep the status text when the response is not JSON.
+    }
+    throw new Error(detail);
+  }
+  return response.json();
+}
+
+function setRunnerStatus(message, failed = false) {
+  const target = document.getElementById("runner-status");
+  target.textContent = message;
+  target.className = failed ? "failed" : "";
+}
+
+function renderPipelineOptions(payload) {
+  const select = document.getElementById("runner-pipeline");
+  select.innerHTML = "";
+  payload.pipelines
+    .filter((pipeline) => pipeline.enabled)
+    .forEach((pipeline) => {
+      const option = document.createElement("option");
+      option.value = pipeline.pipeline_id;
+      option.textContent = pipeline.label;
+      option.dataset.acceptsPdf = String(pipeline.accepts_pdf);
+      option.dataset.requiredInputs = pipeline.required_inputs.join(",");
+      select.appendChild(option);
+    });
+  updateRunnerFormForPipeline();
+}
+
+function updateRunnerFormForPipeline() {
+  const selected = document.getElementById("runner-pipeline").selectedOptions[0];
+  if (!selected) {
+    return;
+  }
+  const required = new Set((selected.dataset.requiredInputs || "").split(",").filter(Boolean));
+  const acceptsPdf = selected.dataset.acceptsPdf === "true";
+  const pipelineId = selected.value;
+  const visibility = {
+    jira_issue_key: required.has("jira_issue_key"),
+    confluence_page_id: required.has("confluence_page_id"),
+    pdf: acceptsPdf,
+    publish_wiki: pipelineId === "full_real_data_smoke",
+    topic: pipelineId === "full_real_data_smoke",
+    mock_response: pipelineId === "full_real_data_smoke",
+  };
+  document.querySelectorAll("[data-runner-field]").forEach((field) => {
+    const name = field.dataset.runnerField;
+    field.hidden = visibility[name] === false;
+  });
+}
+
+function renderRunnerRuns(payload) {
+  const target = document.getElementById("runner-runs");
+  target.innerHTML = "";
+  payload.runs.forEach((run) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `runner-run-card${run.run_id === runnerState.selectedRunId ? " selected" : ""}`;
+    const title = document.createElement("strong");
+    title.textContent = run.label;
+    const status = document.createElement("span");
+    status.textContent = `${run.status} / ${run.run_id}`;
+    const request = document.createElement("small");
+    request.textContent = [run.request?.jira_issue_key, run.request?.confluence_page_id].filter(Boolean).join(" / ");
+    button.append(title, document.createElement("br"), status, document.createElement("br"), request);
+    button.addEventListener("click", () => {
+      runnerState.selectedRunId = run.run_id;
+      loadRunnerDetail(run.run_id);
+    });
+    target.appendChild(button);
+  });
+}
+
+function renderRunnerDetail(manifest) {
+  const target = document.getElementById("runner-detail");
+  target.innerHTML = "";
+  const heading = document.createElement("div");
+  const statusClass = manifest.status === "failed" ? "runner-status failed" : "runner-status";
+  heading.innerHTML = `
+    <p><strong>${manifest.label}</strong></p>
+    <p><span class="${statusClass}">${manifest.status}</span></p>
+    <p><code>${manifest.run_id}</code></p>
+  `;
+  target.appendChild(heading);
+
+  (manifest.steps || []).forEach((step) => {
+    const card = document.createElement("div");
+    card.className = "runner-step-card";
+    const title = document.createElement("strong");
+    title.textContent = step.label;
+    const status = document.createElement("span");
+    status.className = step.status === "failed" ? "runner-status failed" : "runner-status";
+    status.textContent = step.status;
+    const duration = document.createElement("p");
+    duration.textContent = `${step.duration_seconds ?? "-"} seconds`;
+    const logs = document.createElement("pre");
+    logs.textContent = (step.latest_logs || []).join("\n");
+    card.append(title, document.createTextNode(" "), status, duration);
+    if (step.error) {
+      const error = document.createElement("p");
+      error.textContent = step.error;
+      card.appendChild(error);
+    }
+    card.appendChild(logs);
+    target.appendChild(card);
+  });
+
+  const artifacts = manifest.artifacts || {};
+  if (Object.keys(artifacts).length > 0) {
+    const list = document.createElement("div");
+    list.className = "runner-step-card";
+    const title = document.createElement("strong");
+    title.textContent = "Artifacts";
+    list.appendChild(title);
+    Object.keys(artifacts).forEach((name) => {
+      const row = document.createElement("p");
+      const link = document.createElement("a");
+      link.href = `/api/runs/${manifest.run_id}/artifacts/${name}`;
+      link.textContent = name;
+      link.target = "_blank";
+      row.appendChild(link);
+      list.appendChild(row);
+    });
+    target.appendChild(list);
+  }
+}
+
+async function loadRunnerDetail(runId) {
+  const manifest = await runnerFetch(`/api/runs/${runId}`);
+  renderRunnerDetail(manifest);
+}
+
+async function refreshRunnerRuns() {
+  const payload = await runnerFetch("/api/runs");
+  renderRunnerRuns(payload);
+  if (!runnerState.selectedRunId && payload.runs.length > 0) {
+    runnerState.selectedRunId = payload.runs[0].run_id;
+  }
+  if (runnerState.selectedRunId) {
+    await loadRunnerDetail(runnerState.selectedRunId);
+  }
+}
+
+async function connectRunner() {
+  await runnerFetch("/api/auth/check", { method: "POST" });
+  const pipelines = await runnerFetch("/api/pipelines");
+  renderPipelineOptions(pipelines);
+  document.getElementById("runner-run-form").hidden = false;
+  setRunnerStatus("Connected to portal runner.");
+  await refreshRunnerRuns();
+  if (!runnerState.pollTimer) {
+    runnerState.pollTimer = setInterval(() => {
+      refreshRunnerRuns().catch((error) => setRunnerStatus(error.message, true));
+    }, 3000);
+  }
+}
+
+function wireRunnerPanel() {
+  const tokenInput = document.getElementById("runner-token");
+  tokenInput.value = runnerState.token;
+  document.getElementById("runner-auth-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    runnerState.token = tokenInput.value.trim();
+    localStorage.setItem("portalRunnerToken", runnerState.token);
+    try {
+      await connectRunner();
+    } catch (error) {
+      setRunnerStatus(error.message, true);
+    }
+  });
+
+  document.getElementById("runner-pipeline").addEventListener("change", updateRunnerFormForPipeline);
+
+  document.getElementById("runner-run-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData();
+    form.append("pipeline_id", document.getElementById("runner-pipeline").value);
+    form.append("jira_issue_key", document.getElementById("runner-jira-issue").value);
+    form.append("confluence_page_id", document.getElementById("runner-confluence-page").value);
+    form.append("preferred_parser", document.getElementById("runner-parser").value);
+    form.append("publish_wiki", document.getElementById("runner-publish-wiki").checked ? "true" : "false");
+    form.append("topic_slug", document.getElementById("runner-topic-slug").value);
+    form.append("topic_title", document.getElementById("runner-topic-title").value);
+    form.append("mock_response", document.getElementById("runner-mock-response").value);
+    const file = document.getElementById("runner-pdf").files[0];
+    if (file) {
+      form.append("pdf", file);
+    }
+    try {
+      const manifest = await runnerFetch("/api/runs", { method: "POST", body: form });
+      runnerState.selectedRunId = manifest.run_id;
+      setRunnerStatus(`Started ${manifest.run_id}`);
+      await refreshRunnerRuns();
+    } catch (error) {
+      setRunnerStatus(error.message, true);
+    }
+  });
+
+  if (runnerState.token) {
+    connectRunner().catch(() => setRunnerStatus("Enter the runner token to connect."));
+  } else {
+    setRunnerStatus("Start apps.portal_runner.server and enter the shared runner token.");
+  }
+}
+
 function renderTaskWorkbench(workbench) {
   let selectedTaskId = workbench.selected_task_id;
   const taskDetailsById = workbench.task_details_by_id || {};
@@ -115,6 +357,7 @@ function renderTaskWorkbench(workbench) {
   const knowledgePanels = document.getElementById("knowledge-panels");
   const controlEvents = document.getElementById("control-events");
   const artifactInventory = document.getElementById("artifact-inventory");
+  const commandRecipes = document.getElementById("command-recipes");
   const retrievalComparison = document.getElementById("retrieval-comparison");
 
   function renderSelectedTask() {
@@ -143,6 +386,7 @@ function renderTaskWorkbench(workbench) {
       knowledge_panels: workbench.knowledge_panels,
       control_events: workbench.control_events || [],
       artifact_inventory: workbench.artifact_inventory || [],
+      command_recipes: workbench.command_recipes || [],
       retrieval_comparison: workbench.retrieval_comparison,
       controls: workbench.controls,
     };
@@ -172,6 +416,7 @@ function renderTaskWorkbench(workbench) {
     renderBadgeGrid(knowledgePanels, selectedDetails.knowledge_panels, "status-pill");
     renderEventList(controlEvents, selectedDetails.control_events || []);
     renderArtifactInventory(artifactInventory, selectedDetails.artifact_inventory || []);
+    renderCommandRecipes(commandRecipes, selectedDetails.command_recipes || []);
     retrievalComparison.textContent = JSON.stringify(selectedDetails.retrieval_comparison, null, 2);
   }
 
@@ -180,6 +425,7 @@ function renderTaskWorkbench(workbench) {
 
 async function bootPortal() {
   const state = await loadPortalState();
+  wireRunnerPanel();
   renderTaskWorkbench(state.task_workbench);
   renderList(
     document.getElementById("ingestion-status-list"),

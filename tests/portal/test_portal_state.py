@@ -33,6 +33,7 @@ class PortalStateTest(unittest.TestCase):
         self.assertIn("knowledge_panels", workbench)
         self.assertIn("control_events", workbench)
         self.assertIn("artifact_inventory", workbench)
+        self.assertIn("command_recipes", workbench)
         self.assertIn("retrieval_comparison", workbench)
         self.assertIn("controls", workbench)
         self.assertIn("task_details_by_id", workbench)
@@ -85,6 +86,7 @@ class PortalStateTest(unittest.TestCase):
             self.assertIn(selected["task_id"], workbench["task_details_by_id"])
             self.assertIsInstance(workbench["artifact_inventory"], list)
             self.assertTrue(any(row["artifact_type"] == "confluence_update_proposal" for row in workbench["artifact_inventory"]))
+            self.assertTrue(any(recipe["label"] == "Run detail" for recipe in workbench["command_recipes"]))
 
     def test_portal_state_surfaces_prefect_runtime_information(self) -> None:
         with TemporaryDirectory() as temp_dir:
@@ -118,6 +120,7 @@ class PortalStateTest(unittest.TestCase):
             runtime_tab = next(tab for tab in workbench["detail_tabs"] if tab["id"] == "runtime")
             self.assertIn("flow-run-789", runtime_tab["content"])
             self.assertIn("succeeded", runtime_tab["content"])
+            self.assertTrue(any("sync-prefect-state" in recipe["command"] for recipe in workbench["command_recipes"]))
 
 
 if __name__ == "__main__":

@@ -105,6 +105,7 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
                 ],
                 "control_events": [],
                 "artifact_inventory": [],
+                "command_recipes": [],
                 "retrieval_comparison": {
                     "engine": "pageindex",
                     "query": "SSD-102 NAND write telemetry",
@@ -165,6 +166,7 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
         ],
         "control_events": [],
         "artifact_inventory": [],
+        "command_recipes": [],
         "retrieval_comparison": {
             "engine": "pageindex",
             "query": "SSD-102 NAND write telemetry",
@@ -365,6 +367,32 @@ def _build_run_detail_bundle(
             }
             for row in artifacts
         ],
+        "command_recipes": [
+            {
+                "label": "Run detail",
+                "command": f"python scripts/workspace_cli.py run-detail {workspace_dir} {run['run_id']}",
+            },
+            {
+                "label": "Show report",
+                "command": f"python scripts/workspace_cli.py run-artifact {workspace_dir} {run['run_id']} composite_report",
+            },
+            {
+                "label": "Stop run",
+                "command": f"python scripts/workspace_cli.py control-run {workspace_dir} {run['run_id']} --action stop --step-name manual",
+            },
+            {
+                "label": "Resume run",
+                "command": f"python scripts/workspace_cli.py control-run {workspace_dir} {run['run_id']} --action resume",
+            },
+            {
+                "label": "Rerun section RCA",
+                "command": f"python scripts/workspace_cli.py control-run {workspace_dir} {run['run_id']} --action rerun-section --step-name rca --execute",
+            },
+            {
+                "label": "Sync Prefect state",
+                "command": f"python scripts/workspace_cli.py sync-prefect-state {workspace_dir} {run['run_id']} --prefect-state Running --flow-run-id flow-{run['run_id']}",
+            },
+        ],
         "retrieval_comparison": {
             "engine": "pageindex",
             "query": run.get("issue_key") or result_summary.get("issue_id") or "workspace run",
@@ -442,6 +470,7 @@ def _run_task_workbench(
         "knowledge_panels": details_by_run_id[selected["run_id"]]["knowledge_panels"],
         "control_events": details_by_run_id[selected["run_id"]]["control_events"],
         "artifact_inventory": details_by_run_id[selected["run_id"]]["artifact_inventory"],
+        "command_recipes": details_by_run_id[selected["run_id"]]["command_recipes"],
         "retrieval_comparison": details_by_run_id[selected["run_id"]]["retrieval_comparison"],
         "controls": details_by_run_id[selected["run_id"]]["controls"],
     }

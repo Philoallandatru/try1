@@ -367,6 +367,7 @@
         ],
         "control_events": [],
         "artifact_inventory": [],
+        "command_recipes": [],
         "retrieval_comparison": {
           "engine": "pageindex",
           "query": "SSD-102 NAND write telemetry",
@@ -459,6 +460,7 @@
     ],
     "control_events": [],
     "artifact_inventory": [],
+    "command_recipes": [],
     "retrieval_comparison": {
       "engine": "pageindex",
       "query": "SSD-102 NAND write telemetry",

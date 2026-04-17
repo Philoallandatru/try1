@@ -30,6 +30,13 @@ dev = [
 prefect = [
   "prefect>=3.0",
 ]
+portal-runner = [
+  "fastapi>=0.115",
+  "uvicorn>=0.34",
+  "python-multipart>=0.0.9",
+  "PyYAML>=6.0",
+  "httpx>=0.28",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
