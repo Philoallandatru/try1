@@ -1656,6 +1656,111 @@ def smoke_deep_analysis_workspace(
     }
 
 
+def showcase_workspace_runs(
+    workspace_dir: str | Path,
+    *,
+    jira_spec: str | Path,
+    confluence_spec: str | Path,
+    issue_key: str,
+    spec_pdf: str | Path | None = None,
+    spec_asset_id: str | None = None,
+    spec_display_name: str | None = None,
+    preferred_parser: str = "auto",
+    mineru_python_exe: str | None = None,
+    policies: list[str] | None = None,
+    top_k: int = 5,
+    prompt_mode: str = "strict",
+    llm_backend: LLMBackend | None = None,
+    portal_state_output: str | Path | None = None,
+) -> dict:
+    smoke = smoke_deep_analysis_workspace(
+        workspace_dir,
+        jira_spec=jira_spec,
+        confluence_spec=confluence_spec,
+        issue_key=issue_key,
+        spec_pdf=spec_pdf,
+        spec_asset_id=spec_asset_id,
+        spec_display_name=spec_display_name,
+        preferred_parser=preferred_parser,
+        mineru_python_exe=mineru_python_exe,
+        policies=policies,
+        top_k=top_k,
+        prompt_mode=prompt_mode,
+        llm_backend=llm_backend,
+    )
+    completed_run = Path(smoke["deep_analysis"]["run_dir"]).name
+
+    queued = control_workspace_run(
+        workspace_dir,
+        completed_run,
+        action="rerun",
+        requested_by="showcase",
+        reason="showcase queued",
+    )
+    queued_run = Path(queued["run_dir"]).name
+
+    running = control_workspace_run(
+        workspace_dir,
+        completed_run,
+        action="rerun",
+        requested_by="showcase",
+        reason="showcase running",
+    )
+    running_run = Path(running["run_dir"]).name
+    running_synced = sync_workspace_run_prefect_state(
+        workspace_dir,
+        running_run,
+        prefect_state="Running",
+        requested_by="showcase",
+        flow_run_id=f"flow-{running_run}",
+        deployment_name="jira-analysis",
+    )
+
+    stopped = control_workspace_run(
+        workspace_dir,
+        completed_run,
+        action="rerun",
+        requested_by="showcase",
+        reason="showcase stopped",
+    )
+    stopped_run = Path(stopped["run_dir"]).name
+    stopped_synced = sync_workspace_run_prefect_state(
+        workspace_dir,
+        stopped_run,
+        prefect_state="Cancelled",
+        requested_by="showcase",
+        flow_run_id=f"flow-{stopped_run}",
+        deployment_name="jira-analysis",
+    )
+
+    portal_state_path = None
+    if portal_state_output:
+        from apps.portal.portal_state import write_portal_state
+
+        portal_state_path = write_portal_state(
+            portal_state_output,
+            query=issue_key,
+            allowed_policies=set(policies or DEFAULT_POLICIES),
+            workspace_dir=workspace_dir,
+        )
+
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "smoke": smoke,
+        "runs": {
+            "completed": completed_run,
+            "queued": queued_run,
+            "running": running_run,
+            "stopped": stopped_run,
+        },
+        "prefect_runtime": {
+            "running": running_synced,
+            "stopped": stopped_synced,
+        },
+        "portal_state_path": str(portal_state_path) if portal_state_path else None,
+    }
+
+
 def _write_text(path: str | Path, text: str) -> str:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

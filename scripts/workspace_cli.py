@@ -230,6 +230,21 @@ def main() -> int:
     smoke_parser.add_argument("--portal-state-output")
     _add_llm_backend_args(smoke_parser)
 
+    showcase_parser = subparsers.add_parser("showcase-workbench")
+    showcase_parser.add_argument("workspace")
+    showcase_parser.add_argument("--jira-spec", required=True)
+    showcase_parser.add_argument("--confluence-spec", required=True)
+    showcase_parser.add_argument("--issue-key", required=True)
+    showcase_parser.add_argument("--spec-pdf")
+    showcase_parser.add_argument("--spec-asset-id")
+    showcase_parser.add_argument("--spec-display-name")
+    showcase_parser.add_argument("--preferred-parser", choices=["auto", "mineru", "pypdf"], default="auto")
+    showcase_parser.add_argument("--mineru-python-exe")
+    showcase_parser.add_argument("--top-k", type=int, default=5)
+    showcase_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    showcase_parser.add_argument("--portal-state-output")
+    _add_llm_backend_args(showcase_parser)
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -439,6 +454,29 @@ def main() -> int:
             workspace_dir=args.workspace,
         )
         payload["portal_state_path"] = portal_state_output
+        return _print_json(payload)
+    if args.command == "showcase-workbench":
+        from services.workspace import showcase_workspace_runs
+
+        try:
+            payload = showcase_workspace_runs(
+                args.workspace,
+                jira_spec=args.jira_spec,
+                confluence_spec=args.confluence_spec,
+                issue_key=args.issue_key,
+                spec_pdf=args.spec_pdf,
+                spec_asset_id=args.spec_asset_id,
+                spec_display_name=args.spec_display_name,
+                preferred_parser=args.preferred_parser,
+                mineru_python_exe=args.mineru_python_exe,
+                policies=args.policies,
+                top_k=args.top_k,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=_build_llm_backend_from_args(parser, args),
+                portal_state_output=args.portal_state_output,
+            )
+        except ValueError as error:
+            parser.error(str(error))
         return _print_json(payload)
     return 1
 

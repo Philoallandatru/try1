@@ -1487,6 +1487,43 @@ class WorkspaceCliTest(unittest.TestCase):
             portal_state = json.loads(portal_state_path.read_text(encoding="utf-8"))
             self.assertEqual(portal_state["task_workbench"]["tasks"][0]["issue_key"], "SSD-102")
 
+    def test_workspace_cli_showcase_workbench_creates_multiple_run_states(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            portal_state_path = Path(temp_dir) / "portal_state.json"
+
+            result = self._run(
+                "scripts/workspace_cli.py",
+                "showcase-workbench",
+                temp_dir,
+                "--jira-spec",
+                "project-slice",
+                "--confluence-spec",
+                "page-tree",
+                "--issue-key",
+                "SSD-102",
+                "--spec-pdf",
+                "fixtures/corpus/pdf/sample.pdf",
+                "--spec-asset-id",
+                "nvme-showcase",
+                "--preferred-parser",
+                "pypdf",
+                "--policies",
+                "team:ssd",
+                "--portal-state-output",
+                str(portal_state_path),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(set(payload["runs"].keys()), {"completed", "queued", "running", "stopped"})
+            self.assertTrue(portal_state_path.exists())
+            portal_state = json.loads(portal_state_path.read_text(encoding="utf-8"))
+            task_statuses = {task["status"] for task in portal_state["task_workbench"]["tasks"]}
+            self.assertIn("completed", task_statuses)
+            self.assertIn("queued", task_statuses)
+            self.assertIn("running", task_statuses)
+            self.assertIn("stopped", task_statuses)
+
 
 if __name__ == "__main__":
     unittest.main()
