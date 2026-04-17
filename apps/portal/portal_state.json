@@ -292,6 +292,95 @@
         "summary": "Stopped after retrieval; partial artifacts are preserved for resume."
       }
     ],
+    "task_details_by_id": {
+      "run-ssd-102-v1": {
+        "detail_tabs": [
+          {
+            "id": "overview",
+            "label": "Overview",
+            "content": "Jira deep analysis run with checkpointed retrieval, analysis, and knowledge outputs."
+          },
+          {
+            "id": "logs",
+            "label": "Logs",
+            "content": "retrieval_ready -> analysis_ready -> knowledge_ready"
+          },
+          {
+            "id": "evidence",
+            "label": "Evidence",
+            "content": "Top evidence: nvme-spec-v1"
+          },
+          {
+            "id": "report",
+            "label": "Report",
+            "content": "Composite report is available with four section tabs."
+          },
+          {
+            "id": "knowledge",
+            "label": "Knowledge",
+            "content": "Draft Confluence update proposal, wiki draft, and concept cards are ready for review."
+          }
+        ],
+        "report_tabs": [
+          {
+            "id": "rca",
+            "label": "RCA",
+            "status": "ready"
+          },
+          {
+            "id": "spec_impact",
+            "label": "Spec Impact",
+            "status": "ready"
+          },
+          {
+            "id": "decision_brief",
+            "label": "Decision Brief",
+            "status": "ready"
+          },
+          {
+            "id": "general_summary",
+            "label": "General Summary",
+            "status": "ready"
+          }
+        ],
+        "knowledge_panels": [
+          {
+            "id": "confluence_update_proposal",
+            "label": "Confluence Update Proposal",
+            "status": "draft"
+          },
+          {
+            "id": "wiki_draft",
+            "label": "Wiki Draft",
+            "status": "draft"
+          },
+          {
+            "id": "concept_cards",
+            "label": "Concept Cards",
+            "status": "draft"
+          }
+        ],
+        "control_events": [],
+        "artifact_inventory": [],
+        "retrieval_comparison": {
+          "engine": "pageindex",
+          "query": "SSD-102 NAND write telemetry",
+          "top_hits": [
+            "nvme-spec-v1",
+            "nvme-spec-v1",
+            "press-release"
+          ],
+          "hit_quality": null,
+          "readability": null,
+          "citation_fidelity": 1.0
+        },
+        "controls": [
+          "stop",
+          "resume",
+          "rerun"
+        ]
+      }
+    },
     "detail_tabs": [
       {
         "id": "overview",
@@ -358,6 +447,8 @@
         "status": "draft"
       }
     ],
+    "control_events": [],
+    "artifact_inventory": [],
     "retrieval_comparison": {
       "engine": "pageindex",
       "query": "SSD-102 NAND write telemetry",
