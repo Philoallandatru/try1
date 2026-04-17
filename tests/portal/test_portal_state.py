@@ -33,6 +33,7 @@ class PortalStateTest(unittest.TestCase):
         self.assertIn("knowledge_panels", workbench)
         self.assertIn("retrieval_comparison", workbench)
         self.assertIn("controls", workbench)
+        self.assertIn("task_details_by_id", workbench)
         self.assertGreaterEqual(len(workbench["tasks"]), 1)
         selected = next(task for task in workbench["tasks"] if task["selected"])
         self.assertEqual(selected["task_type"], "jira_deep_analysis")
@@ -77,6 +78,7 @@ class PortalStateTest(unittest.TestCase):
             self.assertIn("Action:", workbench["knowledge_panels"][0]["preview"])
             self.assertIn("section_outputs/rca.json", workbench["detail_tabs"][3]["content"])
             self.assertIn("checkpoints", workbench["detail_tabs"][0]["content"].lower())
+            self.assertIn(selected["task_id"], workbench["task_details_by_id"])
 
 
 if __name__ == "__main__":

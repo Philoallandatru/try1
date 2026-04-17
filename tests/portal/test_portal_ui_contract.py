@@ -34,6 +34,9 @@ class PortalUiContractTest(unittest.TestCase):
             "knowledge-panels",
             "task-control",
             "row.preview",
+            "taskDetailsById",
+            "selectedTaskId",
+            "renderSelectedTask",
         ]:
             with self.subTest(marker=marker):
                 self.assertIn(marker, text)

@@ -54,6 +54,61 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
                 "summary": "Stopped after retrieval; partial artifacts are preserved for resume.",
             },
         ],
+        "task_details_by_id": {
+            selected_task_id: {
+                "detail_tabs": [
+                    {
+                        "id": "overview",
+                        "label": "Overview",
+                        "content": "Jira deep analysis run with checkpointed retrieval, analysis, and knowledge outputs.",
+                    },
+                    {
+                        "id": "logs",
+                        "label": "Logs",
+                        "content": "retrieval_ready -> analysis_ready -> knowledge_ready",
+                    },
+                    {
+                        "id": "evidence",
+                        "label": "Evidence",
+                        "content": f"Top evidence: {top_result.get('document_id', 'none')}",
+                    },
+                    {
+                        "id": "report",
+                        "label": "Report",
+                        "content": "Composite report is available with four section tabs.",
+                    },
+                    {
+                        "id": "knowledge",
+                        "label": "Knowledge",
+                        "content": "Draft Confluence update proposal, wiki draft, and concept cards are ready for review.",
+                    },
+                ],
+                "report_tabs": [
+                    {"id": "rca", "label": "RCA", "status": "ready"},
+                    {"id": "spec_impact", "label": "Spec Impact", "status": "ready"},
+                    {"id": "decision_brief", "label": "Decision Brief", "status": "ready"},
+                    {"id": "general_summary", "label": "General Summary", "status": "ready"},
+                ],
+                "knowledge_panels": [
+                    {
+                        "id": "confluence_update_proposal",
+                        "label": "Confluence Update Proposal",
+                        "status": "draft",
+                    },
+                    {"id": "wiki_draft", "label": "Wiki Draft", "status": "draft"},
+                    {"id": "concept_cards", "label": "Concept Cards", "status": "draft"},
+                ],
+                "retrieval_comparison": {
+                    "engine": "pageindex",
+                    "query": "SSD-102 NAND write telemetry",
+                    "top_hits": [row["document_id"] for row in search_workspace[:3]],
+                    "hit_quality": None,
+                    "readability": None,
+                    "citation_fidelity": evaluation_health.get("citation_fidelity"),
+                },
+                "controls": ["stop", "resume", "rerun"],
+            }
+        },
         "detail_tabs": [
             {
                 "id": "overview",
@@ -151,67 +206,32 @@ def _artifact_preview(workspace_dir: str | Path, run_id: str, artifact_type: str
     return json.dumps(payload, ensure_ascii=False)[:240]
 
 
-def _run_task_workbench(
+def _build_run_detail_bundle(
     *,
     workspace_dir: str | Path,
+    run: dict,
+    detail: dict,
     search_workspace: list[dict],
     evaluation_health: dict,
-) -> dict | None:
-    runs_payload = list_workspace_runs(workspace_dir)
-    runs = runs_payload["runs"]
-    if not runs:
-        return None
-
-    selected = runs[0]
-    detail = inspect_workspace_run(workspace_dir, selected["run_id"])
+) -> dict:
     artifacts = detail["artifact_inventory"]
     result_summary = detail["result_summary"]
     control_events = detail["control_events"]
-    reached_checkpoints = selected["checkpoint_summary"]["reached"]
+    reached_checkpoints = run["checkpoint_summary"]["reached"]
     top_result = search_workspace[0] if search_workspace else {}
-    shared_retrieval_preview = _artifact_preview(workspace_dir, selected["run_id"], "shared_retrieval_bundle")
-    report_preview = _artifact_preview(workspace_dir, selected["run_id"], "composite_report")
-    proposal_preview = _artifact_preview(workspace_dir, selected["run_id"], "confluence_update_proposal")
-    wiki_draft_preview = _artifact_preview(workspace_dir, selected["run_id"], "wiki_draft")
-    concept_card_preview = _artifact_preview(workspace_dir, selected["run_id"], "concept_cards")
-    tasks = [
-        {
-            "task_id": run["run_id"],
-            "task_type": run["task_type"],
-            "issue_key": run.get("issue_key"),
-            "project": (run.get("issue_key") or "").split("-", 1)[0] if run.get("issue_key") else None,
-            "owner": run["owner"],
-            "status": run["status"],
-            "updated_at": run.get("updated_at"),
-            "selected": run["run_id"] == selected["run_id"],
-            "summary": (
-                f"{run['checkpoint_summary']['reached_count']}/{run['checkpoint_summary']['total_count']} "
-                f"checkpoints reached; {run['stale_artifact_count']} stale artifact(s)."
-            ),
-        }
-        for run in runs
-    ]
+    shared_retrieval_preview = _artifact_preview(workspace_dir, run["run_id"], "shared_retrieval_bundle")
+    report_preview = _artifact_preview(workspace_dir, run["run_id"], "composite_report")
+    proposal_preview = _artifact_preview(workspace_dir, run["run_id"], "confluence_update_proposal")
+    wiki_draft_preview = _artifact_preview(workspace_dir, run["run_id"], "wiki_draft")
+    concept_card_preview = _artifact_preview(workspace_dir, run["run_id"], "concept_cards")
+
     return {
-        "new_task_entry": {
-            "default_task_type": "jira_deep_analysis",
-            "input_hint": "Enter a Jira issue key and select reusable spec assets before running.",
-            "available_task_types": ["jira_deep_analysis"],
-        },
-        "filters": {
-            "status": sorted({run["status"] for run in runs}),
-            "owner": sorted({run["owner"] for run in runs}),
-            "project": sorted({task["project"] for task in tasks if task["project"]}),
-            "issue_key": selected.get("issue_key"),
-            "updated_time": "workspace_runs",
-        },
-        "selected_task_id": selected["run_id"],
-        "tasks": tasks,
         "detail_tabs": [
             {
                 "id": "overview",
                 "label": "Overview",
                 "content": (
-                    f"{selected['task_type']} for {selected.get('issue_key') or result_summary.get('issue_id')}.\n"
+                    f"{run['task_type']} for {run.get('issue_key') or result_summary.get('issue_id')}.\n"
                     f"Checkpoints reached: {', '.join(reached_checkpoints) or 'none'}."
                 ),
             },
@@ -255,25 +275,25 @@ def _run_task_workbench(
                 "id": "rca",
                 "label": "RCA",
                 "status": _artifact_status(artifacts, "section_output_rca"),
-                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_rca"),
+                "preview": _artifact_preview(workspace_dir, run["run_id"], "section_output_rca"),
             },
             {
                 "id": "spec_impact",
                 "label": "Spec Impact",
                 "status": _artifact_status(artifacts, "section_output_spec_impact"),
-                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_spec_impact"),
+                "preview": _artifact_preview(workspace_dir, run["run_id"], "section_output_spec_impact"),
             },
             {
                 "id": "decision_brief",
                 "label": "Decision Brief",
                 "status": _artifact_status(artifacts, "section_output_decision_brief"),
-                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_decision_brief"),
+                "preview": _artifact_preview(workspace_dir, run["run_id"], "section_output_decision_brief"),
             },
             {
                 "id": "general_summary",
                 "label": "General Summary",
                 "status": _artifact_status(artifacts, "section_output_general_summary"),
-                "preview": _artifact_preview(workspace_dir, selected["run_id"], "section_output_general_summary"),
+                "preview": _artifact_preview(workspace_dir, run["run_id"], "section_output_general_summary"),
             },
         ],
         "knowledge_panels": [
@@ -298,13 +318,76 @@ def _run_task_workbench(
         ],
         "retrieval_comparison": {
             "engine": "pageindex",
-            "query": selected.get("issue_key") or result_summary.get("issue_id") or "workspace run",
+            "query": run.get("issue_key") or result_summary.get("issue_id") or "workspace run",
             "top_hits": [row["document_id"] for row in search_workspace[:3]],
             "hit_quality": None,
             "readability": None,
             "citation_fidelity": evaluation_health.get("citation_fidelity"),
         },
         "controls": ["stop", "resume", "rerun", "rerun-section"],
+    }
+
+
+def _run_task_workbench(
+    *,
+    workspace_dir: str | Path,
+    search_workspace: list[dict],
+    evaluation_health: dict,
+) -> dict | None:
+    runs_payload = list_workspace_runs(workspace_dir)
+    runs = runs_payload["runs"]
+    if not runs:
+        return None
+
+    selected = runs[0]
+    details_by_run_id = {
+        run["run_id"]: _build_run_detail_bundle(
+            workspace_dir=workspace_dir,
+            run=run,
+            detail=inspect_workspace_run(workspace_dir, run["run_id"]),
+            search_workspace=search_workspace,
+            evaluation_health=evaluation_health,
+        )
+        for run in runs
+    }
+    tasks = [
+        {
+            "task_id": run["run_id"],
+            "task_type": run["task_type"],
+            "issue_key": run.get("issue_key"),
+            "project": (run.get("issue_key") or "").split("-", 1)[0] if run.get("issue_key") else None,
+            "owner": run["owner"],
+            "status": run["status"],
+            "updated_at": run.get("updated_at"),
+            "selected": run["run_id"] == selected["run_id"],
+            "summary": (
+                f"{run['checkpoint_summary']['reached_count']}/{run['checkpoint_summary']['total_count']} "
+                f"checkpoints reached; {run['stale_artifact_count']} stale artifact(s)."
+            ),
+        }
+        for run in runs
+    ]
+    return {
+        "new_task_entry": {
+            "default_task_type": "jira_deep_analysis",
+            "input_hint": "Enter a Jira issue key and select reusable spec assets before running.",
+            "available_task_types": ["jira_deep_analysis"],
+        },
+        "filters": {
+            "status": sorted({run["status"] for run in runs}),
+            "owner": sorted({run["owner"] for run in runs}),
+            "project": sorted({task["project"] for task in tasks if task["project"]}),
+            "issue_key": selected.get("issue_key"),
+            "updated_time": "workspace_runs",
+        },
+        "selected_task_id": selected["run_id"],
+        "tasks": tasks,
+        "task_details_by_id": details_by_run_id,
+        "detail_tabs": details_by_run_id[selected["run_id"]]["detail_tabs"],
+        "report_tabs": details_by_run_id[selected["run_id"]]["report_tabs"],
+        "knowledge_panels": details_by_run_id[selected["run_id"]]["knowledge_panels"],
+        "retrieval_comparison": details_by_run_id[selected["run_id"]]["retrieval_comparison"],
+        "controls": details_by_run_id[selected["run_id"]]["controls"],
     }
 
 

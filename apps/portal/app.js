@@ -69,6 +69,8 @@ function renderBadgeGrid(target, rows, className) {
 }
 
 function renderTaskWorkbench(workbench) {
+  let selectedTaskId = workbench.selected_task_id;
+  const taskDetailsById = workbench.task_details_by_id || {};
   const entry = workbench.new_task_entry;
   document.getElementById("new-task-entry").textContent =
     `${entry.default_task_type}: ${entry.input_hint}`;
@@ -77,48 +79,67 @@ function renderTaskWorkbench(workbench) {
     `Filters: ${workbench.filters.status.join(", ")} / owner ${workbench.filters.owner.join(", ")} / project ${workbench.filters.project.join(", ")}`;
 
   const taskList = document.getElementById("task-list");
-  taskList.innerHTML = "";
-  workbench.tasks.forEach((task) => {
-    const button = document.createElement("button");
-    button.className = `task-card${task.selected ? " selected" : ""}`;
-    button.type = "button";
-    const issue = document.createElement("strong");
-    issue.textContent = task.issue_key;
-    const meta = document.createElement("span");
-    meta.textContent = `${task.status} / ${task.owner}`;
-    const summary = document.createElement("span");
-    summary.textContent = task.summary;
-    button.append(issue, meta, summary);
-    taskList.appendChild(button);
-  });
-
   const controls = document.getElementById("task-controls");
-  controls.innerHTML = "";
-  workbench.controls.forEach((control) => {
-    const button = document.createElement("button");
-    button.className = "task-control";
-    button.type = "button";
-    button.textContent = control;
-    controls.appendChild(button);
-  });
-
   const detailTabs = document.getElementById("task-detail-tabs");
-  detailTabs.innerHTML = "";
-  workbench.detail_tabs.forEach((tab) => {
-    const section = document.createElement("section");
-    section.className = "detail-tab";
-    const heading = document.createElement("h3");
-    heading.textContent = tab.label;
-    const body = document.createElement("p");
-    body.textContent = tab.content;
-    section.append(heading, body);
-    detailTabs.appendChild(section);
-  });
+  const reportTabs = document.getElementById("report-tabs");
+  const knowledgePanels = document.getElementById("knowledge-panels");
+  const retrievalComparison = document.getElementById("retrieval-comparison");
 
-  renderBadgeGrid(document.getElementById("report-tabs"), workbench.report_tabs, "status-pill");
-  renderBadgeGrid(document.getElementById("knowledge-panels"), workbench.knowledge_panels, "status-pill");
-  document.getElementById("retrieval-comparison").textContent =
-    JSON.stringify(workbench.retrieval_comparison, null, 2);
+  function renderSelectedTask() {
+    taskList.innerHTML = "";
+    workbench.tasks.forEach((task) => {
+      const button = document.createElement("button");
+      button.className = `task-card${task.task_id === selectedTaskId ? " selected" : ""}`;
+      button.type = "button";
+      const issue = document.createElement("strong");
+      issue.textContent = task.issue_key;
+      const meta = document.createElement("span");
+      meta.textContent = `${task.status} / ${task.owner}`;
+      const summary = document.createElement("span");
+      summary.textContent = task.summary;
+      button.append(issue, meta, summary);
+      button.addEventListener("click", () => {
+        selectedTaskId = task.task_id;
+        renderSelectedTask();
+      });
+      taskList.appendChild(button);
+    });
+
+    const selectedDetails = taskDetailsById[selectedTaskId] || {
+      detail_tabs: workbench.detail_tabs,
+      report_tabs: workbench.report_tabs,
+      knowledge_panels: workbench.knowledge_panels,
+      retrieval_comparison: workbench.retrieval_comparison,
+      controls: workbench.controls,
+    };
+
+    controls.innerHTML = "";
+    selectedDetails.controls.forEach((control) => {
+      const button = document.createElement("button");
+      button.className = "task-control";
+      button.type = "button";
+      button.textContent = control;
+      controls.appendChild(button);
+    });
+
+    detailTabs.innerHTML = "";
+    selectedDetails.detail_tabs.forEach((tab) => {
+      const section = document.createElement("section");
+      section.className = "detail-tab";
+      const heading = document.createElement("h3");
+      heading.textContent = tab.label;
+      const body = document.createElement("p");
+      body.textContent = tab.content;
+      section.append(heading, body);
+      detailTabs.appendChild(section);
+    });
+
+    renderBadgeGrid(reportTabs, selectedDetails.report_tabs, "status-pill");
+    renderBadgeGrid(knowledgePanels, selectedDetails.knowledge_panels, "status-pill");
+    retrievalComparison.textContent = JSON.stringify(selectedDetails.retrieval_comparison, null, 2);
+  }
+
+  renderSelectedTask();
 }
 
 async function bootPortal() {
