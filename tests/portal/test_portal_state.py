@@ -31,6 +31,8 @@ class PortalStateTest(unittest.TestCase):
         self.assertIn("detail_tabs", workbench)
         self.assertIn("report_tabs", workbench)
         self.assertIn("knowledge_panels", workbench)
+        self.assertIn("control_events", workbench)
+        self.assertIn("artifact_inventory", workbench)
         self.assertIn("retrieval_comparison", workbench)
         self.assertIn("controls", workbench)
         self.assertIn("task_details_by_id", workbench)
@@ -79,6 +81,8 @@ class PortalStateTest(unittest.TestCase):
             self.assertIn("section_outputs/rca.json", workbench["detail_tabs"][3]["content"])
             self.assertIn("checkpoints", workbench["detail_tabs"][0]["content"].lower())
             self.assertIn(selected["task_id"], workbench["task_details_by_id"])
+            self.assertIsInstance(workbench["artifact_inventory"], list)
+            self.assertTrue(any(row["artifact_type"] == "confluence_update_proposal" for row in workbench["artifact_inventory"]))
 
 
 if __name__ == "__main__":

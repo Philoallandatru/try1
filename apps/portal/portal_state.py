@@ -98,6 +98,8 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
                     {"id": "wiki_draft", "label": "Wiki Draft", "status": "draft"},
                     {"id": "concept_cards", "label": "Concept Cards", "status": "draft"},
                 ],
+                "control_events": [],
+                "artifact_inventory": [],
                 "retrieval_comparison": {
                     "engine": "pageindex",
                     "query": "SSD-102 NAND write telemetry",
@@ -151,6 +153,8 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
             {"id": "wiki_draft", "label": "Wiki Draft", "status": "draft"},
             {"id": "concept_cards", "label": "Concept Cards", "status": "draft"},
         ],
+        "control_events": [],
+        "artifact_inventory": [],
         "retrieval_comparison": {
             "engine": "pageindex",
             "query": "SSD-102 NAND write telemetry",
@@ -316,6 +320,24 @@ def _build_run_detail_bundle(
                 "preview": concept_card_preview,
             },
         ],
+        "control_events": [
+            {
+                "action": event.get("action", "unknown"),
+                "created_at": event.get("created_at"),
+                "requested_by": event.get("requested_by"),
+                "summary": json.dumps(event.get("result", {}), ensure_ascii=False)[:240],
+            }
+            for event in control_events
+        ],
+        "artifact_inventory": [
+            {
+                "artifact_type": row["artifact_type"],
+                "status": row["status"],
+                "stale": row["stale"],
+                "path": str(row["path"]).replace("\\", "/") if row.get("path") else "",
+            }
+            for row in artifacts
+        ],
         "retrieval_comparison": {
             "engine": "pageindex",
             "query": run.get("issue_key") or result_summary.get("issue_id") or "workspace run",
@@ -386,6 +408,8 @@ def _run_task_workbench(
         "detail_tabs": details_by_run_id[selected["run_id"]]["detail_tabs"],
         "report_tabs": details_by_run_id[selected["run_id"]]["report_tabs"],
         "knowledge_panels": details_by_run_id[selected["run_id"]]["knowledge_panels"],
+        "control_events": details_by_run_id[selected["run_id"]]["control_events"],
+        "artifact_inventory": details_by_run_id[selected["run_id"]]["artifact_inventory"],
         "retrieval_comparison": details_by_run_id[selected["run_id"]]["retrieval_comparison"],
         "controls": details_by_run_id[selected["run_id"]]["controls"],
     }

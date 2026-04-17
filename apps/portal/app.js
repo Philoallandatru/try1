@@ -68,6 +68,36 @@ function renderBadgeGrid(target, rows, className) {
   });
 }
 
+function renderEventList(target, rows) {
+  target.innerHTML = "";
+  rows.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "event-row";
+    item.innerHTML = `
+      <strong>${row.action}</strong>
+      <span>${row.created_at}</span>
+      <span>${row.requested_by}</span>
+      <code>${row.summary}</code>
+    `;
+    target.appendChild(item);
+  });
+}
+
+function renderArtifactInventory(target, rows) {
+  target.innerHTML = "";
+  rows.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "artifact-row";
+    item.innerHTML = `
+      <strong>${row.artifact_type}</strong>
+      <span>${row.status}</span>
+      <span>stale: ${row.stale}</span>
+      <code>${row.path}</code>
+    `;
+    target.appendChild(item);
+  });
+}
+
 function renderTaskWorkbench(workbench) {
   let selectedTaskId = workbench.selected_task_id;
   const taskDetailsById = workbench.task_details_by_id || {};
@@ -83,6 +113,8 @@ function renderTaskWorkbench(workbench) {
   const detailTabs = document.getElementById("task-detail-tabs");
   const reportTabs = document.getElementById("report-tabs");
   const knowledgePanels = document.getElementById("knowledge-panels");
+  const controlEvents = document.getElementById("control-events");
+  const artifactInventory = document.getElementById("artifact-inventory");
   const retrievalComparison = document.getElementById("retrieval-comparison");
 
   function renderSelectedTask() {
@@ -109,6 +141,8 @@ function renderTaskWorkbench(workbench) {
       detail_tabs: workbench.detail_tabs,
       report_tabs: workbench.report_tabs,
       knowledge_panels: workbench.knowledge_panels,
+      control_events: workbench.control_events || [],
+      artifact_inventory: workbench.artifact_inventory || [],
       retrieval_comparison: workbench.retrieval_comparison,
       controls: workbench.controls,
     };
@@ -136,6 +170,8 @@ function renderTaskWorkbench(workbench) {
 
     renderBadgeGrid(reportTabs, selectedDetails.report_tabs, "status-pill");
     renderBadgeGrid(knowledgePanels, selectedDetails.knowledge_panels, "status-pill");
+    renderEventList(controlEvents, selectedDetails.control_events || []);
+    renderArtifactInventory(artifactInventory, selectedDetails.artifact_inventory || []);
     retrievalComparison.textContent = JSON.stringify(selectedDetails.retrieval_comparison, null, 2);
   }
 
