@@ -164,6 +164,24 @@ function renderPipelineOptions(payload) {
   updateRunnerFormForPipeline();
 }
 
+function renderSpecAssetOptions(payload) {
+  const select = document.getElementById("runner-spec-asset");
+  const saved = JSON.parse(localStorage.getItem("portalRunnerForm") || "{}");
+  const current = select.value || saved.specAsset || "";
+  select.innerHTML = "";
+  const upload = document.createElement("option");
+  upload.value = "";
+  upload.textContent = "Upload PDF for this run";
+  select.appendChild(upload);
+  (payload.assets || []).forEach((asset) => {
+    const option = document.createElement("option");
+    option.value = asset.asset_id;
+    option.textContent = `${asset.display_name || asset.asset_id} / ${asset.version} / ${asset.parser_used || "parser"}`;
+    select.appendChild(option);
+  });
+  select.value = current;
+}
+
 function updateRunnerFormForPipeline() {
   const selected = document.getElementById("runner-pipeline").selectedOptions[0];
   if (!selected) {
@@ -174,8 +192,16 @@ function updateRunnerFormForPipeline() {
   const pipelineId = selected.value;
   const visibility = {
     jira_issue_key: required.has("jira_issue_key"),
-    confluence_page_id: required.has("confluence_page_id"),
+    confluence_selector: required.has("confluence_selector") || required.has("confluence_page_id"),
+    confluence_page_id: required.has("confluence_page_id") || (required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page"),
+    confluence_page_ids: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "pages",
+    confluence_root_page_id: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page_tree",
+    confluence_max_depth: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page_tree",
+    confluence_space_key: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "space_slice",
+    confluence_label: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "space_slice",
     pdf: acceptsPdf,
+    spec_asset: pipelineId === "jira_pdf_qa_smoke",
+    spec_asset_id: pipelineId === "pdf_ingest_smoke" || (acceptsPdf && document.getElementById("runner-spec-asset").value === ""),
     publish_wiki: pipelineId === "full_real_data_smoke",
     topic: pipelineId === "full_real_data_smoke",
     mock_response: pipelineId === "full_real_data_smoke",
@@ -270,6 +296,8 @@ async function loadRunnerDetail(runId) {
 async function refreshRunnerRuns() {
   const payload = await runnerFetch("/api/runs");
   renderRunnerRuns(payload);
+  const assets = await runnerFetch("/api/spec-assets");
+  renderSpecAssetOptions(assets);
   if (!runnerState.selectedRunId && payload.runs.length > 0) {
     runnerState.selectedRunId = payload.runs[0].run_id;
   }
@@ -281,7 +309,9 @@ async function refreshRunnerRuns() {
 async function connectRunner() {
   await runnerFetch("/api/auth/check", { method: "POST" });
   const pipelines = await runnerFetch("/api/pipelines");
+  const assets = await runnerFetch("/api/spec-assets");
   renderPipelineOptions(pipelines);
+  renderSpecAssetOptions(assets);
   document.getElementById("runner-run-form").hidden = false;
   setRunnerStatus("Connected to portal runner.");
   await refreshRunnerRuns();
@@ -295,6 +325,7 @@ async function connectRunner() {
 function wireRunnerPanel() {
   const tokenInput = document.getElementById("runner-token");
   tokenInput.value = runnerState.token;
+  restoreRunnerForm();
   document.getElementById("runner-auth-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     runnerState.token = tokenInput.value.trim();
@@ -307,6 +338,8 @@ function wireRunnerPanel() {
   });
 
   document.getElementById("runner-pipeline").addEventListener("change", updateRunnerFormForPipeline);
+  document.getElementById("runner-confluence-scope").addEventListener("change", updateRunnerFormForPipeline);
+  document.getElementById("runner-spec-asset").addEventListener("change", updateRunnerFormForPipeline);
 
   document.getElementById("runner-run-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -314,6 +347,13 @@ function wireRunnerPanel() {
     form.append("pipeline_id", document.getElementById("runner-pipeline").value);
     form.append("jira_issue_key", document.getElementById("runner-jira-issue").value);
     form.append("confluence_page_id", document.getElementById("runner-confluence-page").value);
+    form.append("confluence_scope", document.getElementById("runner-confluence-scope").value);
+    form.append("confluence_page_ids", document.getElementById("runner-confluence-pages").value);
+    form.append("confluence_root_page_id", document.getElementById("runner-confluence-root").value);
+    form.append("confluence_space_key", document.getElementById("runner-confluence-space").value);
+    form.append("confluence_label", document.getElementById("runner-confluence-label").value);
+    form.append("confluence_max_depth", document.getElementById("runner-confluence-depth").value);
+    form.append("spec_asset_id", document.getElementById("runner-spec-asset").value || document.getElementById("runner-spec-asset-id").value);
     form.append("preferred_parser", document.getElementById("runner-parser").value);
     form.append("publish_wiki", document.getElementById("runner-publish-wiki").checked ? "true" : "false");
     form.append("topic_slug", document.getElementById("runner-topic-slug").value);
@@ -323,6 +363,7 @@ function wireRunnerPanel() {
     if (file) {
       form.append("pdf", file);
     }
+    saveRunnerForm();
     try {
       const manifest = await runnerFetch("/api/runs", { method: "POST", body: form });
       runnerState.selectedRunId = manifest.run_id;
@@ -338,6 +379,55 @@ function wireRunnerPanel() {
   } else {
     setRunnerStatus("Start apps.portal_runner.server and enter the shared runner token.");
   }
+}
+
+function saveRunnerForm() {
+  const values = {
+    pipeline: document.getElementById("runner-pipeline").value,
+    jiraIssue: document.getElementById("runner-jira-issue").value,
+    confluencePage: document.getElementById("runner-confluence-page").value,
+    confluenceScope: document.getElementById("runner-confluence-scope").value,
+    confluencePages: document.getElementById("runner-confluence-pages").value,
+    confluenceRoot: document.getElementById("runner-confluence-root").value,
+    confluenceDepth: document.getElementById("runner-confluence-depth").value,
+    confluenceSpace: document.getElementById("runner-confluence-space").value,
+    confluenceLabel: document.getElementById("runner-confluence-label").value,
+    specAsset: document.getElementById("runner-spec-asset").value,
+    specAssetId: document.getElementById("runner-spec-asset-id").value,
+    parser: document.getElementById("runner-parser").value,
+    topicSlug: document.getElementById("runner-topic-slug").value,
+    topicTitle: document.getElementById("runner-topic-title").value,
+    mockResponse: document.getElementById("runner-mock-response").value,
+    publishWiki: document.getElementById("runner-publish-wiki").checked,
+  };
+  localStorage.setItem("portalRunnerForm", JSON.stringify(values));
+}
+
+function restoreRunnerForm() {
+  const raw = localStorage.getItem("portalRunnerForm");
+  if (!raw) {
+    return;
+  }
+  const values = JSON.parse(raw);
+  const assign = (id, value) => {
+    if (value !== undefined && document.getElementById(id)) {
+      document.getElementById(id).value = value;
+    }
+  };
+  assign("runner-jira-issue", values.jiraIssue);
+  assign("runner-confluence-page", values.confluencePage);
+  assign("runner-confluence-scope", values.confluenceScope);
+  assign("runner-confluence-pages", values.confluencePages);
+  assign("runner-confluence-root", values.confluenceRoot);
+  assign("runner-confluence-depth", values.confluenceDepth);
+  assign("runner-confluence-space", values.confluenceSpace);
+  assign("runner-confluence-label", values.confluenceLabel);
+  assign("runner-spec-asset-id", values.specAssetId);
+  assign("runner-parser", values.parser);
+  assign("runner-topic-slug", values.topicSlug);
+  assign("runner-topic-title", values.topicTitle);
+  assign("runner-mock-response", values.mockResponse);
+  document.getElementById("runner-publish-wiki").checked = values.publishWiki !== false;
 }
 
 function renderTaskWorkbench(workbench) {

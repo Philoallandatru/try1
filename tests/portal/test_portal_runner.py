@@ -120,6 +120,7 @@ class PortalRunnerTest(unittest.TestCase):
                         f"  root: {Path(temp_dir, 'workspaces').as_posix()}",
                         f"  uploads_root: {Path(temp_dir, 'uploads').as_posix()}",
                         f"  runs_root: {Path(temp_dir, 'runs').as_posix()}",
+                        f"  spec_assets_workspace: {Path(temp_dir, 'spec-assets').as_posix()}",
                         "pipelines:",
                         "  full_real_data_smoke:",
                         "    enabled: true",
@@ -162,6 +163,7 @@ class PortalRunnerTest(unittest.TestCase):
                         f"  root: {Path(temp_dir, 'workspaces').as_posix()}",
                         f"  uploads_root: {Path(temp_dir, 'uploads').as_posix()}",
                         f"  runs_root: {Path(temp_dir, 'runs').as_posix()}",
+                        f"  spec_assets_workspace: {Path(temp_dir, 'spec-assets').as_posix()}",
                         "pipelines:",
                         "  pdf_ingest_smoke:",
                         "    enabled: true",
@@ -233,6 +235,7 @@ class PortalRunnerTest(unittest.TestCase):
                         f"  root: {Path(temp_dir, 'workspaces').as_posix()}",
                         f"  uploads_root: {Path(temp_dir, 'uploads').as_posix()}",
                         f"  runs_root: {Path(temp_dir, 'runs').as_posix()}",
+                        f"  spec_assets_workspace: {Path(temp_dir, 'spec-assets').as_posix()}",
                         "pipelines:",
                         "  full_real_data_smoke:",
                         "    enabled: true",
@@ -275,6 +278,101 @@ class PortalRunnerTest(unittest.TestCase):
         self.assertEqual(detail["status"], "succeeded", detail.get("error"))
         self.assertIn("wiki-publish", detail["artifacts"])
         self.assertTrue(all(step["status"] == "succeeded" for step in detail["steps"]))
+
+    def test_fastapi_app_can_reuse_ingested_spec_asset_for_jira_pdf_qa(self) -> None:
+        try:
+            from fastapi.testclient import TestClient
+        except ImportError:
+            self.skipTest("portal-runner extra is not installed")
+
+        from apps.portal_runner.server import create_app
+        from services.connectors.confluence.connector import load_confluence_sync
+        from services.connectors.jira.connector import load_jira_sync
+
+        jira_payload = load_jira_sync("fixtures/connectors/jira/incremental_sync.json")
+        confluence_payload = load_confluence_sync("fixtures/connectors/confluence/page_sync.json")
+
+        def fake_load_source_payload(*, kind: str, **_: object) -> dict:
+            if kind == "jira":
+                return jira_payload
+            if kind == "confluence":
+                return confluence_payload
+            raise AssertionError(f"Unexpected source kind: {kind}")
+
+        with temporary_directory("portal-runner-reuse-api") as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                "\n".join(
+                    [
+                        "server:",
+                        "  runner_token: runner-secret",
+                        "  max_upload_mb: 10",
+                        "jira:",
+                        "  base_url: https://jira.example.com",
+                        "  token: jira-secret",
+                        "confluence:",
+                        "  base_url: https://conf.example.com",
+                        "  token: conf-secret",
+                        "workspace:",
+                        f"  root: {Path(temp_dir, 'workspaces').as_posix()}",
+                        f"  uploads_root: {Path(temp_dir, 'uploads').as_posix()}",
+                        f"  runs_root: {Path(temp_dir, 'runs').as_posix()}",
+                        f"  spec_assets_workspace: {Path(temp_dir, 'spec-assets').as_posix()}",
+                        "pipelines:",
+                        "  pdf_ingest_smoke:",
+                        "    enabled: true",
+                        "    preferred_parser: pypdf",
+                        "  jira_pdf_qa_smoke:",
+                        "    enabled: true",
+                        "    preferred_parser: pypdf",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            client = TestClient(create_app(config_path, host="127.0.0.1"))
+            headers = {"Authorization": "Bearer runner-secret"}
+            with Path("fixtures/corpus/pdf/sample.pdf").open("rb") as handle:
+                ingest_response = client.post(
+                    "/api/runs",
+                    headers=headers,
+                    data={"pipeline_id": "pdf_ingest_smoke", "preferred_parser": "pypdf", "spec_asset_id": "nvme-shared"},
+                    files={"pdf": ("sample.pdf", handle, "application/pdf")},
+                )
+            self.assertEqual(ingest_response.status_code, 200, ingest_response.text)
+            self._wait_for_run(client, headers, ingest_response.json()["run_id"])
+
+            assets = client.get("/api/spec-assets", headers=headers).json()["assets"]
+            self.assertTrue(any(asset["asset_id"] == "nvme-shared" for asset in assets))
+
+            with patch("apps.portal_runner.runner.load_source_payload", side_effect=fake_load_source_payload):
+                qa_response = client.post(
+                    "/api/runs",
+                    headers=headers,
+                    data={
+                        "pipeline_id": "jira_pdf_qa_smoke",
+                        "jira_issue_key": "SSD-102",
+                        "confluence_scope": "page",
+                        "confluence_page_id": "CONF-201",
+                        "spec_asset_id": "nvme-shared",
+                        "mock_response": "Mock Jira PDF QA",
+                    },
+                )
+                self.assertEqual(qa_response.status_code, 200, qa_response.text)
+                qa_detail = self._wait_for_run(client, headers, qa_response.json()["run_id"])
+
+        self.assertEqual(qa_detail["status"], "succeeded", qa_detail.get("error"))
+        self.assertIn("selected-spec-asset", qa_detail["artifacts"])
+
+    def _wait_for_run(self, client, headers: dict, run_id: str) -> dict:
+        detail = {}
+        for _ in range(80):
+            detail = client.get(f"/api/runs/{run_id}", headers=headers).json()
+            if detail["status"] in {"succeeded", "failed", "cancelled"}:
+                break
+            sleep(0.1)
+        self.assertEqual(detail["status"], "succeeded", detail.get("error"))
+        return detail
 
 
 if __name__ == "__main__":

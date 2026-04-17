@@ -16,6 +16,23 @@ workspace:
   root: ".tmp/portal-runner/workspaces"
   uploads_root: ".tmp/portal-runner/uploads"
   runs_root: ".tmp/portal-runner/runs"
+  spec_assets_workspace: ".tmp/portal-runner/spec-assets-workspace"
+
+llm:
+  backend: "mock"
+  model: null
+  base_url: null
+  api_key: null
+  timeout_seconds: 120
+  mock_response: "Portal runner smoke analysis"
+
+# Example vLLM configuration:
+# llm:
+#   backend: "vllm"
+#   model: "Qwen/Qwen2.5-7B-Instruct"
+#   base_url: "http://localhost:8000/v1"
+#   api_key: null
+#   timeout_seconds: 120
 
 pipelines:
   jira_live_smoke:
@@ -23,6 +40,9 @@ pipelines:
   confluence_live_smoke:
     enabled: true
   pdf_ingest_smoke:
+    enabled: true
+    preferred_parser: "pypdf"
+  jira_pdf_qa_smoke:
     enabled: true
     preferred_parser: "pypdf"
   full_real_data_smoke:

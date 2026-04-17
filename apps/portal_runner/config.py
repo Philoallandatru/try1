@@ -36,6 +36,17 @@ class WorkspaceConfig:
     root: Path = Path(".tmp/portal-runner/workspaces")
     uploads_root: Path = Path(".tmp/portal-runner/uploads")
     runs_root: Path = Path(".tmp/portal-runner/runs")
+    spec_assets_workspace: Path = Path(".tmp/portal-runner/spec-assets-workspace")
+
+
+@dataclass(frozen=True)
+class LLMConfig:
+    backend: str = "mock"
+    model: str | None = None
+    base_url: str | None = None
+    api_key: str | None = None
+    timeout_seconds: int = 120
+    mock_response: str = "Portal runner smoke analysis"
 
 
 @dataclass(frozen=True)
@@ -52,6 +63,7 @@ class PortalRunnerConfig:
     jira: SourceConfig
     confluence: SourceConfig
     workspace: WorkspaceConfig = field(default_factory=WorkspaceConfig)
+    llm: LLMConfig = field(default_factory=LLMConfig)
     pipelines: dict[str, PipelineConfig] = field(default_factory=dict)
 
     def pipeline_config(self, pipeline_id: str) -> PipelineConfig:
@@ -78,6 +90,14 @@ class PortalRunnerConfig:
                 "root": str(self.workspace.root),
                 "uploads_root": str(self.workspace.uploads_root),
                 "runs_root": str(self.workspace.runs_root),
+                "spec_assets_workspace": str(self.workspace.spec_assets_workspace),
+            },
+            "llm": {
+                "backend": self.llm.backend,
+                "model": self.llm.model,
+                "base_url": self.llm.base_url,
+                "api_key_configured": bool(self.llm.api_key),
+                "timeout_seconds": self.llm.timeout_seconds,
             },
             "pipelines": {
                 pipeline_id: {
@@ -111,6 +131,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> PortalRunnerConfig:
     jira = _source_config(raw.get("jira", {}), name="jira")
     confluence = _source_config(raw.get("confluence", {}), name="confluence")
     workspace = _workspace_config(raw.get("workspace", {}))
+    llm = _llm_config(raw.get("llm", {}))
     pipelines = _pipeline_configs(raw.get("pipelines", {}))
 
     return PortalRunnerConfig(
@@ -119,6 +140,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG_PATH) -> PortalRunnerConfig:
         jira=jira,
         confluence=confluence,
         workspace=workspace,
+        llm=llm,
         pipelines=pipelines,
     )
 
@@ -154,6 +176,25 @@ def _workspace_config(raw: Any) -> WorkspaceConfig:
         root=Path(raw.get("root") or ".tmp/portal-runner/workspaces"),
         uploads_root=Path(raw.get("uploads_root") or ".tmp/portal-runner/uploads"),
         runs_root=Path(raw.get("runs_root") or ".tmp/portal-runner/runs"),
+        spec_assets_workspace=Path(raw.get("spec_assets_workspace") or ".tmp/portal-runner/spec-assets-workspace"),
+    )
+
+
+def _llm_config(raw: Any) -> LLMConfig:
+    raw = _ensure_mapping(raw, "llm")
+    backend = str(raw.get("backend") or "mock")
+    if backend not in {"none", "mock", "vllm", "openai-compatible"}:
+        raise PortalRunnerConfigError("llm.backend must be one of: none, mock, vllm, openai-compatible")
+    timeout_seconds = int(raw.get("timeout_seconds", 120))
+    if timeout_seconds <= 0:
+        raise PortalRunnerConfigError("llm.timeout_seconds must be greater than 0.")
+    return LLMConfig(
+        backend=backend,
+        model=_optional_str(raw.get("model")),
+        base_url=_optional_str(raw.get("base_url")),
+        api_key=_optional_str(raw.get("api_key")),
+        timeout_seconds=timeout_seconds,
+        mock_response=str(raw.get("mock_response") or "Portal runner smoke analysis"),
     )
 
 

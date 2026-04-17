@@ -10,6 +10,8 @@ class PortalUiContractTest(unittest.TestCase):
             "Task Workbench",
             "Pipeline Runner",
             "data-runner-field",
+            "runner-spec-asset",
+            "runner-confluence-scope",
             "Task Details",
             "Ingestion Status",
             "Corpus Inventory",
@@ -58,7 +60,11 @@ class PortalUiContractTest(unittest.TestCase):
             "renderRunnerRuns",
             "renderRunnerDetail",
             "updateRunnerFormForPipeline",
+            "renderSpecAssetOptions",
+            "saveRunnerForm",
+            "restoreRunnerForm",
             "/api/pipelines",
+            "/api/spec-assets",
             "/api/runs",
         ]:
             with self.subTest(marker=marker):

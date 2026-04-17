@@ -44,6 +44,45 @@
             Confluence page id
             <input id="runner-confluence-page" type="text" placeholder="123456">
           </label>
+          <label data-runner-field="confluence_selector">
+            Confluence scope
+            <select id="runner-confluence-scope">
+              <option value="page">Single page</option>
+              <option value="pages">Page IDs</option>
+              <option value="page_tree">Page tree</option>
+              <option value="space_slice">Space slice</option>
+            </select>
+          </label>
+          <label data-runner-field="confluence_page_ids">
+            Confluence page IDs
+            <textarea id="runner-confluence-pages" placeholder="123456, 123457"></textarea>
+          </label>
+          <label data-runner-field="confluence_root_page_id">
+            Root page id
+            <input id="runner-confluence-root" type="text" placeholder="123456">
+          </label>
+          <label data-runner-field="confluence_max_depth">
+            Max depth
+            <input id="runner-confluence-depth" type="number" min="0" max="5" value="1">
+          </label>
+          <label data-runner-field="confluence_space_key">
+            Space key
+            <input id="runner-confluence-space" type="text" placeholder="SSDENG">
+          </label>
+          <label data-runner-field="confluence_label">
+            Label
+            <input id="runner-confluence-label" type="text" placeholder="firmware">
+          </label>
+          <label data-runner-field="spec_asset">
+            Reusable spec asset
+            <select id="runner-spec-asset">
+              <option value="">Upload PDF for this run</option>
+            </select>
+          </label>
+          <label data-runner-field="spec_asset_id">
+            New spec asset id
+            <input id="runner-spec-asset-id" type="text" placeholder="nvme-spec-mineru">
+          </label>
           <label>
             Preferred parser
             <select id="runner-parser">

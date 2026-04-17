@@ -69,6 +69,39 @@ For LAN access, open `http://<server-ip>:8787` from another machine.
 - `jira_live_smoke`
 - `confluence_live_smoke`
 - `pdf_ingest_smoke`
+- `jira_pdf_qa_smoke`
 - `full_real_data_smoke`
 
 The portal displays each run with step status, duration, the latest log lines, and artifact links.
+
+## Jira QA Workflow
+
+Use `jira_pdf_qa_smoke` when the goal is to test Jira QA over a small Confluence slice plus NVMe spec evidence.
+
+Recommended flow:
+
+1. Run `pdf_ingest_smoke` once with `preferred_parser: mineru` or `auto` and set a stable asset id such as `nvme-spec-mineru`.
+2. On later runs, select that reusable spec asset instead of uploading the same PDF again.
+3. Select a small Confluence scope:
+   - `Single page`
+   - `Page IDs`
+   - `Page tree`
+   - `Space slice`
+4. Run `jira_pdf_qa_smoke` with the target Jira issue key.
+
+This avoids reparsing the NVMe PDF with MinerU for every QA iteration.
+
+## vLLM Configuration
+
+The runner can call a vLLM server through its OpenAI-compatible API:
+
+```yaml
+llm:
+  backend: "vllm"
+  model: "Qwen/Qwen2.5-7B-Instruct"
+  base_url: "http://localhost:8000/v1"
+  api_key: null
+  timeout_seconds: 120
+```
+
+When `llm.backend` is `vllm`, `llm.model` and `llm.base_url` are required.

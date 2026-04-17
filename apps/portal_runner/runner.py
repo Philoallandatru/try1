@@ -4,16 +4,17 @@ from pathlib import Path
 from threading import Lock, Thread
 import json
 import re
+import shutil
 
 from apps.portal.portal_state import write_portal_state
 from apps.portal_runner.config import PortalRunnerConfig
 from apps.portal_runner.pipeline_registry import get_pipeline_definition
 from apps.portal_runner.schemas import PipelineInput
 from apps.portal_runner.storage import PortalRunnerStorage
-from services.analysis.llm_backends import MockLLMBackend
+from services.analysis.llm_backends import MockLLMBackend, build_llm_backend
 from services.ops.orchestration import load_source_payload
 from services.workspace import build_workspace, deep_analyze_issue, init_workspace, publish_workspace_wiki
-from services.workspace.spec_assets import ingest_spec_asset
+from services.workspace.spec_assets import ingest_spec_asset, load_spec_asset_registry
 
 
 class PipelineExecutionError(RuntimeError):
@@ -60,6 +61,13 @@ class PortalPipelineRunner:
                     f"SHA256 {saved_upload['sha256']}",
                 ],
             )
+        elif "store_uploaded_pdf" in definition.steps:
+            self.storage.update_step(
+                manifest["run_id"],
+                "store_uploaded_pdf",
+                status="skipped",
+                logs=["No PDF uploaded; using reusable spec asset selection."],
+            )
         thread = Thread(target=self._execute_run, args=(manifest["run_id"], pipeline_input), daemon=True)
         with self._lock:
             self._threads[manifest["run_id"]] = thread
@@ -82,8 +90,25 @@ class PortalPipelineRunner:
                     lambda: self._confluence_live_fetch(run_id, pipeline_input, context),
                 )
             elif definition.pipeline_id == "pdf_ingest_smoke":
+                context["workspace_dir"] = self._shared_spec_workspace()
                 self._run_step(run_id, "workspace_init", lambda: self._workspace_init(run_id, context))
                 self._run_step(run_id, "pdf_spec_asset_ingest", lambda: self._pdf_spec_asset_ingest(run_id, pipeline_input, context))
+            elif definition.pipeline_id == "jira_pdf_qa_smoke":
+                self._run_step(run_id, "jira_live_fetch", lambda: self._jira_live_fetch(run_id, pipeline_input, context))
+                self._run_step(
+                    run_id,
+                    "confluence_live_fetch",
+                    lambda: self._confluence_live_fetch(run_id, pipeline_input, context),
+                )
+                self._run_step(run_id, "workspace_init", lambda: self._workspace_init(run_id, context))
+                self._run_step(
+                    run_id,
+                    "spec_asset_select_or_ingest",
+                    lambda: self._spec_asset_select_or_ingest(run_id, pipeline_input, context),
+                )
+                self._run_step(run_id, "workspace_build", lambda: self._workspace_build(run_id, context))
+                self._run_step(run_id, "deep_analysis", lambda: self._deep_analysis(run_id, pipeline_input, context))
+                self._run_step(run_id, "portal_state", lambda: self._portal_state(run_id, context, pipeline_input))
             elif definition.pipeline_id == "full_real_data_smoke":
                 self._run_step(run_id, "jira_live_fetch", lambda: self._jira_live_fetch(run_id, pipeline_input, context))
                 self._run_step(
@@ -125,10 +150,13 @@ class PortalPipelineRunner:
         pipeline_config = self.config.pipeline_config(pipeline_id)
         if not pipeline_config.enabled:
             raise ValueError(f"Pipeline is disabled: {pipeline_id}")
-        if pipeline_id in {"jira_live_smoke", "full_real_data_smoke"} and not self.config.jira.configured:
+        if pipeline_id in {"jira_live_smoke", "full_real_data_smoke", "jira_pdf_qa_smoke"} and not self.config.jira.configured:
             raise ValueError("Jira is not configured in portal runner config.")
-        if pipeline_id in {"confluence_live_smoke", "full_real_data_smoke"} and not self.config.confluence.configured:
+        if pipeline_id in {"confluence_live_smoke", "full_real_data_smoke", "jira_pdf_qa_smoke"} and not self.config.confluence.configured:
             raise ValueError("Confluence is not configured in portal runner config.")
+        if pipeline_id in {"full_real_data_smoke", "jira_pdf_qa_smoke"} and self.config.llm.backend in {"vllm", "openai-compatible"}:
+            if not self.config.llm.model or not self.config.llm.base_url:
+                raise ValueError("llm.model and llm.base_url are required for vLLM/OpenAI-compatible QA.")
         return {"pipeline_id": pipeline_id, "configured": True}
 
     def _jira_live_fetch(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
@@ -152,8 +180,7 @@ class PortalPipelineRunner:
         return {"document_count": len(payload.get("documents", [])), "artifact": artifact}
 
     def _confluence_live_fetch(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
-        if not pipeline_input.confluence_page_id:
-            raise ValueError("confluence_page_id is required.")
+        selector = self._confluence_selector_kwargs(pipeline_input)
         payload = load_source_payload(
             kind="confluence",
             path=None,
@@ -164,12 +191,41 @@ class PortalPipelineRunner:
             token=self.config.confluence.token,
             auth_mode=self.config.confluence.auth_mode,
             fetch_backend="atlassian-api",
-            page_id=pipeline_input.confluence_page_id,
+            **selector,
         )
         artifact = self.storage.save_artifact(run_id, "confluence-live", payload)
         self._write_workspace_payload(context["workspace_dir"], "confluence", "confluence-live", payload)
         self.storage.update_step(run_id, "confluence_live_fetch", status="running", artifacts={"confluence-live": artifact})
         return {"document_count": len(payload.get("documents", [])), "artifact": artifact}
+
+    def _confluence_selector_kwargs(self, pipeline_input: PipelineInput) -> dict:
+        scope = pipeline_input.confluence_scope or "page"
+        if scope == "page":
+            if not pipeline_input.confluence_page_id:
+                raise ValueError("confluence_page_id is required for page scope.")
+            return {"page_id": pipeline_input.confluence_page_id}
+        if scope == "pages":
+            if not pipeline_input.confluence_page_ids:
+                raise ValueError("confluence_page_ids is required for pages scope.")
+            return {"page_ids": _normalize_selector_list(pipeline_input.confluence_page_ids)}
+        if scope == "page_tree":
+            if not pipeline_input.confluence_root_page_id:
+                raise ValueError("confluence_root_page_id is required for page_tree scope.")
+            return {
+                "root_page_id": pipeline_input.confluence_root_page_id,
+                "include_descendants": True,
+                "max_depth": pipeline_input.confluence_max_depth,
+            }
+        if scope == "space_slice":
+            if not pipeline_input.confluence_space_key:
+                raise ValueError("confluence_space_key is required for space_slice scope.")
+            return {
+                "space_key": pipeline_input.confluence_space_key,
+                "label": pipeline_input.confluence_label,
+                "modified_from": pipeline_input.confluence_modified_from,
+                "modified_to": pipeline_input.confluence_modified_to,
+            }
+        raise ValueError(f"Unsupported Confluence scope: {scope}")
 
     def _workspace_init(self, run_id: str, context: dict) -> dict:
         result = init_workspace(context["workspace_dir"])
@@ -185,12 +241,31 @@ class PortalPipelineRunner:
         result = ingest_spec_asset(
             context["workspace_dir"],
             spec_pdf=upload["path"],
-            asset_id=_asset_id_from_run(run_id),
+            asset_id=pipeline_input.spec_asset_id or _asset_id_from_run(run_id),
             display_name=pipeline_input.topic_title or "Portal Runner Spec",
             preferred_parser=preferred_parser,
         )
         artifact = self.storage.save_artifact(run_id, "pdf-spec-asset", result)
         self.storage.update_step(run_id, "pdf_spec_asset_ingest", status="running", artifacts={"pdf-spec-asset": artifact})
+        return result
+
+    def _spec_asset_select_or_ingest(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
+        upload = self.storage.read_manifest(run_id).get("upload")
+        if upload:
+            return self._pdf_spec_asset_ingest(run_id, pipeline_input, context)
+        if not pipeline_input.spec_asset_id:
+            raise ValueError("Select a reusable spec asset or upload a PDF.")
+        result = self._copy_shared_spec_asset(
+            asset_id=pipeline_input.spec_asset_id,
+            target_workspace=context["workspace_dir"],
+        )
+        artifact = self.storage.save_artifact(run_id, "selected-spec-asset", result)
+        self.storage.update_step(
+            run_id,
+            "spec_asset_select_or_ingest",
+            status="running",
+            artifacts={"selected-spec-asset": artifact},
+        )
         return result
 
     def _workspace_build(self, run_id: str, context: dict) -> dict:
@@ -202,7 +277,7 @@ class PortalPipelineRunner:
     def _deep_analysis(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
         if not pipeline_input.jira_issue_key:
             raise ValueError("jira_issue_key is required.")
-        backend = MockLLMBackend(response_text=pipeline_input.mock_response or "Portal runner smoke analysis")
+        backend = self._llm_backend(pipeline_input)
         result = deep_analyze_issue(
             context["workspace_dir"],
             pipeline_input.jira_issue_key,
@@ -269,7 +344,7 @@ class PortalPipelineRunner:
         }
         route_path = Path(context["workspace_dir"]) / "route-manifest.json"
         route_path.write_text(json.dumps(route_manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        backend = MockLLMBackend(response_text=pipeline_input.mock_response or "Portal runner wiki content")
+        backend = self._llm_backend(pipeline_input)
         result = publish_workspace_wiki(
             context["workspace_dir"],
             manifest_path=route_path,
@@ -282,6 +357,60 @@ class PortalPipelineRunner:
 
     def _workspace_dir(self, run_id: str) -> Path:
         return self.config.workspace.root / run_id
+
+    def _shared_spec_workspace(self) -> Path:
+        return self.config.workspace.spec_assets_workspace
+
+    def _llm_backend(self, pipeline_input: PipelineInput):
+        if pipeline_input.mock_response:
+            return MockLLMBackend(response_text=pipeline_input.mock_response)
+        backend = self.config.llm.backend
+        if backend == "vllm":
+            backend = "openai-compatible"
+        return build_llm_backend(
+            backend=backend,
+            model=self.config.llm.model,
+            base_url=self.config.llm.base_url,
+            api_key=self.config.llm.api_key,
+            mock_response=self.config.llm.mock_response,
+            timeout_seconds=self.config.llm.timeout_seconds,
+        )
+
+    def _copy_shared_spec_asset(self, *, asset_id: str, target_workspace: str | Path) -> dict:
+        init_workspace(self._shared_spec_workspace())
+        init_workspace(target_workspace)
+        registry = load_spec_asset_registry(self._shared_spec_workspace())
+        matches = [entry for entry in registry.get("assets", []) if entry.get("asset_id") == asset_id]
+        if not matches:
+            raise ValueError(f"Unknown spec asset: {asset_id}")
+        selected = sorted(matches, key=lambda entry: str(entry.get("version", "")))[-1]
+        source_root = Path(selected["asset_root"])
+        target_root = Path(target_workspace) / "raw" / "files" / "spec_assets" / asset_id / selected["version"]
+        if target_root.exists():
+            shutil.rmtree(target_root)
+        target_root.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source_root, target_root)
+
+        registry_path = Path(target_workspace) / "raw" / "files" / "spec_assets" / "registry.json"
+        if registry_path.exists():
+            target_registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        else:
+            target_registry = {"assets": []}
+        copied_entry = {**selected, "asset_root": str(target_root)}
+        target_registry["assets"] = [
+            entry
+            for entry in target_registry.get("assets", [])
+            if not (entry.get("asset_id") == asset_id and entry.get("version") == selected["version"])
+        ]
+        target_registry["assets"].append(copied_entry)
+        registry_path.write_text(json.dumps(target_registry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        return {
+            "asset_id": asset_id,
+            "version": selected["version"],
+            "document_id": selected.get("document_id"),
+            "source_asset_root": str(source_root),
+            "target_asset_root": str(target_root),
+        }
 
     def _write_workspace_payload(self, workspace_dir: str | Path, kind: str, source_name: str, payload: dict) -> None:
         root = Path(workspace_dir)
@@ -297,6 +426,10 @@ class PortalPipelineRunner:
             raise ValueError("jira_issue_key is required.")
         if "confluence_page_id" in required_inputs and not pipeline_input.confluence_page_id:
             raise ValueError("confluence_page_id is required.")
+        if "confluence_selector" in required_inputs:
+            self._confluence_selector_kwargs(pipeline_input)
+        if pipeline_input.pipeline_id == "jira_pdf_qa_smoke" and not upload and not pipeline_input.spec_asset_id:
+            raise ValueError("jira_pdf_qa_smoke requires a PDF upload or spec_asset_id.")
         if "pdf" in required_inputs and not upload:
             raise ValueError("PDF upload is required.")
 
@@ -324,3 +457,8 @@ def _asset_id_from_run(run_id: str) -> str:
 def _safe_slug(value: str) -> str:
     slug = re.sub(r"[^A-Za-z0-9_-]+", "-", value).strip("-").lower()
     return slug or "portal-runner"
+
+
+def _normalize_selector_list(value: str) -> str:
+    parts = [part.strip() for part in re.split(r"[\s,]+", value) if part.strip()]
+    return ",".join(parts)

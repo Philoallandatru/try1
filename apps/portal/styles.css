@@ -69,12 +69,18 @@ body {
 
 .runner-form input,
 .runner-form select,
+.runner-form textarea,
 .runner-form button {
   min-height: 38px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
+}
+
+.runner-form textarea {
+  min-height: 78px;
+  resize: vertical;
 }
 
 .runner-form button {
