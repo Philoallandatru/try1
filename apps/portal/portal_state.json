@@ -306,6 +306,11 @@
             "content": "retrieval_ready -> analysis_ready -> knowledge_ready"
           },
           {
+            "id": "runtime",
+            "label": "Runtime",
+            "content": "Adapter: none.\nPrefect state: n/a.\nAdapter state: n/a.\nFlow run id: n/a.\nDeployment: n/a."
+          },
+          {
             "id": "evidence",
             "label": "Evidence",
             "content": "Top evidence: nvme-spec-v1"
@@ -391,6 +396,11 @@
         "id": "logs",
         "label": "Logs",
         "content": "retrieval_ready -> analysis_ready -> knowledge_ready"
+      },
+      {
+        "id": "runtime",
+        "label": "Runtime",
+        "content": "Adapter: none.\nPrefect state: n/a.\nAdapter state: n/a.\nFlow run id: n/a.\nDeployment: n/a."
       },
       {
         "id": "evidence",

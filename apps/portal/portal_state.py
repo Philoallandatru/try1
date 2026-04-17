@@ -68,6 +68,11 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
                         "content": "retrieval_ready -> analysis_ready -> knowledge_ready",
                     },
                     {
+                        "id": "runtime",
+                        "label": "Runtime",
+                        "content": _runtime_content({}, {}),
+                    },
+                    {
                         "id": "evidence",
                         "label": "Evidence",
                         "content": f"Top evidence: {top_result.get('document_id', 'none')}",
@@ -121,6 +126,11 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
                 "id": "logs",
                 "label": "Logs",
                 "content": "retrieval_ready -> analysis_ready -> knowledge_ready",
+            },
+            {
+                "id": "runtime",
+                "label": "Runtime",
+                "content": _runtime_content({}, {}),
             },
             {
                 "id": "evidence",
@@ -210,6 +220,16 @@ def _artifact_preview(workspace_dir: str | Path, run_id: str, artifact_type: str
     return json.dumps(payload, ensure_ascii=False)[:240]
 
 
+def _runtime_content(runtime: dict, prefect_runtime: dict) -> str:
+    return (
+        f"Adapter: {runtime.get('adapter', 'none')}.\n"
+        f"Prefect state: {prefect_runtime.get('prefect_state', 'n/a')}.\n"
+        f"Adapter state: {prefect_runtime.get('adapter_state', 'n/a')}.\n"
+        f"Flow run id: {prefect_runtime.get('flow_run_id', 'n/a')}.\n"
+        f"Deployment: {prefect_runtime.get('deployment_identifier') or prefect_runtime.get('deployment_name', 'n/a')}."
+    )
+
+
 def _build_run_detail_bundle(
     *,
     workspace_dir: str | Path,
@@ -222,6 +242,8 @@ def _build_run_detail_bundle(
     result_summary = detail["result_summary"]
     control_events = detail["control_events"]
     reached_checkpoints = run["checkpoint_summary"]["reached"]
+    runtime = detail["manifest"].get("runtime", {})
+    prefect_runtime = runtime.get("prefect", {})
     top_result = search_workspace[0] if search_workspace else {}
     shared_retrieval_preview = _artifact_preview(workspace_dir, run["run_id"], "shared_retrieval_bundle")
     report_preview = _artifact_preview(workspace_dir, run["run_id"], "composite_report")
@@ -250,6 +272,11 @@ def _build_run_detail_bundle(
                         else ""
                     )
                 ),
+            },
+            {
+                "id": "runtime",
+                "label": "Runtime",
+                "content": _runtime_content(runtime, prefect_runtime),
             },
             {
                 "id": "evidence",
@@ -385,6 +412,11 @@ def _run_task_workbench(
             "summary": (
                 f"{run['checkpoint_summary']['reached_count']}/{run['checkpoint_summary']['total_count']} "
                 f"checkpoints reached; {run['stale_artifact_count']} stale artifact(s)."
+                + (
+                    f" Runtime: {next((tab['content'].splitlines()[2].replace('Adapter state: ', '') for tab in details_by_run_id[run['run_id']]['detail_tabs'] if tab['id'] == 'runtime'), 'n/a')}"
+                    if any(tab["id"] == "runtime" for tab in details_by_run_id[run["run_id"]]["detail_tabs"])
+                    else ""
+                )
             ),
         }
         for run in runs
