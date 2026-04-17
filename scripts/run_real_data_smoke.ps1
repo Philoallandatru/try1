@@ -30,6 +30,7 @@ param(
     [string]$TopicTitle = "Real Source Smoke",
     [string]$MockResponse = "Real-source smoke content",
     [string]$PythonExe,
+    [switch]$UseShowcaseWorkbench,
 
     [switch]$SkipConnectorSmoke,
     [switch]$SkipWorkspaceSmoke,
@@ -246,18 +247,33 @@ if (-not $SkipWorkspaceSmoke) {
         "--preferred-parser", $PreferredParser
     )
 
-    Invoke-Step -Name "Run workspace real-source smoke-deep-analysis" -Arguments @(
-        "scripts/workspace_cli.py",
-        "smoke-deep-analysis",
-        $WorkspaceDir,
-        "--jira-spec", "one-issue",
-        "--confluence-spec", "one-page",
-        "--issue-key", $JiraIssueKey,
-        "--spec-pdf", $SpecPdfPath,
-        "--spec-asset-id", $SpecAssetId,
-        "--preferred-parser", $PreferredParser,
-        "--portal-state-output", $portalStateJson
-    )
+    if ($UseShowcaseWorkbench) {
+        Invoke-Step -Name "Run workspace real-source showcase-workbench" -Arguments @(
+            "scripts/workspace_cli.py",
+            "showcase-workbench",
+            $WorkspaceDir,
+            "--jira-spec", "one-issue",
+            "--confluence-spec", "one-page",
+            "--issue-key", $JiraIssueKey,
+            "--spec-pdf", $SpecPdfPath,
+            "--spec-asset-id", $SpecAssetId,
+            "--preferred-parser", $PreferredParser,
+            "--portal-state-output", $portalStateJson
+        )
+    } else {
+        Invoke-Step -Name "Run workspace real-source smoke-deep-analysis" -Arguments @(
+            "scripts/workspace_cli.py",
+            "smoke-deep-analysis",
+            $WorkspaceDir,
+            "--jira-spec", "one-issue",
+            "--confluence-spec", "one-page",
+            "--issue-key", $JiraIssueKey,
+            "--spec-pdf", $SpecPdfPath,
+            "--spec-asset-id", $SpecAssetId,
+            "--preferred-parser", $PreferredParser,
+            "--portal-state-output", $portalStateJson
+        )
+    }
 
     Invoke-Step -Name "List workspace runs" -Arguments @(
         "scripts/workspace_cli.py",
@@ -359,6 +375,9 @@ Write-Host "  Wiki:     $(Join-Path $workspacePath 'wiki\vitepress_site')"
 Write-Host ""
 Write-Host "To preview the portal:"
 Write-Host "  .\.venv\Scripts\python.exe scripts\workspace_cli.py portal-state $WorkspaceDir --output apps\portal\portal_state.json --query $JiraIssueKey"
+if ($UseShowcaseWorkbench) {
+    Write-Host "  # Showcase mode already generated completed / queued / running / stopped runs"
+}
 Write-Host "  cd apps\portal"
 Write-Host "  python -m http.server 8787"
 Write-Host ""
