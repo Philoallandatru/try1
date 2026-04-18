@@ -8,7 +8,7 @@ Use this guide when you want:
 
 - a fixed working directory for staged Jira and Confluence validation
 - repeatable source registry entries instead of long ad hoc command lines
-- a snapshot-first flow for `fetch -> build -> query -> export`
+- a single source registry flow for `source -> selector -> profile -> analyze-jira`
 
 The workspace is an orchestration layer only:
 
@@ -110,6 +110,12 @@ Create a named Jira source:
 
 ```powershell
 python scripts/workspace_cli.py source add .tmp\workspace jira_lab --connector-type jira.atlassian_api --base-url https://jira.example.com --credential-ref jira_lab_token --policy team:ssd --policy public
+```
+
+Create a fixture-backed Jira source for local validation:
+
+```powershell
+python scripts/workspace_cli.py source add .tmp\workspace jira_fixture --connector-type jira.atlassian_api --mode fixture --path fixtures/connectors/jira/incremental_sync.json --policy team:ssd
 ```
 
 Create a local PDF source:
@@ -251,7 +257,7 @@ The panel renders the recommended `analyze-jira` command preview from the curren
 
 ## 4. Legacy Source Spec Files
 
-Each `fetch` operation is driven by one JSON spec file.
+Legacy `fetch <workspace> <spec>` operations are driven by JSON spec files. This mode is retained for compatibility and migration only. New operator workflows should use `source`, `selector`, `profile`, and `analyze-jira`.
 
 ### Common fields
 
@@ -405,7 +411,7 @@ Parameters:
   - required
   - target workspace root directory
 
-### `fetch`
+### `fetch` (legacy)
 
 ```powershell
 python scripts/workspace_cli.py fetch <workspace> <spec>
@@ -817,8 +823,12 @@ Use the workspace CLI when the goal is to stage source inputs and inspect snapsh
 
 ```powershell
 python scripts/workspace_cli.py init .tmp\workspace
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\project-slice.json
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+python scripts/workspace_cli.py source add .tmp\workspace jira_fixture --connector-type jira.atlassian_api --mode fixture --path fixtures/connectors/jira/incremental_sync.json --policy team:ssd
+python scripts/workspace_cli.py selector add .tmp\workspace jira_one_issue --source jira_fixture --type issue --issue-key SSD-102
+python scripts/workspace_cli.py source add .tmp\workspace conf_fixture --connector-type confluence.atlassian_api --mode fixture --path fixtures/connectors/confluence/page_sync.json --policy team:ssd
+python scripts/workspace_cli.py selector add .tmp\workspace conf_one_page --source conf_fixture --type page --page-id CONF-201
+python scripts/workspace_cli.py profile add .tmp\workspace ssd_default --input jira=jira_fixture:jira_one_issue --input confluence=conf_fixture:conf_one_page --top-k 5 --policy team:ssd --llm-backend none
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-102
 python scripts/workspace_cli.py build .tmp\workspace
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend mock --llm-mock-response "Mock workspace answer"
 ```
@@ -866,28 +876,27 @@ Role split:
 python scripts/workspace_cli.py init .tmp\workspace
 ```
 
-2. Edit `raw/jira/specs/one-issue.json` with real `base_url`, `token`, and `issue_key`.
-
-3. Fetch:
+2. Add the Jira source and selector:
 
 ```powershell
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\one-issue.json
+python scripts/workspace_cli.py source add .tmp\workspace jira_lab --connector-type jira.atlassian_api --base-url https://jira.example.com --credential-ref jira_lab_token --policy team:ssd --policy public
+python scripts/workspace_cli.py selector add .tmp\workspace jira_one_issue --source jira_lab --type issue --issue-key SSD-777
 ```
 
-4. Build:
+3. Add the analysis profile and run:
 
 ```powershell
-python scripts/workspace_cli.py build .tmp\workspace
+python scripts/workspace_cli.py profile add .tmp\workspace ssd_default --input jira=jira_lab:jira_one_issue --top-k 5 --policy team:ssd --policy public --llm-backend none --llm-prompt-mode strict
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-777
 ```
 
-5. Inspect and query:
+4. Inspect:
 
 ```powershell
 python scripts/workspace_cli.py status .tmp\workspace
-python scripts/workspace_cli.py query .tmp\workspace "black screen"
 ```
 
-6. Expand by editing `project-slice.json`, then re-run `fetch` and `build`.
+5. Reuse the same profile for another Jira issue by creating or updating the selector, then running `analyze-jira` again.
 
 ### Confluence page tree from zero
 
@@ -897,24 +906,23 @@ python scripts/workspace_cli.py query .tmp\workspace "black screen"
 python scripts/workspace_cli.py init .tmp\workspace
 ```
 
-2. Edit `raw/confluence/specs/page-tree.json` with:
-
-- `mode: live`
-- `base_url`
-- `token`
-- `scope.root_page_id`
-- optional `scope.max_depth`
-
-3. Fetch:
+2. Add the Confluence source and selector:
 
 ```powershell
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+python scripts/workspace_cli.py source add .tmp\workspace conf_fw --connector-type confluence.atlassian_api --base-url https://confluence.example.com --credential-ref conf_fw_token --policy team:ssd --policy public
+python scripts/workspace_cli.py selector add .tmp\workspace conf_tree --source conf_fw --type page_tree --root-page-id 123456 --max-depth 2
 ```
 
-4. Build:
+3. Add it to a Jira analysis profile:
 
 ```powershell
-python scripts/workspace_cli.py build .tmp\workspace
+python scripts/workspace_cli.py profile add .tmp\workspace ssd_default --input jira=jira_lab:jira_one_issue --input confluence=conf_fw:conf_tree --top-k 5 --policy team:ssd --policy public --llm-backend none --llm-prompt-mode strict
+```
+
+4. Run Jira analysis with the selected Jira and Confluence sources:
+
+```powershell
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-777
 ```
 
 5. Export if needed:

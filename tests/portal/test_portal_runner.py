@@ -63,6 +63,58 @@ class PortalRunnerTest(unittest.TestCase):
         self.assertNotIn("conf-secret", str(status))
         validate_bind_security(config, "0.0.0.0")
 
+    def test_config_treats_placeholder_source_tokens_as_unconfigured(self) -> None:
+        fake_yaml = types.SimpleNamespace(
+            safe_load=lambda _: {
+                "server": {"runner_token": "runner-secret"},
+                "jira": {"base_url": "https://jira.example.com", "token": "change-me"},
+                "confluence": {"base_url": "https://conf.example.com", "token": "<token>"},
+            }
+        )
+        original_yaml = sys.modules.get("yaml")
+        sys.modules["yaml"] = fake_yaml
+        try:
+            with temporary_directory("portal-runner-placeholder-config") as temp_dir:
+                config_path = Path(temp_dir) / "config.yaml"
+                config_path.write_text("server: {}\n", encoding="utf-8")
+                config = load_config(config_path)
+        finally:
+            if original_yaml is None:
+                sys.modules.pop("yaml", None)
+            else:
+                sys.modules["yaml"] = original_yaml
+
+        status = config.public_status()
+        self.assertFalse(status["jira"]["configured"])
+        self.assertFalse(status["confluence"]["configured"])
+
+    def test_config_accepts_literal_source_tokens(self) -> None:
+        fake_yaml = types.SimpleNamespace(
+            safe_load=lambda _: {
+                "server": {"runner_token": "runner-secret"},
+                "jira": {"base_url": "https://jira.example.com", "token": "jira-secret"},
+                "confluence": {"base_url": "https://conf.example.com", "token": "conf-secret"},
+            }
+        )
+        original_yaml = sys.modules.get("yaml")
+        sys.modules["yaml"] = fake_yaml
+        try:
+            with temporary_directory("portal-runner-literal-config") as temp_dir:
+                config_path = Path(temp_dir) / "config.yaml"
+                config_path.write_text("server: {}\n", encoding="utf-8")
+                config = load_config(config_path)
+        finally:
+            if original_yaml is None:
+                sys.modules.pop("yaml", None)
+            else:
+                sys.modules["yaml"] = original_yaml
+
+        status = config.public_status()
+        self.assertTrue(status["jira"]["configured"])
+        self.assertTrue(status["confluence"]["configured"])
+        self.assertNotIn("jira-secret", str(status))
+        self.assertNotIn("conf-secret", str(status))
+
     def test_pipeline_registry_exposes_fixed_whitelist(self) -> None:
         full = get_pipeline_definition("full_real_data_smoke")
         self.assertIn("jira_issue_key", full.required_inputs)

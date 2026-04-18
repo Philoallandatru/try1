@@ -6,6 +6,7 @@ from typing import Any
 
 
 DEFAULT_CONFIG_PATH = Path(".local/portal-runner/config.yaml")
+PLACEHOLDER_SECRET_VALUES = {"", "change-me", "<token>", "<jira-token>", "<confluence-token>"}
 
 
 class PortalRunnerConfigError(ValueError):
@@ -163,10 +164,10 @@ def _source_config(raw: Any, *, name: str) -> SourceConfig:
     raw = _ensure_mapping(raw, name)
     return SourceConfig(
         base_url=str(raw.get("base_url") or "").strip(),
-        token=str(raw.get("token") or "").strip(),
+        token=_secret_value(raw.get("token")),
         auth_mode=str(raw.get("auth_mode") or "auto"),
         username=_optional_str(raw.get("username")),
-        password=_optional_str(raw.get("password")),
+        password=_secret_value(raw.get("password")) or None,
     )
 
 
@@ -224,3 +225,12 @@ def _optional_str(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _secret_value(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if text.lower() in PLACEHOLDER_SECRET_VALUES:
+        return ""
+    return text

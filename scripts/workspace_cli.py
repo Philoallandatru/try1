@@ -153,6 +153,7 @@ def main() -> int:
     source_add.add_argument("workspace")
     source_add.add_argument("name")
     source_add.add_argument("--connector-type", required=True)
+    source_add.add_argument("--mode", choices=["fixture", "live", "local"])
     source_add.add_argument("--base-url")
     source_add.add_argument("--path")
     source_add.add_argument("--credential-ref")
@@ -481,6 +482,7 @@ def main() -> int:
                         args.workspace,
                         args.name,
                         connector_type=args.connector_type,
+                        mode=args.mode,
                         base_url=args.base_url,
                         path=args.path,
                         credential_ref=args.credential_ref,

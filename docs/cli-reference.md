@@ -52,7 +52,7 @@ python scripts/workspace_cli.py <command>
 Supported commands:
 
 - `init <workspace>`
-- `source add <workspace> <name> --connector-type ... --base-url ...`
+- `source add <workspace> <name> --connector-type ... [--mode live|fixture|local] [--base-url ...] [--path ...]`
 - `source configure <workspace> <name> --base-url ... --auth-mode ...`
 - `source set-credential <workspace> <name> --credential-ref ...`
 - `source defaults <workspace> <name> --refresh-freq-minutes ...`
@@ -108,7 +108,8 @@ Recommended workspace layout:
 Usage model:
 
 - `init` creates the fixed workspace layout and starter spec files.
-- `source` manages named Jira and Confluence source registry files under `sources/*.yaml`.
+- `source` manages named Jira, Confluence, and local file source registry entries under `sources/*.yaml`.
+- `source add --mode fixture --path ...` is the supported way to create local fixture-backed Jira/Confluence sources for repeatable testing.
 - `source add --connector-type pdf.local_file --path ...` registers a local PDF file source that writes reusable spec assets.
 - `selector` manages reusable source selectors under `selectors/*.yaml`.
 - `profile` manages reusable analysis presets under `profiles/*.yaml`.

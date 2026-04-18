@@ -541,6 +541,7 @@ def add_workspace_source(
     name: str,
     *,
     connector_type: str,
+    mode: str | None = None,
     base_url: str | None = None,
     path: str | None = None,
     credential_ref: str | None = None,
@@ -550,7 +551,9 @@ def add_workspace_source(
 ) -> dict:
     _load_workspace_config(workspace_dir)
     kind = "jira" if connector_type.startswith("jira.") else "pdf" if connector_type.startswith("pdf.") else "confluence"
-    mode = "local" if kind == "pdf" else "live"
+    source_mode = mode or ("local" if kind == "pdf" else "live")
+    if kind == "pdf" and source_mode != "local":
+        raise ValueError("pdf.local_file sources must use mode=local")
     config = {"auth_mode": "auto"}
     if base_url:
         config["base_url"] = base_url
@@ -560,7 +563,7 @@ def add_workspace_source(
         "version": 1,
         "name": name,
         "kind": kind,
-        "mode": mode,
+        "mode": source_mode,
         "connector_type": connector_type,
         "credential_ref": credential_ref,
         "config": config,
