@@ -6,7 +6,8 @@ from apps.portal_runner.pipeline_registry import list_pipeline_definitions
 from apps.portal_runner.runner import PortalPipelineRunner
 from apps.portal_runner.schemas import PipelineInput
 from apps.portal_runner.storage import PortalRunnerStorage
-from services.workspace import init_workspace
+from apps.portal.portal_state import build_portal_state
+from services.workspace import init_workspace, run_workspace_analysis
 from services.workspace.spec_assets import load_spec_asset_registry
 
 
@@ -59,6 +60,31 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         init_workspace(config.workspace.spec_assets_workspace)
         registry = load_spec_asset_registry(config.workspace.spec_assets_workspace)
         return {"workspace": str(config.workspace.spec_assets_workspace), "assets": registry.get("assets", [])}
+
+    @app.post("/api/workspace/analyze-jira")
+    async def workspace_analyze_jira(
+        request: Request,
+        _: None = Depends(require_auth),
+    ) -> dict:
+        payload = await request.json()
+        workspace_dir = _blank_to_none(str(payload.get("workspace_dir") or ""))
+        profile = _blank_to_none(str(payload.get("profile") or ""))
+        issue_key = _blank_to_none(str(payload.get("issue_key") or ""))
+        if not workspace_dir or not profile or not issue_key:
+            raise HTTPException(status_code=400, detail="workspace_dir, profile, and issue_key are required.")
+        try:
+            analysis = run_workspace_analysis(
+                workspace_dir,
+                profile_name=profile,
+                issue_key=issue_key,
+            )
+            state = build_portal_state(query=issue_key, workspace_dir=workspace_dir)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {
+            "analysis": analysis,
+            "portal_state": state,
+        }
 
     @app.post("/api/runs")
     async def create_run(

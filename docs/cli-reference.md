@@ -52,7 +52,6 @@ python scripts/workspace_cli.py <command>
 Supported commands:
 
 - `init <workspace>`
-- `fetch <workspace> <spec>`
 - `source add <workspace> <name> --connector-type ... --base-url ...`
 - `source configure <workspace> <name> --base-url ... --auth-mode ...`
 - `source set-credential <workspace> <name> --credential-ref ...`
@@ -63,9 +62,14 @@ Supported commands:
 - `source refresh <workspace> <name> --selector-profile ...`
 - `source list <workspace>`
 - `source show <workspace> <name>`
-- `selector add <workspace> <name> --source ... --type ...`
+- `selector add <workspace> <name> --source ... --type ... [--issue-key ...] [--project-key ...] [--project-keys A,B] [--issue-type ...] [--status ...] [--label ...] [--updated-from ...] [--updated-to ...] [--page-id ...] [--root-page-id ...] [--max-depth ...] [--space-key ...] [--modified-from ...] [--modified-to ...] [--ancestor-id ...] [--title ...] [--page-ids 1,2]`
 - `selector list <workspace>`
 - `selector show <workspace> <name>`
+- `profile add <workspace> <name> --input NAME=SOURCE:SELECTOR [--spec-asset ...]`
+- `profile list <workspace>`
+- `profile show <workspace> <name>`
+- `profile update <workspace> <name> [--input NAME=SOURCE:SELECTOR ...]`
+- `profile validate <workspace> <name>`
 - `fetch-source <workspace> --source ... --selector-profile ...`
 - `refresh <workspace>`
 - `build <workspace>`
@@ -73,6 +77,7 @@ Supported commands:
 - `reindex <workspace> --index-name pageindex_v1`
 - `export <workspace>`
 - `query <workspace> "<question>"`
+- `analyze-jira <workspace> --profile ... --issue-key ... [--use-existing-snapshot]`
 - `run-analysis <workspace> --profile ... --issue-key ... [--use-existing-snapshot]`
 - `rerun-analysis <workspace> --profile ... --issue-key ... --use-existing-snapshot`
 - `status <workspace>`
@@ -103,22 +108,29 @@ Recommended workspace layout:
 Usage model:
 
 - `init` creates the fixed workspace layout and starter spec files.
-- `fetch` resolves a saved source spec and writes the normalized sync payload into `raw/*/payloads/`.
 - `source` manages named Jira and Confluence source registry files under `sources/*.yaml`.
 - `source add --connector-type pdf.local_file --path ...` registers a local PDF file source that writes reusable spec assets.
 - `selector` manages reusable source selectors under `selectors/*.yaml`.
+- `profile` manages reusable analysis presets under `profiles/*.yaml`.
 - `fetch-source` fetches through the registry and writes `latest.json`, `history/*.json`, and `fetch-manifest.json`.
+- `fetch-source` for `pdf.local_file` also writes cache and normalize manifests so PDF sources appear in the same status DAG as Jira and Confluence.
 - `refresh` refetches stale registry sources that have prior fetch manifests.
 - `rebuild` rebuilds normalize artifacts from cached raw payloads and then assembles a snapshot.
 - `reindex` rebuilds the `build/index/pageindex_v1/page_index.json` artifact from normalized documents.
 - `build` assembles `snapshots/current/` from current normalized documents and spec assets.
 - `export` emits Markdown plus `page_index.json` from the current snapshot.
 - `query` searches the snapshot PageIndex directly and can optionally call a local LLM backend.
-- `run-analysis` and `rerun-analysis` execute profile-driven Jira analysis through the existing snapshot and deep-analysis seam. Without `--use-existing-snapshot`, `run-analysis` fetches stale profile inputs and builds before analysis.
+- `analyze-jira` is the recommended Jira analysis entrypoint. Without `--use-existing-snapshot`, it fetches stale profile inputs and builds a profile-scoped snapshot before analysis.
+- `run-analysis` and `rerun-analysis` remain compatibility commands over the same profile-driven analysis seam.
 - `status` reports spec counts, payload counts, snapshot manifest, and latest export state.
 - `status` also reports the `fetch -> normalize -> index -> analysis` cache DAG.
 - `lint` checks workspace integrity and stale snapshot/export conditions.
 - `watch` polls workspace spec/payload changes and can run a bootstrap pass with `--run-once`.
+
+Compatibility-only command:
+
+- `fetch <workspace> <spec>`
+  - legacy JSON spec workflow retained for migration and compatibility
 
 Query examples:
 
@@ -331,6 +343,8 @@ Notes:
 ```bash
 python scripts/platform_cli.py portal-state --query "nvme flush"
 ```
+
+The static portal workbench now includes a minimal `New Task` form with `Issue Key`, `Analysis Profile`, and `Run`, backed by the existing task-workbench state contract.
 
 ## Notes
 

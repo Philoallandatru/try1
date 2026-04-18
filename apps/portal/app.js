@@ -6,6 +6,8 @@ async function loadPortalState() {
   return response.json();
 }
 
+let currentPortalState = null;
+
 function renderList(target, entries, formatter) {
   target.innerHTML = "";
   entries.forEach((entry) => {
@@ -115,6 +117,7 @@ const runnerState = {
   token: localStorage.getItem("portalRunnerToken") || "",
   selectedRunId: null,
   pollTimer: null,
+  wired: false,
 };
 
 const RUNNER_TERMINAL_STATUSES = new Set(["succeeded", "failed", "cancelled"]);
@@ -372,6 +375,10 @@ async function connectRunner() {
 }
 
 function wireRunnerPanel() {
+  if (runnerState.wired) {
+    return;
+  }
+  runnerState.wired = true;
   const tokenInput = document.getElementById("runner-token");
   tokenInput.value = runnerState.token;
   restoreRunnerForm();
@@ -491,6 +498,62 @@ function renderTaskWorkbench(workbench) {
   const entry = workbench.new_task_entry;
   document.getElementById("new-task-entry").textContent =
     `${entry.default_task_type}: ${entry.input_hint}`;
+  const issueInput = document.getElementById("new-task-issue-key");
+  const profileSelect = document.getElementById("new-task-profile");
+  const commandPreview = document.getElementById("new-task-command-preview");
+  const runButton = document.getElementById("new-task-run");
+  const issueField = (entry.fields || []).find((field) => field.id === "issue_key");
+  const profileField = (entry.fields || []).find((field) => field.id === "profile");
+  issueInput.value = issueField?.value || "";
+  profileSelect.innerHTML = "";
+  (entry.available_profiles || []).forEach((profile) => {
+    const option = document.createElement("option");
+    option.value = profile;
+    option.textContent = profile;
+    profileSelect.appendChild(option);
+  });
+  if (profileField?.value) {
+    profileSelect.value = profileField.value;
+  }
+  function renderNewTaskCommandPreview() {
+    const issueKey = issueInput.value.trim() || "<issue-key>";
+    const profile = profileSelect.value || "<profile>";
+    commandPreview.textContent = (entry.command_preview || "").replace(
+      /--profile\s+\S+\s+--issue-key\s+\S+/,
+      `--profile ${profile} --issue-key ${issueKey}`
+    );
+  }
+  issueInput.oninput = renderNewTaskCommandPreview;
+  profileSelect.onchange = renderNewTaskCommandPreview;
+  runButton.onclick = async () => {
+    renderNewTaskCommandPreview();
+    if (!currentPortalState?.workspace_dir) {
+      setRunnerStatus("Portal state has no workspace_dir; cannot run analysis from the page.", true);
+      return;
+    }
+    if (!runnerState.token) {
+      setRunnerStatus("Connect the runner before starting an analysis from the page.", true);
+      return;
+    }
+    try {
+      setRunnerStatus(`Running analyze-jira for ${issueInput.value.trim() || "<issue-key>"}...`);
+      const payload = await runnerFetch("/api/workspace/analyze-jira", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspace_dir: currentPortalState.workspace_dir,
+          profile: profileSelect.value,
+          issue_key: issueInput.value.trim(),
+        }),
+      });
+      currentPortalState = payload.portal_state;
+      renderPortal(payload.portal_state);
+      setRunnerStatus(`Analysis completed for ${issueInput.value.trim()}.`);
+    } catch (error) {
+      setRunnerStatus(error.message, true);
+    }
+  };
+  renderNewTaskCommandPreview();
 
   document.getElementById("task-filters").textContent =
     `Filters: ${workbench.filters.status.join(", ")} / owner ${workbench.filters.owner.join(", ")} / project ${workbench.filters.project.join(", ")}`;
@@ -568,8 +631,7 @@ function renderTaskWorkbench(workbench) {
   renderSelectedTask();
 }
 
-async function bootPortal() {
-  const state = await loadPortalState();
+function renderPortal(state) {
   wireRunnerPanel();
   renderTaskWorkbench(state.task_workbench);
   renderList(
@@ -594,6 +656,11 @@ async function bootPortal() {
     state.search_workspace,
     inspectionTarget
   );
+}
+
+async function bootPortal() {
+  currentPortalState = await loadPortalState();
+  renderPortal(currentPortalState);
 }
 
 bootPortal().catch((error) => {

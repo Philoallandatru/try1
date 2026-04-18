@@ -13,6 +13,7 @@ from tests.temp_utils import temporary_directory as TemporaryDirectory
 class PortalStateTest(unittest.TestCase):
     def test_portal_state_contains_operator_views(self) -> None:
         state = build_portal_state()
+        self.assertIn("workspace_dir", state)
         self.assertIn("ingestion_status", state)
         self.assertIn("corpus_inventory", state)
         self.assertIn("search_workspace", state)
@@ -46,6 +47,9 @@ class PortalStateTest(unittest.TestCase):
             ["rca", "spec_impact", "decision_brief", "general_summary"],
         )
         self.assertTrue(any(tab["id"] == "runtime" for tab in workbench["detail_tabs"]))
+        self.assertTrue(any(field["id"] == "issue_key" for field in workbench["new_task_entry"]["fields"]))
+        self.assertTrue(any(field["id"] == "profile" for field in workbench["new_task_entry"]["fields"]))
+        self.assertIn("command_preview", workbench["new_task_entry"])
 
     def test_portal_state_can_be_written_for_static_ui(self) -> None:
         path = write_portal_state("apps/portal/portal_state.json")
@@ -74,6 +78,7 @@ class PortalStateTest(unittest.TestCase):
             workbench = state["task_workbench"]
             selected = next(task for task in workbench["tasks"] if task["selected"])
 
+            self.assertEqual(state["workspace_dir"], temp_dir)
             self.assertEqual(selected["task_id"], Path(run_payload["run_dir"]).name)
             self.assertEqual(selected["issue_key"], "SSD-102")
             self.assertIn("rerun-section", workbench["controls"])
@@ -87,6 +92,8 @@ class PortalStateTest(unittest.TestCase):
             self.assertIsInstance(workbench["artifact_inventory"], list)
             self.assertTrue(any(row["artifact_type"] == "confluence_update_proposal" for row in workbench["artifact_inventory"]))
             self.assertTrue(any(recipe["label"] == "Run detail" for recipe in workbench["command_recipes"]))
+            self.assertIn("available_profiles", workbench["new_task_entry"])
+            self.assertIn("command_preview", workbench["new_task_entry"])
 
     def test_portal_state_surfaces_prefect_runtime_information(self) -> None:
         with TemporaryDirectory() as temp_dir:

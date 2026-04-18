@@ -18,6 +18,18 @@
       <article class="panel wide" id="new-task-panel">
         <h2>New Task</h2>
         <p id="new-task-entry"></p>
+        <form id="new-task-form" class="runner-form runner-grid">
+          <label>
+            Issue Key
+            <input id="new-task-issue-key" type="text" placeholder="SSD-777">
+          </label>
+          <label>
+            Analysis Profile
+            <select id="new-task-profile"></select>
+          </label>
+          <button id="new-task-run" type="button">Run</button>
+        </form>
+        <pre id="new-task-command-preview"></pre>
       </article>
 
       <article class="panel wide" id="pipeline-runner-panel">

@@ -52,7 +52,9 @@ from services.workspace.source_registry import (
     load_run_profile,
     load_selector_profile,
     load_source,
+    validate_run_profile,
     write_credentials_example,
+    write_run_profile,
     write_selector_profile,
     write_source,
 )
@@ -567,6 +569,7 @@ def add_workspace_source(
             "include_attachments": include_attachments,
             "include_image_metadata": True,
             "download_images": False,
+            **({"preferred_parser": "pypdf"} if kind == "pdf" else {}),
         },
         "policies": list(policies or DEFAULT_POLICIES),
         "metadata": {},
@@ -714,9 +717,21 @@ def add_workspace_selector(
     selector_type: str,
     issue_key: str | None = None,
     project_key: str | None = None,
+    project_keys: list[str] | None = None,
+    issue_type: str | None = None,
+    status: str | None = None,
+    label: str | None = None,
+    updated_from: str | None = None,
+    updated_to: str | None = None,
     page_id: str | None = None,
     root_page_id: str | None = None,
     max_depth: int | None = None,
+    space_key: str | None = None,
+    modified_from: str | None = None,
+    modified_to: str | None = None,
+    ancestor_id: str | None = None,
+    title: str | None = None,
+    page_ids: list[str] | None = None,
 ) -> dict:
     _load_workspace_config(workspace_dir)
     selector = {"type": selector_type}
@@ -724,12 +739,36 @@ def add_workspace_selector(
         selector["issue_key"] = issue_key
     if project_key:
         selector["project_key"] = project_key
+    if project_keys:
+        selector["project_keys"] = list(project_keys)
+    if issue_type:
+        selector["issue_type"] = issue_type
+    if status:
+        selector["status"] = status
+    if label:
+        selector["label"] = label
+    if updated_from:
+        selector["updated_from"] = updated_from
+    if updated_to:
+        selector["updated_to"] = updated_to
     if page_id:
         selector["page_id"] = page_id
     if root_page_id:
         selector["root_page_id"] = root_page_id
     if max_depth is not None:
         selector["max_depth"] = max_depth
+    if space_key:
+        selector["space_key"] = space_key
+    if modified_from:
+        selector["modified_from"] = modified_from
+    if modified_to:
+        selector["modified_to"] = modified_to
+    if ancestor_id:
+        selector["ancestor_id"] = ancestor_id
+    if title:
+        selector["title"] = title
+    if page_ids:
+        selector["page_ids"] = list(page_ids)
     payload = {"version": 1, "name": name, "source": source, "selector": selector}
     path = write_selector_profile(workspace_dir, payload)
     return {
@@ -752,6 +791,120 @@ def show_workspace_selector(workspace_dir: str | Path, name: str) -> dict:
     return {
         "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
         "selector": load_selector_profile(workspace_dir, name),
+    }
+
+
+def add_workspace_profile(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    input_bindings: dict[str, dict] | None = None,
+    spec_asset_ids: list[str] | None = None,
+    top_k: int = 5,
+    policies: list[str] | None = None,
+    llm_backend: str = "none",
+    llm_model: str | None = None,
+    llm_prompt_mode: str = "strict",
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    inputs = dict(input_bindings or {})
+    if spec_asset_ids is not None:
+        inputs["spec_assets"] = list(spec_asset_ids)
+    payload = {
+        "version": 1,
+        "name": name,
+        "inputs": inputs,
+        "analysis": {
+            "top_k": top_k,
+            "policies": list(policies or DEFAULT_POLICIES),
+            "llm_backend": llm_backend,
+            "llm_prompt_mode": llm_prompt_mode,
+        },
+    }
+    if llm_model:
+        payload["analysis"]["llm_model"] = llm_model
+    path = write_run_profile(workspace_dir, payload)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "path": path,
+        "profile": load_run_profile(workspace_dir, name),
+    }
+
+
+def list_workspace_profiles(workspace_dir: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "profiles": list_run_profiles(workspace_dir),
+    }
+
+
+def show_workspace_profile(workspace_dir: str | Path, name: str) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "profile": load_run_profile(workspace_dir, name),
+    }
+
+
+def update_workspace_profile(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    input_bindings: dict[str, dict] | None = None,
+    replace_inputs: bool = False,
+    spec_asset_ids: list[str] | None = None,
+    top_k: int | None = None,
+    policies: list[str] | None = None,
+    llm_backend: str | None = None,
+    llm_model: str | None = None,
+    llm_prompt_mode: str | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    profile = load_run_profile(workspace_dir, name)
+    inputs = dict(profile.get("inputs", {}))
+    if replace_inputs:
+        existing_spec_assets = inputs.get("spec_assets")
+        inputs = dict(input_bindings or {})
+        if spec_asset_ids is None and existing_spec_assets is not None:
+            inputs["spec_assets"] = list(existing_spec_assets)
+    elif input_bindings is not None:
+        inputs.update(input_bindings)
+    if spec_asset_ids is not None:
+        if spec_asset_ids:
+            inputs["spec_assets"] = list(spec_asset_ids)
+        else:
+            inputs.pop("spec_assets", None)
+    profile["inputs"] = inputs
+
+    analysis = dict(profile.get("analysis", {}))
+    if top_k is not None:
+        analysis["top_k"] = top_k
+    if policies is not None:
+        analysis["policies"] = list(policies)
+    if llm_backend is not None:
+        analysis["llm_backend"] = llm_backend
+    if llm_model is not None:
+        analysis["llm_model"] = llm_model
+    if llm_prompt_mode is not None:
+        analysis["llm_prompt_mode"] = llm_prompt_mode
+    profile["analysis"] = analysis
+
+    path = write_run_profile(workspace_dir, profile)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "path": path,
+        "profile": load_run_profile(workspace_dir, name),
+    }
+
+
+def validate_workspace_profile(workspace_dir: str | Path, name: str) -> dict:
+    _load_workspace_config(workspace_dir)
+    profile = load_run_profile(workspace_dir, name)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "ok": True,
+        "profile": validate_run_profile(workspace_dir, profile),
     }
 
 
@@ -786,19 +939,41 @@ def fetch_workspace_source(workspace_dir: str | Path, *, source_name: str, selec
             preferred_parser=source.get("defaults", {}).get("preferred_parser", "auto"),
             mineru_python_exe=source.get("defaults", {}).get("mineru_python_exe"),
         )
+        cache_paths = _source_payload_cache_paths(workspace_dir, source["kind"], source["name"])
+        spec_corpus = _read_json(asset["corpus_json"])
+        cached_payload = {
+            "documents": spec_corpus.get("documents", []),
+            "cursor": asset.get("version"),
+            "sync_type": "local_file",
+            "spec_asset": {
+                "asset_id": asset["asset_id"],
+                "version": asset["version"],
+                "metadata_json": asset["metadata_json"],
+                "corpus_json": asset["corpus_json"],
+                "page_index_json": asset["page_index_json"],
+            },
+        }
+        _write_json(cache_paths["latest"], cached_payload)
+        _write_json(cache_paths["history"], cached_payload)
+        manifest = {
+            **request["manifest"],
+            "fetched_at": _utc_now(),
+            "payload_path": str(cache_paths["history"]),
+            "latest_payload_path": str(cache_paths["latest"]),
+            "payload_hash": _stable_payload_hash(cached_payload),
+            "document_count": len(cached_payload["documents"]),
+            "sync_type": "local_file",
+            "cursor": asset.get("version"),
+            "spec_asset": asset,
+        }
+        _write_json(cache_paths["manifest"], manifest)
+        _normalize_payload_file(workspace_dir, source["kind"], cache_paths["latest"])
         paths = workspace_paths(workspace_dir)
         run_dir = _run_dir(paths, source_name=source["name"], command="fetch-source")
         run_dir.mkdir(parents=True, exist_ok=True)
         manifest = {
-            **request["manifest"],
-            "fetched_at": _utc_now(),
-            "payload_path": asset["metadata_json"],
-            "latest_payload_path": asset["metadata_json"],
-            "payload_hash": _file_sha256(asset["metadata_json"]),
-            "document_count": 1,
-            "sync_type": "local_file",
-            "cursor": asset.get("version"),
-            "spec_asset": asset,
+            **manifest,
+            "normalize_manifest_path": str(paths["normalize_root"] / source["name"] / "manifest.json"),
         }
         _write_json(run_dir / "request.json", {"source": _redact(source), "selector_profile": request["selector_profile"]})
         _write_json(run_dir / "result.json", manifest)
@@ -806,10 +981,10 @@ def fetch_workspace_source(workspace_dir: str | Path, *, source_name: str, selec
             "workspace_dir": str(paths["root"]),
             "source_name": source["name"],
             "selector_profile": selector_profile,
-            "latest_payload_path": asset["metadata_json"],
-            "history_payload_path": asset["metadata_json"],
-            "fetch_manifest_path": asset["metadata_json"],
-            "document_count": 1,
+            "latest_payload_path": str(cache_paths["latest"]),
+            "history_payload_path": str(cache_paths["history"]),
+            "fetch_manifest_path": str(cache_paths["manifest"]),
+            "document_count": len(cached_payload["documents"]),
             "run_dir": str(run_dir),
             "spec_asset": asset,
         }
@@ -977,9 +1152,6 @@ def _normalize_cache_status(workspace_dir: str | Path, fetch_rows: list[dict]) -
             continue
         fetch_manifest_path = paths["raw"] / source["kind"] / "payloads" / source_name / "fetch-manifest.json"
         normalize_manifest_path = paths["normalize_root"] / source_name / "manifest.json"
-        if source["kind"] == "pdf":
-            rows.append({"source_name": source_name, "status": "fresh", "reason": "spec_asset_managed"})
-            continue
         if not fetch_manifest_path.exists():
             rows.append({"source_name": source_name, "status": "stale", "reason": "missing_fetch_manifest"})
             continue
@@ -1058,7 +1230,11 @@ def _analysis_cache_status(workspace_dir: str | Path, index_row: dict) -> dict:
 def _payload_files(workspace_dir: str | Path) -> list[tuple[str, Path]]:
     paths = workspace_paths(workspace_dir)
     files: list[tuple[str, Path]] = []
-    for kind, payload_dir in (("jira", paths["jira_payloads"]), ("confluence", paths["confluence_payloads"])):
+    for kind, payload_dir in (
+        ("jira", paths["jira_payloads"]),
+        ("confluence", paths["confluence_payloads"]),
+        ("pdf", paths["raw"] / "pdf" / "payloads"),
+    ):
         payload_paths = sorted(
             payload_dir.glob("*.json"),
             key=lambda path: (path.stat().st_mtime, str(path)),
@@ -2101,19 +2277,31 @@ def _watch_summary(
     }
 
 
-def build_workspace(workspace_dir: str | Path, *, spec_asset_ids: list[str] | None = None) -> dict:
+def build_workspace(
+    workspace_dir: str | Path,
+    *,
+    spec_asset_ids: list[str] | None = None,
+    selected_sources: list[str] | None = None,
+    snapshot_dir: str | Path | None = None,
+    write_index_artifacts: bool = True,
+) -> dict:
     _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
     from services.workspace.spec_assets import load_latest_spec_asset_documents
 
+    selected_source_names = set(selected_sources or [])
     for kind, payload_path in _payload_files(workspace_dir):
         source_id = payload_path.parent.name if payload_path.name == "latest.json" else payload_path.stem
+        if selected_source_names and source_id not in selected_source_names:
+            continue
         normalize_manifest = paths["normalize_root"] / source_id / "manifest.json"
         if not normalize_manifest.exists():
             _normalize_payload_file(workspace_dir, kind, payload_path)
 
     asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir, asset_ids=spec_asset_ids)
     normalized_paths = sorted(paths["normalize_root"].glob("*/documents.json"))
+    if selected_source_names:
+        normalized_paths = [path for path in normalized_paths if path.parent.name in selected_source_names]
     if not normalized_paths and not asset_documents:
         raise ValueError("No normalized workspace documents or spec assets found. Run fetch-source, rebuild, or ingest-spec-asset first.")
 
@@ -2143,36 +2331,38 @@ def build_workspace(workspace_dir: str | Path, *, spec_asset_ids: list[str] | No
         merged_documents[document["document_id"]] = document
     sources.update(asset_sources)
 
-    existing_manifest = load_snapshot(paths["snapshot_root"]).get("manifest", {})
+    target_snapshot_dir = Path(snapshot_dir) if snapshot_dir is not None else paths["snapshot_root"]
+    existing_manifest = load_snapshot(target_snapshot_dir).get("manifest", {})
     created_at = existing_manifest.get("created_at")
     snapshot_report = write_snapshot(
-        paths["snapshot_root"],
+        target_snapshot_dir,
         documents=[merged_documents[key] for key in sorted(merged_documents)],
         sources=sources,
         created_at=created_at,
     )
     documents_payload = {"documents": [merged_documents[key] for key in sorted(merged_documents)]}
-    index_dir = paths["index_root"] / "pageindex_v1"
-    index_page_path = index_dir / "page_index.json"
-    _copy_file(paths["snapshot_root"] / "page_index.json", index_page_path)
-    _write_json(
-        index_dir / "manifest.json",
-        {
-            "index_name": "pageindex_v1",
-            "input_documents_hash": _stable_payload_hash(documents_payload),
-            "index_version": "pageindex_v1_current",
-            "created_at": _utc_now(),
-            "page_index_path": str(index_page_path),
-            "page_index_count": snapshot_report["manifest"]["page_index_count"],
-        },
-    )
+    if write_index_artifacts:
+        index_dir = paths["index_root"] / "pageindex_v1"
+        index_page_path = index_dir / "page_index.json"
+        _copy_file(target_snapshot_dir / "page_index.json", index_page_path)
+        _write_json(
+            index_dir / "manifest.json",
+            {
+                "index_name": "pageindex_v1",
+                "input_documents_hash": _stable_payload_hash(documents_payload),
+                "index_version": "pageindex_v1_current",
+                "created_at": _utc_now(),
+                "page_index_path": str(index_page_path),
+                "page_index_count": snapshot_report["manifest"]["page_index_count"],
+            },
+        )
 
     run_dir = _run_dir(paths, source_name="workspace", command="build")
     run_dir.mkdir(parents=True, exist_ok=True)
     _write_json(
         run_dir / "result.json",
         {
-            "snapshot_dir": str(paths["snapshot_root"]),
+            "snapshot_dir": str(target_snapshot_dir),
             "document_count": snapshot_report["manifest"]["document_count"],
             "page_index_count": snapshot_report["manifest"]["page_index_count"],
             "sources": sources,
@@ -2180,7 +2370,7 @@ def build_workspace(workspace_dir: str | Path, *, spec_asset_ids: list[str] | No
     )
     return {
         "workspace_dir": str(paths["root"]),
-        "snapshot_dir": str(paths["snapshot_root"]),
+        "snapshot_dir": str(target_snapshot_dir),
         "document_count": snapshot_report["manifest"]["document_count"],
         "page_index_count": snapshot_report["manifest"]["page_index_count"],
         "sources": sources,
@@ -2459,8 +2649,40 @@ def run_workspace_analysis(
     _load_workspace_config(workspace_dir)
     profile = load_run_profile(workspace_dir, profile_name)
     analysis_config = profile.get("analysis", {})
-    orchestration: dict[str, list[dict]] = {"fetches": [], "skipped": []}
-    if not use_existing_snapshot:
+    selected_sources: list[str] = []
+    selected_selector_profiles: list[str] = []
+    for input_name, input_config in profile.get("inputs", {}).items():
+        if input_name == "spec_assets" or not isinstance(input_config, dict):
+            continue
+        source_name = input_config.get("source")
+        selector_name = input_config.get("selector_profile")
+        if source_name:
+            selected_sources.append(source_name)
+        if selector_name:
+            selected_selector_profiles.append(selector_name)
+    selected_sources = sorted(set(selected_sources))
+    selected_selector_profiles = sorted(set(selected_selector_profiles))
+    raw_spec_assets = profile.get("inputs", {}).get("spec_assets")
+    selected_spec_assets = list(raw_spec_assets) if isinstance(raw_spec_assets, list) else []
+    scope_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "profile": profile_name,
+                "selected_sources": selected_sources,
+                "selected_selector_profiles": selected_selector_profiles,
+                "selected_spec_assets": selected_spec_assets,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()[:12]
+    run_snapshot_dir = workspace_paths(workspace_dir)["runs"] / "_profile_snapshots" / profile_name / scope_hash
+    orchestration: dict[str, object] = {"fetches": [], "skipped": []}
+    if use_existing_snapshot:
+        expected_snapshot = snapshot_paths(run_snapshot_dir)
+        if not all(path.exists() for path in expected_snapshot.values()):
+            raise ValueError(f"Scoped snapshot does not exist for profile {profile_name}: {run_snapshot_dir}")
+    else:
         fetch_status_by_source = {row["source_name"]: row for row in fetch_cache_status(workspace_dir)}
         for input_name, input_config in profile.get("inputs", {}).items():
             if input_name == "spec_assets" or not isinstance(input_config, dict):
@@ -2476,10 +2698,12 @@ def run_workspace_analysis(
             orchestration["fetches"].append(
                 fetch_workspace_source(workspace_dir, source_name=source_name, selector_profile=selector_name)
             )
-        spec_asset_ids = profile.get("inputs", {}).get("spec_assets")
-        build_workspace(
+        orchestration["build"] = build_workspace(
             workspace_dir,
-            spec_asset_ids=list(spec_asset_ids) if isinstance(spec_asset_ids, list) else None,
+            spec_asset_ids=selected_spec_assets,
+            selected_sources=selected_sources,
+            snapshot_dir=run_snapshot_dir,
+            write_index_artifacts=False,
         )
     if llm_backend is None and analysis_config.get("llm_backend") not in (None, "none"):
         llm_backend = build_llm_backend(
@@ -2497,17 +2721,28 @@ def run_workspace_analysis(
         top_k=int(analysis_config.get("top_k", 5)),
         prompt_mode=analysis_config.get("llm_prompt_mode", "strict"),
         llm_backend=llm_backend,
+        snapshot_dir=run_snapshot_dir,
+        input_metadata={
+            "profile": profile_name,
+            "selected_sources": selected_sources,
+            "selected_selector_profiles": selected_selector_profiles,
+            "selected_spec_assets": selected_spec_assets,
+        },
     )
     manifest_path = Path(payload["run_dir"]) / "analysis-manifest.json"
     snapshot_hashes = {
         name: _file_sha256(path)
-        for name, path in snapshot_paths(workspace_paths(workspace_dir)["snapshot_root"]).items()
+        for name, path in snapshot_paths(run_snapshot_dir).items()
     }
     analysis_manifest = {
         "profile": profile_name,
         "issue_key": issue_key,
+        "snapshot_dir": str(run_snapshot_dir),
         "snapshot_files": snapshot_hashes,
         "snapshot_hash": _stable_payload_hash(snapshot_hashes),
+        "selected_sources": selected_sources,
+        "selected_selector_profiles": selected_selector_profiles,
+        "selected_spec_assets": selected_spec_assets,
         "analysis_version": "deep_analysis_v1",
         "prompt_profile_version": analysis_config.get("llm_prompt_mode", "strict"),
         "created_at": _utc_now(),
@@ -2516,6 +2751,7 @@ def run_workspace_analysis(
     return {
         "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
         "profile": profile_name,
+        "snapshot_dir": str(run_snapshot_dir),
         "analysis_manifest_path": str(manifest_path),
         "orchestration": orchestration,
         "analysis": payload,
@@ -2558,6 +2794,7 @@ def status_workspace(workspace_dir: str | Path) -> dict:
         "payload_counts": {
             "jira": len(list(paths["jira_payloads"].glob("*.json"))),
             "confluence": len(list(paths["confluence_payloads"].glob("*.json"))),
+            "pdf": len(list((paths["raw"] / "pdf" / "payloads").glob("*/latest.json"))),
             "total": len(payload_files),
         },
         "cache": {
@@ -2719,15 +2956,18 @@ def deep_analyze_issue(
     top_k: int = 5,
     prompt_mode: str = "strict",
     llm_backend: LLMBackend | None = None,
+    snapshot_dir: str | Path | None = None,
+    input_metadata: dict | None = None,
 ) -> dict:
     """Deep-analyze a single Jira issue from the workspace snapshot."""
     _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
-    snapshot = load_snapshot(paths["snapshot_root"])
+    active_snapshot_dir = Path(snapshot_dir) if snapshot_dir is not None else paths["snapshot_root"]
+    snapshot = load_snapshot(active_snapshot_dir)
     documents = snapshot.get("documents", {}).get("documents", [])
     snapshot_file_hashes = {
         name: _file_sha256(path)
-        for name, path in snapshot_paths(paths["snapshot_root"]).items()
+        for name, path in snapshot_paths(active_snapshot_dir).items()
     }
     effective_policies = set(policies or DEFAULT_POLICIES)
 
@@ -2860,16 +3100,20 @@ def deep_analyze_issue(
             prompt_version=prompt_mode,
         ),
     ]
+    input_config = {
+        "issue_key": issue_key,
+        "policies": sorted(effective_policies),
+        "top_k": top_k,
+        "prompt_mode": prompt_mode,
+        "snapshot_dir": str(active_snapshot_dir),
+        "snapshot_files": snapshot_file_hashes,
+    }
+    if input_metadata:
+        input_config.update(input_metadata)
     manifest = build_run_manifest(
         task_type="jira_deep_analysis",
         owner="workspace-operator",
-        input_config={
-            "issue_key": issue_key,
-            "policies": sorted(effective_policies),
-            "top_k": top_k,
-            "prompt_mode": prompt_mode,
-            "snapshot_files": snapshot_file_hashes,
-        },
+        input_config=input_config,
         run_id=run_dir.name,
         status="completed",
         artifacts=artifacts,

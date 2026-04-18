@@ -51,6 +51,24 @@ def _write_yaml(path: str | Path, payload: dict) -> str:
     return str(target)
 
 
+def _load_spec_asset_registry(workspace_dir: str | Path) -> dict:
+    path = Path(workspace_dir) / "raw" / "files" / "spec_assets" / "registry.json"
+    if not path.exists():
+        return {"assets": []}
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"Spec asset registry must contain an object: {path}")
+    return payload
+
+
+def _known_spec_asset_ids(workspace_dir: str | Path) -> set[str]:
+    return {
+        str(entry.get("asset_id"))
+        for entry in _load_spec_asset_registry(workspace_dir).get("assets", [])
+        if isinstance(entry, dict) and entry.get("asset_id")
+    }
+
+
 def _json_hash(payload: dict) -> str:
     data = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return f"sha256:{hashlib.sha256(data).hexdigest()}"
@@ -125,7 +143,7 @@ def validate_source(source: dict) -> dict:
     if kind not in SOURCE_KINDS:
         raise ValueError("source.kind must be one of: jira, confluence, pdf")
     if mode not in SOURCE_MODES:
-        raise ValueError("source.mode must be one of: fixture, live")
+        raise ValueError("source.mode must be one of: fixture, live, local")
     if connector_type not in CONNECTOR_TYPES:
         raise ValueError("source.connector_type must be one of: jira.atlassian_api, confluence.atlassian_api, pdf.local_file")
     if CONNECTOR_TYPES[connector_type] != kind:
@@ -177,7 +195,17 @@ def validate_run_profile(workspace_dir: str | Path, run_profile: dict) -> dict:
     if not isinstance(inputs, dict) or not inputs:
         raise ValueError("profile.inputs must be a non-empty object")
     for input_name, input_config in inputs.items():
-        if not isinstance(input_name, str) or not isinstance(input_config, dict):
+        if not isinstance(input_name, str):
+            raise ValueError("profile.inputs entries must be named objects")
+        if input_name == "spec_assets":
+            if not isinstance(input_config, list) or any(not isinstance(asset_id, str) or not asset_id.strip() for asset_id in input_config):
+                raise ValueError("profile.inputs.spec_assets must be a list of asset ids")
+            known_asset_ids = _known_spec_asset_ids(workspace_dir)
+            unknown_asset_ids = sorted(asset_id for asset_id in input_config if asset_id not in known_asset_ids)
+            if unknown_asset_ids:
+                raise ValueError(f"Unknown spec asset ids: {', '.join(unknown_asset_ids)}")
+            continue
+        if not isinstance(input_config, dict):
             raise ValueError("profile.inputs entries must be named objects")
         source_name = _validate_name(input_config.get("source"), f"profile.inputs.{input_name}.source")
         selector_name = _validate_name(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from services.workspace.workspace import (
+    add_workspace_profile,
     add_workspace_selector,
     add_workspace_source,
     build_workspace,
@@ -21,6 +22,7 @@ from services.workspace.workspace import (
     list_workspace_runs,
     load_workspace_run_artifact,
     lint_workspace,
+    list_workspace_profiles,
     publish_workspace_wiki,
     query_workspace,
     rebuild_workspace,
@@ -32,6 +34,7 @@ from services.workspace.workspace import (
     set_workspace_source_credential,
     set_workspace_source_enabled,
     showcase_workspace_runs,
+    show_workspace_profile,
     show_workspace_selector,
     show_workspace_source,
     smoke_deep_analysis_workspace,
@@ -40,6 +43,8 @@ from services.workspace.workspace import (
     sync_workspace_run_prefect_state,
     test_workspace_source,
     update_workspace_source_defaults,
+    update_workspace_profile,
+    validate_workspace_profile,
     verify_workspace_site_build,
     watch_workspace,
 )
@@ -48,6 +53,7 @@ from services.workspace.spec_assets import ingest_spec_asset
 __all__ = [
     "add_workspace_selector",
     "add_workspace_source",
+    "add_workspace_profile",
     "build_workspace",
     "build_workspace_site",
     "compile_workspace_wiki",
@@ -66,6 +72,7 @@ __all__ = [
     "list_workspace_runs",
     "load_workspace_run_artifact",
     "lint_workspace",
+    "list_workspace_profiles",
     "publish_workspace_wiki",
     "query_workspace",
     "rebuild_workspace",
@@ -77,6 +84,7 @@ __all__ = [
     "set_workspace_source_credential",
     "set_workspace_source_enabled",
     "showcase_workspace_runs",
+    "show_workspace_profile",
     "show_workspace_selector",
     "show_workspace_source",
     "smoke_deep_analysis_workspace",
@@ -85,6 +93,8 @@ __all__ = [
     "sync_workspace_run_prefect_state",
     "test_workspace_source",
     "update_workspace_source_defaults",
+    "update_workspace_profile",
+    "validate_workspace_profile",
     "ingest_spec_asset",
     "verify_workspace_site_build",
     "watch_workspace",
