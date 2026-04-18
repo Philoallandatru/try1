@@ -13,6 +13,7 @@ from apps.portal_runner.config import load_config, validate_bind_security
 from apps.portal_runner.pipeline_registry import get_pipeline_definition, list_pipeline_definitions
 from apps.portal_runner.schemas import PipelineInput
 from apps.portal_runner.storage import PortalRunnerStorage
+from services.workspace import init_workspace
 from tests.temp_utils import temporary_directory
 
 
@@ -441,6 +442,110 @@ class PortalRunnerTest(unittest.TestCase):
             self.assertTrue((workspace_dir / "sources" / "portal_jira.yaml").exists())
             self.assertTrue((workspace_dir / "sources" / "portal_confluence.yaml").exists())
             self.assertTrue((workspace_dir / "build" / "index" / "pageindex_v1" / "page_index.json").exists())
+
+    def test_fastapi_app_can_run_workspace_analyze_jira_on_existing_workspace(self) -> None:
+        try:
+            from fastapi.testclient import TestClient
+        except ImportError:
+            self.skipTest("portal-runner extra is not installed")
+
+        from apps.portal_runner.server import create_app
+
+        with temporary_directory("portal-runner-workspace-analyze") as temp_dir:
+            config_path = Path(temp_dir) / "config.yaml"
+            workspace_dir = Path(temp_dir, "workspace")
+            config_path.write_text(
+                "\n".join(
+                    [
+                        "server:",
+                        "  runner_token: runner-secret",
+                        "jira:",
+                        "  base_url: https://jira.example.com",
+                        "  token: jira-secret",
+                        "confluence:",
+                        "  base_url: https://conf.example.com",
+                        "  token: conf-secret",
+                        "workspace:",
+                        f"  root: {Path(temp_dir, 'workspaces').as_posix()}",
+                        f"  uploads_root: {Path(temp_dir, 'uploads').as_posix()}",
+                        f"  runs_root: {Path(temp_dir, 'runs').as_posix()}",
+                        f"  spec_assets_workspace: {Path(temp_dir, 'spec-assets').as_posix()}",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            init_workspace(workspace_dir)
+            (workspace_dir / "sources" / "jira_fixture.yaml").write_text(
+                "\n".join(
+                    [
+                        "version: 1",
+                        "name: jira_fixture",
+                        "kind: jira",
+                        "connector_type: jira.atlassian_api",
+                        "mode: fixture",
+                        "config:",
+                        "  path: fixtures/connectors/jira/incremental_sync.json",
+                        "defaults: {}",
+                        "policies:",
+                        "  - team:ssd",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (workspace_dir / "selectors" / "jira_one_issue.yaml").write_text(
+                "\n".join(
+                    [
+                        "version: 1",
+                        "name: jira_one_issue",
+                        "source: jira_fixture",
+                        "selector:",
+                        "  type: issue",
+                        "  issue_key: SSD-102",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (workspace_dir / "profiles" / "ssd_default.yaml").write_text(
+                "\n".join(
+                    [
+                        "version: 1",
+                        "name: ssd_default",
+                        "inputs:",
+                        "  jira:",
+                        "    source: jira_fixture",
+                        "    selector_profile: jira_one_issue",
+                        "analysis:",
+                        "  top_k: 3",
+                        "  llm_backend: none",
+                        "  llm_prompt_mode: strict",
+                        "  policies:",
+                        "    - team:ssd",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            client = TestClient(create_app(config_path, host="127.0.0.1"))
+            headers = {"Authorization": "Bearer runner-secret"}
+            response = client.post(
+                "/api/workspace/analyze-jira",
+                headers=headers,
+                json={
+                    "workspace_dir": str(workspace_dir),
+                    "profile": "ssd_default",
+                    "issue_key": "SSD-102",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["analysis"]["profile"], "ssd_default")
+        self.assertEqual(payload["portal_state"]["workspace_dir"], str(workspace_dir))
+        self.assertEqual(payload["portal_state"]["task_workbench"]["new_task_entry"]["fields"][0]["value"], "SSD-102")
 
     def test_fastapi_app_exposes_run_events_and_cancel(self) -> None:
         try:

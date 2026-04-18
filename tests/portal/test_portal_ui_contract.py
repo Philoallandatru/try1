@@ -7,6 +7,10 @@ class PortalUiContractTest(unittest.TestCase):
         text = Path("apps/portal/index.html").read_text(encoding="utf-8")
         for marker in [
             "New Task",
+            "Issue Key",
+            "Analysis Profile",
+            "new-task-run",
+            "new-task-command-preview",
             "Task Workbench",
             "Pipeline Runner",
             "data-runner-field",
@@ -35,6 +39,12 @@ class PortalUiContractTest(unittest.TestCase):
         text = Path("apps/portal/app.js").read_text(encoding="utf-8")
         for marker in [
             "renderTaskWorkbench",
+            "new-task-issue-key",
+            "new-task-profile",
+            "renderNewTaskCommandPreview",
+            "currentPortalState",
+            "renderPortal",
+            "/api/workspace/analyze-jira",
             "task-list",
             "task-detail-tabs",
             "report-tabs",

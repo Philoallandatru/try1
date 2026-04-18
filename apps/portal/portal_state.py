@@ -7,7 +7,7 @@ from services.eval.harness import evaluate_dataset
 from services.retrieval.citations.assembler import assemble_citation, build_source_inspection
 from services.retrieval.indexing.page_index import build_page_index, load_documents
 from services.retrieval.search.hybrid_search import search_page_index
-from services.workspace.workspace import inspect_workspace_run, list_workspace_runs, load_workspace_run_artifact
+from services.workspace.workspace import inspect_workspace_run, list_workspace_profiles, list_workspace_runs, list_workspace_sources, load_workspace_run_artifact
 
 
 DEFAULT_POLICIES = {"team:ssd", "public"}
@@ -21,6 +21,14 @@ def _fallback_task_workbench(search_workspace: list[dict], evaluation_health: di
             "default_task_type": "jira_deep_analysis",
             "input_hint": "Enter a Jira issue key and select reusable spec assets before running.",
             "available_task_types": ["jira_deep_analysis"],
+            "fields": [
+                {"id": "issue_key", "label": "Issue Key", "type": "text", "value": "SSD-102"},
+                {"id": "profile", "label": "Analysis Profile", "type": "select", "value": "ssd_default"},
+            ],
+            "available_profiles": ["ssd_default"],
+            "available_sources": ["jira_lab", "conf_fw", "nvme_2_1"],
+            "run_label": "Run",
+            "command_preview": "python scripts/workspace_cli.py analyze-jira .tmp\\workspace --profile ssd_default --issue-key SSD-102",
         },
         "filters": {
             "status": ["queued", "running", "completed", "stopped", "failed"],
@@ -213,7 +221,7 @@ def _artifact_preview(workspace_dir: str | Path, run_id: str, artifact_type: str
     if artifact_type == "confluence_update_proposal":
         action = payload.get("knowledge_action", "unknown")
         delta = payload.get("proposed_delta", "")
-        return f"Action: {action} — {delta}".strip()
+        return f"Action: {action} - {delta}".strip()
     if artifact_type == "concept_cards":
         cards = payload.get("cards", [])
         if not cards:
@@ -449,11 +457,38 @@ def _run_task_workbench(
         }
         for run in runs
     ]
+    available_profiles = [profile["name"] for profile in list_workspace_profiles(workspace_dir)["profiles"]]
+    available_sources = [source["name"] for source in list_workspace_sources(workspace_dir)["sources"]]
+    detail_manifest = inspect_workspace_run(workspace_dir, selected["run_id"]).get("manifest", {})
+    input_config = detail_manifest.get("input_config", {})
+    selected_profile_name = input_config.get("profile") or (available_profiles[0] if available_profiles else "")
     return {
         "new_task_entry": {
             "default_task_type": "jira_deep_analysis",
             "input_hint": "Enter a Jira issue key and select reusable spec assets before running.",
             "available_task_types": ["jira_deep_analysis"],
+            "fields": [
+                {
+                    "id": "issue_key",
+                    "label": "Issue Key",
+                    "type": "text",
+                    "value": selected.get("issue_key") or "",
+                },
+                {
+                    "id": "profile",
+                    "label": "Analysis Profile",
+                    "type": "select",
+                    "value": selected_profile_name,
+                },
+            ],
+            "available_profiles": available_profiles,
+            "available_sources": available_sources,
+            "run_label": "Run",
+            "command_preview": (
+                f"python scripts/workspace_cli.py analyze-jira {workspace_dir} --profile {selected_profile_name} --issue-key {selected.get('issue_key') or ''}"
+                if selected_profile_name
+                else ""
+            ),
         },
         "filters": {
             "status": sorted({run["status"] for run in runs}),
@@ -545,6 +580,7 @@ def build_portal_state(
 
     citation_inspection = search_workspace[0]["inspection"] if search_workspace else {}
     return {
+        "workspace_dir": str(workspace_dir) if workspace_dir else None,
         "ingestion_status": ingestion_status,
         "corpus_inventory": corpus_inventory,
         "search_query": query,

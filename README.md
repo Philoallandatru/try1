@@ -140,17 +140,18 @@ Initialize a workspace:
 python scripts/workspace_cli.py init .tmp\workspace
 ```
 
-Fetch a saved source spec into the workspace:
+Create named sources and selectors:
 
 ```powershell
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\jira\specs\one-issue.json
-python scripts/workspace_cli.py fetch .tmp\workspace .tmp\workspace\raw\confluence\specs\page-tree.json
+python scripts/workspace_cli.py source add .tmp\workspace jira_lab --connector-type jira.atlassian_api --base-url https://jira.example.com --credential-ref jira_lab_token
+python scripts/workspace_cli.py selector add .tmp\workspace jira_one_issue --source jira_lab --type issue --issue-key SSD-777
+python scripts/workspace_cli.py profile add .tmp\workspace ssd_default --input jira=jira_lab:jira_one_issue --top-k 5 --policy team:ssd --policy public
 ```
 
-Build the canonical snapshot from the fetched payloads:
+Run the official Jira analysis path:
 
 ```powershell
-python scripts/workspace_cli.py build .tmp\workspace
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-777
 ```
 
 Inspect status, query the snapshot, and export derived outputs:
@@ -163,6 +164,8 @@ python scripts/workspace_cli.py export .tmp\workspace
 python scripts/workspace_cli.py lint .tmp\workspace
 python scripts/workspace_cli.py watch .tmp\workspace --run-once
 ```
+
+Legacy `fetch <workspace> <spec>` remains available for compatibility, but the recommended repeated operator flow is `source -> selector -> profile -> analyze-jira`.
 
 The workspace keeps operator-oriented state under:
 

@@ -99,6 +99,13 @@ In the current implementation this file is mostly metadata and defaults. Source-
 
 The source registry is the preferred persistent configuration surface for repeated workspace runs.
 
+The official repeated operator path is:
+
+1. `source add`
+2. `selector add`
+3. `profile add`
+4. `analyze-jira`
+
 Create a named Jira source:
 
 ```powershell
@@ -119,6 +126,22 @@ Create a selector profile:
 python scripts/workspace_cli.py selector add .tmp\workspace jira_one_issue --source jira_lab --type issue --issue-key SSD-777
 ```
 
+Common bounded selector examples:
+
+```powershell
+python scripts/workspace_cli.py selector add .tmp\workspace jira_slice --source jira_lab --type project_slice --project-keys SSD,FIRMWARE --issue-type Bug --status "In Progress" --label nvme --updated-from 2026-04-01T00:00:00Z --updated-to 2026-04-10T00:00:00Z
+python scripts/workspace_cli.py selector add .tmp\workspace conf_slice --source conf_fw --type space_slice --space-key SSDENG --label firmware --modified-from 2026-04-01T00:00:00Z --modified-to 2026-04-10T00:00:00Z --ancestor-id 123456 --title NVMe --page-ids 123,124
+```
+
+Create a reusable analysis profile:
+
+```powershell
+python scripts/workspace_cli.py profile add .tmp\workspace ssd_default --input jira=jira_lab:jira_one_issue --top-k 5 --policy team:ssd --policy public --llm-backend none --llm-prompt-mode strict
+python scripts/workspace_cli.py profile list .tmp\workspace
+python scripts/workspace_cli.py profile show .tmp\workspace ssd_default
+python scripts/workspace_cli.py profile validate .tmp\workspace ssd_default
+```
+
 Fetch and cache source payload:
 
 ```powershell
@@ -131,6 +154,15 @@ Refresh stale cached sources:
 python scripts/workspace_cli.py refresh .tmp\workspace
 python scripts/workspace_cli.py source refresh .tmp\workspace jira_lab --selector-profile jira_one_issue
 ```
+
+For `pdf.local_file` sources, `fetch-source` now writes the same cache-layer artifacts as Jira and Confluence:
+
+- `raw/pdf/payloads/<source>/latest.json`
+- `raw/pdf/payloads/<source>/fetch-manifest.json`
+- `build/normalize/<source>/manifest.json`
+- `build/normalize/<source>/documents.json`
+
+This keeps PDF sources visible in the same fetch/normalize/index status DAG.
 
 Build the snapshot from cached payload:
 
@@ -145,13 +177,14 @@ python scripts/workspace_cli.py rebuild .tmp\workspace --from raw --source jira_
 python scripts/workspace_cli.py reindex .tmp\workspace --index-name pageindex_v1
 ```
 
-Run analysis from the existing snapshot:
+Run analysis through the official profile-driven entrypoint:
 
 ```powershell
-python scripts/workspace_cli.py run-analysis .tmp\workspace --profile ssd_deep_analysis_default --issue-key SSD-777 --use-existing-snapshot
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-777
+python scripts/workspace_cli.py analyze-jira .tmp\workspace --profile ssd_default --issue-key SSD-777 --use-existing-snapshot
 ```
 
-When `--use-existing-snapshot` is omitted, `run-analysis` reads the profile inputs, fetches stale sources, builds the snapshot, and then runs the existing deep-analysis seam. Profile `analysis.llm_backend`, `analysis.llm_model`, `analysis.llm_base_url`, `analysis.llm_api_key`, `analysis.llm_mock_response`, and `analysis.llm_timeout_seconds` are used when the CLI does not provide an explicit backend.
+When `--use-existing-snapshot` is omitted, `analyze-jira` reads the profile inputs, fetches stale sources, builds a profile-scoped snapshot, and then runs the existing deep-analysis seam. When `--use-existing-snapshot` is supplied, the CLI reuses the matching profile-scoped snapshot instead of the shared workspace snapshot. `run-analysis` remains available as a compatibility alias.
 
 Registry files are YAML:
 
@@ -195,6 +228,26 @@ cache.normalize  raw-payload-to-documents freshness
 cache.index      normalized-documents-to-PageIndex freshness
 cache.analysis   snapshot-to-analysis freshness for profile runs
 ```
+
+### Compatibility Only
+
+The legacy JSON spec flow remains available:
+
+```powershell
+python scripts/workspace_cli.py fetch <workspace> <spec>
+```
+
+It is still useful for compatibility and migration, but it is not the recommended repeated operator path.
+
+## 4. Minimal Portal Entry
+
+The static portal workbench now exposes a minimal analyze form in the `New Task` panel:
+
+- `Issue Key`
+- `Analysis Profile`
+- `Run`
+
+The panel renders the recommended `analyze-jira` command preview from the current workspace state and selected profile. The task detail and artifact panels still reuse the existing workbench/result contract.
 
 ## 4. Legacy Source Spec Files
 

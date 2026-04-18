@@ -224,6 +224,104 @@ class SourceRegistryTest(unittest.TestCase):
             self.assertTrue(request["manifest"]["config_hash"].startswith("sha256:"))
             self.assertTrue(request["manifest"]["selector_hash"].startswith("sha256:"))
 
+    def test_run_profile_accepts_registered_spec_assets(self) -> None:
+        with TemporaryDirectory() as workspace:
+            write_source(
+                workspace,
+                {
+                    "version": 1,
+                    "name": "jira_lab",
+                    "kind": "jira",
+                    "connector_type": "jira.atlassian_api",
+                    "config": {"base_url": "https://jira.example.com", "auth_mode": "auto"},
+                    "defaults": {"include_comments": True},
+                    "policies": ["team:ssd"],
+                },
+            )
+            write_selector_profile(
+                workspace,
+                {
+                    "version": 1,
+                    "name": "jira_one_issue",
+                    "source": "jira_lab",
+                    "selector": {"type": "issue", "issue_key": "SSD-777"},
+                },
+            )
+            spec_asset_registry = Path(workspace) / "raw" / "files" / "spec_assets" / "registry.json"
+            spec_asset_registry.parent.mkdir(parents=True, exist_ok=True)
+            spec_asset_registry.write_text(
+                json.dumps(
+                    {
+                        "assets": [
+                            {
+                                "asset_id": "nvme_2_1",
+                                "display_name": "NVMe 2.1",
+                                "version": "v1",
+                                "document_id": "sample",
+                                "asset_root": str(Path(workspace) / "raw" / "files" / "spec_assets" / "nvme_2_1" / "v1"),
+                            }
+                        ]
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            profile_path = write_run_profile(
+                workspace,
+                {
+                    "version": 1,
+                    "name": "ssd_default",
+                    "inputs": {
+                        "jira": {"source": "jira_lab", "selector_profile": "jira_one_issue"},
+                        "spec_assets": ["nvme_2_1"],
+                    },
+                    "analysis": {"top_k": 5, "llm_backend": "none", "llm_prompt_mode": "strict"},
+                },
+            )
+
+            self.assertTrue(Path(profile_path).exists())
+            profile = load_run_profile(workspace, "ssd_default")
+            self.assertEqual(profile["inputs"]["spec_assets"], ["nvme_2_1"])
+
+    def test_run_profile_rejects_unknown_spec_assets(self) -> None:
+        with TemporaryDirectory() as workspace:
+            write_source(
+                workspace,
+                {
+                    "version": 1,
+                    "name": "jira_lab",
+                    "kind": "jira",
+                    "connector_type": "jira.atlassian_api",
+                    "config": {"base_url": "https://jira.example.com", "auth_mode": "auto"},
+                    "defaults": {"include_comments": True},
+                    "policies": ["team:ssd"],
+                },
+            )
+            write_selector_profile(
+                workspace,
+                {
+                    "version": 1,
+                    "name": "jira_one_issue",
+                    "source": "jira_lab",
+                    "selector": {"type": "issue", "issue_key": "SSD-777"},
+                },
+            )
+
+            with self.assertRaisesRegex(ValueError, "Unknown spec asset ids"):
+                write_run_profile(
+                    workspace,
+                    {
+                        "version": 1,
+                        "name": "ssd_default",
+                        "inputs": {
+                            "jira": {"source": "jira_lab", "selector_profile": "jira_one_issue"},
+                            "spec_assets": ["missing_asset"],
+                        },
+                        "analysis": {"top_k": 5, "llm_backend": "none", "llm_prompt_mode": "strict"},
+                    },
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

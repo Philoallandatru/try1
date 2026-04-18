@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 from apps.portal.portal_state import build_portal_state, write_portal_state
 from services.analysis.llm_backends import build_llm_backend
 from services.workspace import (
+    add_workspace_profile,
     add_workspace_selector,
     add_workspace_source,
     build_workspace,
@@ -27,6 +28,7 @@ from services.workspace import (
     inbox_workspace,
     init_workspace,
     inspect_workspace_run,
+    list_workspace_profiles,
     list_workspace_selectors,
     list_workspace_sources,
     lint_workspace,
@@ -43,6 +45,7 @@ from services.workspace import (
     set_workspace_source_credential,
     set_workspace_source_enabled,
     smoke_deep_analysis_workspace,
+    show_workspace_profile,
     show_workspace_selector,
     show_workspace_source,
     status_workspace,
@@ -50,6 +53,8 @@ from services.workspace import (
     sync_workspace_run_prefect_state,
     test_workspace_source,
     update_workspace_source_defaults,
+    update_workspace_profile,
+    validate_workspace_profile,
     watch_workspace,
 )
 
@@ -100,6 +105,35 @@ def _build_llm_backend_from_args(parser: argparse.ArgumentParser, args: argparse
         )
     except ValueError as error:
         parser.error(str(error))
+
+
+def _parse_profile_inputs(parser: argparse.ArgumentParser, values: list[str] | None) -> dict[str, dict] | None:
+    if values is None:
+        return None
+    bindings: dict[str, dict] = {}
+    for value in values:
+        try:
+            input_name, remainder = value.split("=", 1)
+            source_name, selector_profile = remainder.split(":", 1)
+        except ValueError:
+            parser.error(f"Invalid --input value: {value}. Expected NAME=SOURCE:SELECTOR.")
+        input_name = input_name.strip()
+        source_name = source_name.strip()
+        selector_profile = selector_profile.strip()
+        if not input_name or not source_name or not selector_profile:
+            parser.error(f"Invalid --input value: {value}. Expected NAME=SOURCE:SELECTOR.")
+        bindings[input_name] = {
+            "source": source_name,
+            "selector_profile": selector_profile,
+        }
+    return bindings
+
+
+def _parse_csv_list(value: str | None) -> list[str] | None:
+    if value is None:
+        return None
+    items = [item.strip() for item in value.split(",")]
+    return [item for item in items if item]
 
 
 def main() -> int:
@@ -179,14 +213,71 @@ def main() -> int:
     selector_add.add_argument("--type", required=True)
     selector_add.add_argument("--issue-key")
     selector_add.add_argument("--project-key")
+    selector_add.add_argument("--project-keys")
+    selector_add.add_argument("--issue-type")
+    selector_add.add_argument("--status")
+    selector_add.add_argument("--label")
+    selector_add.add_argument("--updated-from")
+    selector_add.add_argument("--updated-to")
     selector_add.add_argument("--page-id")
     selector_add.add_argument("--root-page-id")
     selector_add.add_argument("--max-depth", type=int)
+    selector_add.add_argument("--space-key")
+    selector_add.add_argument("--modified-from")
+    selector_add.add_argument("--modified-to")
+    selector_add.add_argument("--ancestor-id")
+    selector_add.add_argument("--title")
+    selector_add.add_argument("--page-ids")
     selector_list = selector_subparsers.add_parser("list")
     selector_list.add_argument("workspace")
     selector_show = selector_subparsers.add_parser("show")
     selector_show.add_argument("workspace")
     selector_show.add_argument("name")
+
+    profile_parser = subparsers.add_parser("profile")
+    profile_subparsers = profile_parser.add_subparsers(dest="profile_command", required=True)
+    profile_add = profile_subparsers.add_parser("add")
+    profile_add.add_argument("workspace")
+    profile_add.add_argument("name")
+    profile_add.add_argument("--input", action="append")
+    profile_add.add_argument("--spec-asset", action="append")
+    profile_add.add_argument("--top-k", type=int, default=5)
+    profile_add.add_argument("--policy", action="append")
+    profile_add.add_argument(
+        "--llm-backend",
+        choices=["none", "mock", "ollama", "openai-compatible"],
+        default="none",
+    )
+    profile_add.add_argument("--llm-model")
+    profile_add.add_argument(
+        "--llm-prompt-mode",
+        choices=["strict", "balanced", "exploratory"],
+        default="strict",
+    )
+    profile_list = profile_subparsers.add_parser("list")
+    profile_list.add_argument("workspace")
+    profile_show = profile_subparsers.add_parser("show")
+    profile_show.add_argument("workspace")
+    profile_show.add_argument("name")
+    profile_update = profile_subparsers.add_parser("update")
+    profile_update.add_argument("workspace")
+    profile_update.add_argument("name")
+    profile_update.add_argument("--input", action="append")
+    profile_update.add_argument("--spec-asset", action="append")
+    profile_update.add_argument("--top-k", type=int)
+    profile_update.add_argument("--policy", action="append")
+    profile_update.add_argument(
+        "--llm-backend",
+        choices=["none", "mock", "ollama", "openai-compatible"],
+    )
+    profile_update.add_argument("--llm-model")
+    profile_update.add_argument(
+        "--llm-prompt-mode",
+        choices=["strict", "balanced", "exploratory"],
+    )
+    profile_validate = profile_subparsers.add_parser("validate")
+    profile_validate.add_argument("workspace")
+    profile_validate.add_argument("name")
 
     fetch_source_parser = subparsers.add_parser("fetch-source")
     fetch_source_parser.add_argument("workspace")
@@ -297,6 +388,13 @@ def main() -> int:
     run_analysis_parser.add_argument("--issue-key", required=True)
     run_analysis_parser.add_argument("--use-existing-snapshot", action="store_true")
     _add_llm_backend_args(run_analysis_parser)
+
+    analyze_jira_parser = subparsers.add_parser("analyze-jira")
+    analyze_jira_parser.add_argument("workspace")
+    analyze_jira_parser.add_argument("--profile", required=True)
+    analyze_jira_parser.add_argument("--issue-key", required=True)
+    analyze_jira_parser.add_argument("--use-existing-snapshot", action="store_true")
+    _add_llm_backend_args(analyze_jira_parser)
 
     rerun_analysis_parser = subparsers.add_parser("rerun-analysis")
     rerun_analysis_parser.add_argument("workspace")
@@ -467,15 +565,66 @@ def main() -> int:
                         selector_type=args.type,
                         issue_key=args.issue_key,
                         project_key=args.project_key,
+                        project_keys=_parse_csv_list(args.project_keys),
+                        issue_type=args.issue_type,
+                        status=args.status,
+                        label=args.label,
+                        updated_from=args.updated_from,
+                        updated_to=args.updated_to,
                         page_id=args.page_id,
                         root_page_id=args.root_page_id,
                         max_depth=args.max_depth,
+                        space_key=args.space_key,
+                        modified_from=args.modified_from,
+                        modified_to=args.modified_to,
+                        ancestor_id=args.ancestor_id,
+                        title=args.title,
+                        page_ids=_parse_csv_list(args.page_ids),
                     )
                 )
             if args.selector_command == "list":
                 return _print_json(list_workspace_selectors(args.workspace))
             if args.selector_command == "show":
                 return _print_json(show_workspace_selector(args.workspace, args.name))
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "profile":
+        try:
+            if args.profile_command == "add":
+                return _print_json(
+                    add_workspace_profile(
+                        args.workspace,
+                        args.name,
+                        input_bindings=_parse_profile_inputs(parser, args.input),
+                        spec_asset_ids=args.spec_asset,
+                        top_k=args.top_k,
+                        policies=args.policy,
+                        llm_backend=args.llm_backend,
+                        llm_model=args.llm_model,
+                        llm_prompt_mode=args.llm_prompt_mode,
+                    )
+                )
+            if args.profile_command == "list":
+                return _print_json(list_workspace_profiles(args.workspace))
+            if args.profile_command == "show":
+                return _print_json(show_workspace_profile(args.workspace, args.name))
+            if args.profile_command == "update":
+                return _print_json(
+                    update_workspace_profile(
+                        args.workspace,
+                        args.name,
+                        input_bindings=_parse_profile_inputs(parser, args.input),
+                        replace_inputs=args.input is not None,
+                        spec_asset_ids=args.spec_asset,
+                        top_k=args.top_k,
+                        policies=args.policy,
+                        llm_backend=args.llm_backend,
+                        llm_model=args.llm_model,
+                        llm_prompt_mode=args.llm_prompt_mode,
+                    )
+                )
+            if args.profile_command == "validate":
+                return _print_json(validate_workspace_profile(args.workspace, args.name))
         except ValueError as error:
             parser.error(str(error))
     if args.command == "fetch-source":
@@ -633,7 +782,7 @@ def main() -> int:
         if args.output_answer_md:
             payload["output_answer_md"] = _write_text_output(args.output_answer_md, payload["answer"]["text"])
         return _print_json(payload)
-    if args.command in {"run-analysis", "rerun-analysis"}:
+    if args.command in {"run-analysis", "rerun-analysis", "analyze-jira"}:
         try:
             return _print_json(
                 run_workspace_analysis(

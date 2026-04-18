@@ -623,6 +623,10 @@ Current shape:
 
 - `task_workbench`
   - `new_task_entry`
+    - `fields[]`
+    - `available_profiles[]`
+    - `available_sources[]`
+    - `command_preview`
   - `filters`
   - `selected_task_id`
   - `tasks[]`
@@ -649,6 +653,7 @@ Key invariants:
 - the workbench state is static and fixture-backed in Phase 1
 - when `workspace_dir` is provided, workbench tasks and artifact statuses are derived from real workspace run manifests
 - `workspace_cli.py portal-state <workspace>` writes a portal state JSON file from real workspace run artifacts without starting a web server
+- `new_task_entry` exposes the minimal analyze form state: `Issue Key`, `Analysis Profile`, and `Run`
 - controls are UI placeholders for `stop`, `resume`, and `rerun`; they do not execute orchestration yet
 - report tabs preserve the four-section analysis model: `RCA`, `Spec Impact`, `Decision Brief`, and `General Summary`
 - knowledge panels reserve Confluence proposal, wiki draft, and concept-card review surfaces
@@ -684,10 +689,12 @@ Produced by:
 - `services/workspace/source_registry.py`
 - `scripts/workspace_cli.py source`
 - `scripts/workspace_cli.py selector`
+- `scripts/workspace_cli.py profile`
 - `scripts/workspace_cli.py fetch-source`
 - `scripts/workspace_cli.py refresh`
 - `scripts/workspace_cli.py rebuild`
 - `scripts/workspace_cli.py reindex`
+- `scripts/workspace_cli.py analyze-jira`
 - `scripts/workspace_cli.py run-analysis`
 
 Current registry files:
@@ -714,12 +721,17 @@ Key invariants:
 - source names are stable identifiers used by payload cache and build manifests
 - credentials support `bearer_env` and `bearer_inline`; env references are preferred for durable local workspaces
 - `pdf.local_file` sources are represented as registry sources and write reusable spec assets under `raw/files/spec_assets/`
+- `pdf.local_file` fetches also persist `raw/pdf/payloads/<source>/latest.json`, `fetch-manifest.json`, and normalize artifacts so PDF sources participate in the same cache DAG
 - fetch cache invalidation is driven by source config hash, selector hash, and optional refresh frequency
 - cached raw payloads live under `raw/<kind>/payloads/<source>/latest.json` and `history/*.json`
 - `refresh <workspace>` only refetches stale sources with a previous selector profile in their fetch manifest
 - `rebuild <workspace> --from raw` rebuilds normalize artifacts from cached payloads and assembles the snapshot without refetching
 - `reindex <workspace>` rebuilds `build/index/pageindex_v1/page_index.json` from normalized documents without refetching
-- `run-analysis <workspace> --profile ...` fetches stale profile inputs and builds before analysis unless `--use-existing-snapshot` is supplied
+- run profiles may include `inputs.spec_assets` as a list of registered spec asset ids
+- `analyze-jira <workspace> --profile ...` is the recommended Jira analysis entrypoint
+- `analyze-jira` and `run-analysis` build a profile-scoped snapshot from the selected profile inputs unless `--use-existing-snapshot` is supplied
+- `--use-existing-snapshot` reuses the matching profile-scoped snapshot rather than the shared `snapshots/current/` workspace snapshot
+- analysis manifests record the selected sources, selected selector profiles, selected spec assets, and the scoped snapshot path used for the run
 - `smoke-deep-analysis <workspace> --profile ...` routes through the profile analysis path
 - `status <workspace>` exposes `cache.fetch`, `cache.normalize`, `cache.index`, and `cache.analysis` freshness
 - `snapshots/current/` remains limited to `manifest.json`, `documents.json`, and `page_index.json`
