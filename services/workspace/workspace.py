@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 from pathlib import Path
@@ -9,6 +10,9 @@ import shutil
 import time
 from uuid import uuid4
 
+import yaml
+
+from services.analysis.llm_backends import build_llm_backend
 from services.analysis.llm_backends import LLMBackend
 from services.analysis.deep_analysis import build_deep_analysis_from_documents
 from services.analysis.demo_profiles import build_confluence_wiki_summary_prompt
@@ -21,7 +25,7 @@ from services.ingest.markdown_export import documents_to_markdown, write_documen
 from services.ops.orchestration import load_source_payload
 from services.retrieval.persistence.snapshot_store import load_snapshot, snapshot_paths, write_snapshot
 from services.retrieval.engine import PAGE_INDEX_ENGINE, build_shared_retrieval_bundle
-from services.retrieval.toolkit import citation_for_index, load_page_index_artifact, search_index
+from services.retrieval.toolkit import build_retrieval_index, citation_for_index, load_page_index_artifact, search_index
 from services.workspace.task_manifest import (
     build_artifact_record,
     build_run_manifest,
@@ -39,10 +43,24 @@ from services.workspace.task_control import (
     request_stop,
     write_controlled_manifest,
 )
+from services.workspace.source_registry import (
+    build_fetch_request,
+    fetch_cache_status,
+    list_run_profiles,
+    list_selector_profiles,
+    list_sources,
+    load_run_profile,
+    load_selector_profile,
+    load_source,
+    write_credentials_example,
+    write_selector_profile,
+    write_source,
+)
 from services.wiki_site import build_vitepress_site
 
 
-WORKSPACE_CONFIG_FILE = "config.json"
+WORKSPACE_CONFIG_FILE = "workspace.yaml"
+LEGACY_WORKSPACE_CONFIG_FILE = "config.json"
 WORKSPACE_VERSION = 1
 DEFAULT_POLICIES = ["team:ssd", "public"]
 SUPPORTED_KINDS = {"jira", "confluence"}
@@ -73,10 +91,18 @@ def _read_json(path: str | Path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8-sig"))
 
 
+def _json_default(value: object) -> object:
+    if isinstance(value, set):
+        return sorted(value)
+    if isinstance(value, Counter):
+        return dict(value)
+    raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
+
+
 def _write_json(path: str | Path, payload: dict | list) -> str:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    output_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=_json_default), encoding="utf-8")
     return str(output_path)
 
 
@@ -114,12 +140,21 @@ def workspace_paths(workspace_dir: str | Path) -> dict[str, Path]:
     return {
         "root": root,
         "config": root / WORKSPACE_CONFIG_FILE,
+        "legacy_config": root / LEGACY_WORKSPACE_CONFIG_FILE,
         "raw": root / "raw",
         "jira_specs": root / "raw" / "jira" / "specs",
         "jira_payloads": root / "raw" / "jira" / "payloads",
         "confluence_specs": root / "raw" / "confluence" / "specs",
         "confluence_payloads": root / "raw" / "confluence" / "payloads",
         "files": root / "raw" / "files",
+        "sources": root / "sources",
+        "selectors": root / "selectors",
+        "profiles": root / "profiles",
+        "local": root / ".local",
+        "credentials_example": root / ".local" / "credentials.example.yaml",
+        "build_root": root / "build",
+        "normalize_root": root / "build" / "normalize",
+        "index_root": root / "build" / "index",
         "spec_assets_root": root / "raw" / "files" / "spec_assets",
         "spec_assets_registry": root / "raw" / "files" / "spec_assets" / "registry.json",
         "snapshot_root": root / "snapshots" / "current",
@@ -147,6 +182,20 @@ def _default_workspace_config() -> dict:
             "runs_dir": "runs",
         },
     }
+
+
+def _write_yaml(path: str | Path, payload: dict) -> str:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    return str(output_path)
+
+
+def _read_yaml(path: str | Path) -> dict:
+    payload = yaml.safe_load(Path(path).read_text(encoding="utf-8-sig"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"YAML file must contain a mapping: {path}")
+    return payload
 
 
 def _starter_specs() -> dict[str, dict]:
@@ -230,22 +279,26 @@ def init_workspace(workspace_dir: str | Path) -> dict:
         if key in {
             "root",
             "config",
+            "legacy_config",
             "wiki_topics",
             "wiki_routes",
             "wiki_compilation_manifest",
             "spec_assets_registry",
+            "credentials_example",
         }:
             continue
         path.mkdir(parents=True, exist_ok=True)
 
-    if not paths["config"].exists():
-        _write_json(paths["config"], _default_workspace_config())
+    if not paths["config"].exists() and not paths["legacy_config"].exists():
+        _write_yaml(paths["config"], _default_workspace_config())
     if not paths["wiki_topics"].exists():
         _write_json(paths["wiki_topics"], _default_topic_registry())
     if not paths["wiki_routes"].exists():
         _write_json(paths["wiki_routes"], _default_route_manifest())
     if not paths["wiki_compilation_manifest"].exists():
         _write_json(paths["wiki_compilation_manifest"], _default_compilation_manifest())
+    if not paths["credentials_example"].exists():
+        write_credentials_example(workspace_dir)
 
     written_specs = []
     for relative_path, payload in _starter_specs().items():
@@ -260,15 +313,21 @@ def init_workspace(workspace_dir: str | Path) -> dict:
         "topic_registry_path": str(paths["wiki_topics"]),
         "route_manifest_path": str(paths["wiki_routes"]),
         "compilation_manifest_path": str(paths["wiki_compilation_manifest"]),
+        "source_dir": str(paths["sources"]),
+        "selector_dir": str(paths["selectors"]),
+        "profile_dir": str(paths["profiles"]),
+        "credentials_example_path": str(paths["credentials_example"]),
         "written_specs": written_specs,
     }
 
 
 def _load_workspace_config(workspace_dir: str | Path) -> dict:
     paths = workspace_paths(workspace_dir)
-    if not paths["config"].exists():
-        raise ValueError(f"Workspace is not initialized: {paths['config']}")
-    return _read_json(paths["config"])
+    if paths["config"].exists():
+        return _read_yaml(paths["config"])
+    if paths["legacy_config"].exists():
+        return _read_json(paths["legacy_config"])
+    raise ValueError(f"Workspace is not initialized: {paths['config']}")
 
 
 def _resolve_spec_path(workspace_dir: str | Path, spec_ref: str | Path) -> Path:
@@ -430,35 +489,569 @@ def _resolve_run_dir(workspace_dir: str | Path, run_ref: str | Path) -> Path:
 
 def fetch_workspace_spec(workspace_dir: str | Path, spec_ref: str | Path) -> dict:
     _load_workspace_config(workspace_dir)
-    paths = workspace_paths(workspace_dir)
     spec_path, spec = _load_source_spec(workspace_dir, spec_ref)
     source_name = _source_name(spec_path, spec)
-    payload = load_source_payload(**_source_payload_kwargs(spec))
-    payload_path = _payload_output_path(workspace_dir, str(spec["kind"]), source_name)
-    _write_json(payload_path, payload)
-
-    run_dir = _run_dir(paths, source_name=source_name, command="fetch")
-    run_dir.mkdir(parents=True, exist_ok=True)
-    _write_json(run_dir / "request.json", {"spec_path": str(spec_path), "spec": _redact(spec)})
-    _write_json(
-        run_dir / "result.json",
+    selector_profile = f"{source_name}_selector"
+    source_config = {
+        "auth_mode": spec.get("auth_mode", "auto"),
+    }
+    for key in ("base_url", "path", "username", "password", "token", "jql", "cql", "space_key"):
+        if spec.get(key) is not None:
+            source_config[key] = spec[key]
+    source_payload = {
+        "version": 1,
+        "name": source_name,
+        "kind": spec["kind"],
+        "mode": spec["mode"],
+        "connector_type": f"{spec['kind']}.atlassian_api",
+        "config": source_config,
+        "defaults": dict(spec.get("fetch", {})),
+        "policies": spec.get("policies", DEFAULT_POLICIES),
+        "metadata": {"legacy_spec_path": str(spec_path)},
+    }
+    write_source(workspace_dir, source_payload)
+    write_selector_profile(
+        workspace_dir,
         {
-            "payload_path": str(payload_path),
-            "document_count": len(payload.get("documents", [])),
-            "sync_type": payload.get("sync_type"),
-            "cursor": payload.get("cursor"),
-            "selector_summary": payload.get("selector_summary"),
+            "version": 1,
+            "name": selector_profile,
+            "source": source_name,
+            "selector": spec.get("scope", {}),
         },
     )
+    result = fetch_workspace_source(workspace_dir, source_name=source_name, selector_profile=selector_profile)
+    result["spec_path"] = str(spec_path)
+    result["payload_path"] = result["latest_payload_path"]
     return {
-        "workspace_dir": str(paths["root"]),
+        "workspace_dir": result["workspace_dir"],
         "spec_path": str(spec_path),
-        "payload_path": str(payload_path),
+        "payload_path": result["latest_payload_path"],
+        "latest_payload_path": result["latest_payload_path"],
+        "history_payload_path": result["history_payload_path"],
+        "fetch_manifest_path": result["fetch_manifest_path"],
+        "document_count": result["document_count"],
+        "run_dir": result["run_dir"],
+    }
+
+
+def add_workspace_source(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    connector_type: str,
+    base_url: str | None = None,
+    path: str | None = None,
+    credential_ref: str | None = None,
+    policies: list[str] | None = None,
+    include_comments: bool = True,
+    include_attachments: bool = True,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    kind = "jira" if connector_type.startswith("jira.") else "pdf" if connector_type.startswith("pdf.") else "confluence"
+    mode = "local" if kind == "pdf" else "live"
+    config = {"auth_mode": "auto"}
+    if base_url:
+        config["base_url"] = base_url
+    if path:
+        config["path"] = path
+    source = {
+        "version": 1,
+        "name": name,
+        "kind": kind,
+        "mode": mode,
+        "connector_type": connector_type,
+        "credential_ref": credential_ref,
+        "config": config,
+        "defaults": {
+            "include_comments": include_comments,
+            "include_attachments": include_attachments,
+            "include_image_metadata": True,
+            "download_images": False,
+        },
+        "policies": list(policies or DEFAULT_POLICIES),
+        "metadata": {},
+    }
+    path = write_source(workspace_dir, source)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "path": path,
+        "source": load_source(workspace_dir, name),
+    }
+
+
+def list_workspace_sources(workspace_dir: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "sources": list_sources(workspace_dir),
+    }
+
+
+def show_workspace_source(workspace_dir: str | Path, name: str) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "source": load_source(workspace_dir, name),
+    }
+
+
+def configure_workspace_source(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    base_url: str | None = None,
+    auth_mode: str | None = None,
+    path: str | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    source = load_source(workspace_dir, name)
+    config = dict(source.get("config", {}))
+    if base_url is not None:
+        config["base_url"] = base_url
+    if auth_mode is not None:
+        config["auth_mode"] = auth_mode
+    if path is not None:
+        config["path"] = path
+    source["config"] = config
+    output_path = write_source(workspace_dir, source)
+    return {"workspace_dir": str(workspace_paths(workspace_dir)["root"]), "path": output_path, "source": load_source(workspace_dir, name)}
+
+
+def set_workspace_source_credential(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    credential_ref: str | None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    source = load_source(workspace_dir, name)
+    if credential_ref:
+        source["credential_ref"] = credential_ref
+    else:
+        source.pop("credential_ref", None)
+    output_path = write_source(workspace_dir, source)
+    return {"workspace_dir": str(workspace_paths(workspace_dir)["root"]), "path": output_path, "source": load_source(workspace_dir, name)}
+
+
+def update_workspace_source_defaults(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    include_comments: bool | None = None,
+    include_attachments: bool | None = None,
+    include_image_metadata: bool | None = None,
+    download_images: bool | None = None,
+    refresh_freq_minutes: int | None = None,
+    prune_freq_hours: int | None = None,
+    page_size: int | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    source = load_source(workspace_dir, name)
+    defaults = dict(source.get("defaults", {}))
+    updates = {
+        "include_comments": include_comments,
+        "include_attachments": include_attachments,
+        "include_image_metadata": include_image_metadata,
+        "download_images": download_images,
+        "refresh_freq_minutes": refresh_freq_minutes,
+        "prune_freq_hours": prune_freq_hours,
+        "page_size": page_size,
+    }
+    for key, value in updates.items():
+        if value is not None:
+            defaults[key] = value
+    source["defaults"] = defaults
+    output_path = write_source(workspace_dir, source)
+    return {"workspace_dir": str(workspace_paths(workspace_dir)["root"]), "path": output_path, "source": load_source(workspace_dir, name)}
+
+
+def set_workspace_source_enabled(workspace_dir: str | Path, name: str, *, enabled: bool) -> dict:
+    _load_workspace_config(workspace_dir)
+    source = load_source(workspace_dir, name)
+    source["enabled"] = enabled
+    output_path = write_source(workspace_dir, source)
+    return {"workspace_dir": str(workspace_paths(workspace_dir)["root"]), "path": output_path, "source": load_source(workspace_dir, name)}
+
+
+def test_workspace_source(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    selector_profile: str | None = None,
+    skip_credential_check: bool = False,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    source = load_source(workspace_dir, name)
+    selector_name = selector_profile
+    if selector_name is None:
+        matching_selectors = [selector for selector in list_selector_profiles(workspace_dir) if selector["source"] == name]
+        selector_name = matching_selectors[0]["name"] if matching_selectors else None
+    request = None
+    if selector_name:
+        request = build_fetch_request(
+            workspace_dir,
+            source_name=name,
+            selector_profile=selector_name,
+            resolve_credentials=not skip_credential_check,
+        )
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "source_name": name,
+        "selector_profile": selector_name,
+        "ok": True,
+        "config_hash": request["manifest"]["config_hash"] if request else None,
+        "selector_hash": request["manifest"]["selector_hash"] if request else None,
+        "kind": source["kind"],
+        "mode": source.get("mode", "live"),
+    }
+
+
+def add_workspace_selector(
+    workspace_dir: str | Path,
+    name: str,
+    *,
+    source: str,
+    selector_type: str,
+    issue_key: str | None = None,
+    project_key: str | None = None,
+    page_id: str | None = None,
+    root_page_id: str | None = None,
+    max_depth: int | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    selector = {"type": selector_type}
+    if issue_key:
+        selector["issue_key"] = issue_key
+    if project_key:
+        selector["project_key"] = project_key
+    if page_id:
+        selector["page_id"] = page_id
+    if root_page_id:
+        selector["root_page_id"] = root_page_id
+    if max_depth is not None:
+        selector["max_depth"] = max_depth
+    payload = {"version": 1, "name": name, "source": source, "selector": selector}
+    path = write_selector_profile(workspace_dir, payload)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "path": path,
+        "selector": load_selector_profile(workspace_dir, name),
+    }
+
+
+def list_workspace_selectors(workspace_dir: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "selectors": list_selector_profiles(workspace_dir),
+    }
+
+
+def show_workspace_selector(workspace_dir: str | Path, name: str) -> dict:
+    _load_workspace_config(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "selector": load_selector_profile(workspace_dir, name),
+    }
+
+
+def _stable_payload_hash(payload: dict | list) -> str:
+    data = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return f"sha256:{hashlib.sha256(data).hexdigest()}"
+
+
+def _source_payload_cache_paths(workspace_dir: str | Path, kind: str, source_name: str) -> dict[str, Path]:
+    payload_root = workspace_paths(workspace_dir)["raw"] / kind / "payloads" / source_name
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    return {
+        "root": payload_root,
+        "latest": payload_root / "latest.json",
+        "manifest": payload_root / "fetch-manifest.json",
+        "history": payload_root / "history" / f"{timestamp}.json",
+    }
+
+
+def fetch_workspace_source(workspace_dir: str | Path, *, source_name: str, selector_profile: str) -> dict:
+    _load_workspace_config(workspace_dir)
+    request = build_fetch_request(workspace_dir, source_name=source_name, selector_profile=selector_profile)
+    source = request["source"]
+    if source["kind"] == "pdf":
+        from services.workspace.spec_assets import ingest_spec_asset
+
+        asset = ingest_spec_asset(
+            workspace_dir,
+            spec_pdf=source.get("config", {}).get("path"),
+            asset_id=source["name"],
+            display_name=source.get("metadata", {}).get("description") or source["name"],
+            preferred_parser=source.get("defaults", {}).get("preferred_parser", "auto"),
+            mineru_python_exe=source.get("defaults", {}).get("mineru_python_exe"),
+        )
+        paths = workspace_paths(workspace_dir)
+        run_dir = _run_dir(paths, source_name=source["name"], command="fetch-source")
+        run_dir.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            **request["manifest"],
+            "fetched_at": _utc_now(),
+            "payload_path": asset["metadata_json"],
+            "latest_payload_path": asset["metadata_json"],
+            "payload_hash": _file_sha256(asset["metadata_json"]),
+            "document_count": 1,
+            "sync_type": "local_file",
+            "cursor": asset.get("version"),
+            "spec_asset": asset,
+        }
+        _write_json(run_dir / "request.json", {"source": _redact(source), "selector_profile": request["selector_profile"]})
+        _write_json(run_dir / "result.json", manifest)
+        return {
+            "workspace_dir": str(paths["root"]),
+            "source_name": source["name"],
+            "selector_profile": selector_profile,
+            "latest_payload_path": asset["metadata_json"],
+            "history_payload_path": asset["metadata_json"],
+            "fetch_manifest_path": asset["metadata_json"],
+            "document_count": 1,
+            "run_dir": str(run_dir),
+            "spec_asset": asset,
+        }
+    payload = load_source_payload(**request["kwargs"])
+    cache_paths = _source_payload_cache_paths(workspace_dir, source["kind"], source["name"])
+    _write_json(cache_paths["latest"], payload)
+    _write_json(cache_paths["history"], payload)
+    manifest = {
+        **request["manifest"],
+        "fetched_at": _utc_now(),
+        "payload_path": str(cache_paths["history"]),
+        "latest_payload_path": str(cache_paths["latest"]),
+        "payload_hash": _stable_payload_hash(payload),
         "document_count": len(payload.get("documents", [])),
         "sync_type": payload.get("sync_type"),
         "cursor": payload.get("cursor"),
-        "selector_summary": payload.get("selector_summary"),
+    }
+    _write_json(cache_paths["manifest"], manifest)
+    _normalize_payload_file(workspace_dir, source["kind"], cache_paths["latest"])
+
+    paths = workspace_paths(workspace_dir)
+    run_dir = _run_dir(paths, source_name=source["name"], command="fetch-source")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(run_dir / "request.json", {"source": _redact(source), "selector_profile": request["selector_profile"]})
+    _write_json(run_dir / "result.json", manifest)
+    return {
+        "workspace_dir": str(paths["root"]),
+        "source_name": source["name"],
+        "selector_profile": selector_profile,
+        "latest_payload_path": str(cache_paths["latest"]),
+        "history_payload_path": str(cache_paths["history"]),
+        "fetch_manifest_path": str(cache_paths["manifest"]),
+        "document_count": manifest["document_count"],
         "run_dir": str(run_dir),
+    }
+
+
+def refresh_workspace_source(workspace_dir: str | Path, source_name: str, *, selector_profile: str) -> dict:
+    return fetch_workspace_source(workspace_dir, source_name=source_name, selector_profile=selector_profile)
+
+
+def refresh_workspace(workspace_dir: str | Path) -> dict:
+    _load_workspace_config(workspace_dir)
+    paths = workspace_paths(workspace_dir)
+    refreshed: list[dict] = []
+    skipped: list[dict] = []
+    for row in fetch_cache_status(workspace_dir):
+        if row["status"] != "stale":
+            skipped.append(row)
+            continue
+        source = load_source(workspace_dir, row["source_name"])
+        manifest_path = paths["raw"] / source["kind"] / "payloads" / source["name"] / "fetch-manifest.json"
+        if not manifest_path.exists():
+            skipped.append(row | {"skip_reason": "no_prior_selector_profile"})
+            continue
+        manifest = _read_json(manifest_path)
+        selector_profile = manifest.get("selector_profile")
+        if not selector_profile:
+            skipped.append(row | {"skip_reason": "missing_selector_profile"})
+            continue
+        refreshed.append(fetch_workspace_source(workspace_dir, source_name=source["name"], selector_profile=selector_profile))
+    return {
+        "workspace_dir": str(paths["root"]),
+        "refreshed_count": len(refreshed),
+        "skipped_count": len(skipped),
+        "refreshed": refreshed,
+        "skipped": skipped,
+    }
+
+
+def _normalize_payload_file(workspace_dir: str | Path, kind: str, payload_path: Path) -> str:
+    paths = workspace_paths(workspace_dir)
+    payload = _read_json(payload_path)
+    documents = payload.get("documents", [])
+    source_id = payload_path.parent.name if payload_path.name == "latest.json" else payload_path.stem
+    normalize_dir = paths["normalize_root"] / source_id
+    _write_json(
+        normalize_dir / "manifest.json",
+        {
+            "source_name": source_id,
+            "payload_hash": _stable_payload_hash(payload),
+            "normalize_version": "workspace_payload_passthrough_v1",
+            "created_at": _utc_now(),
+            "documents_path": str(normalize_dir / "documents.json"),
+            "document_count": len(documents),
+            "source_type": kind,
+        },
+    )
+    _write_json(normalize_dir / "documents.json", {"documents": documents})
+    return source_id
+
+
+def rebuild_workspace(workspace_dir: str | Path, *, from_layer: str = "raw", source_name: str | None = None) -> dict:
+    if from_layer != "raw":
+        raise ValueError("Only --from raw is supported")
+    _load_workspace_config(workspace_dir)
+    rebuilt_sources = []
+    for kind, payload_path in _payload_files(workspace_dir):
+        source_id = payload_path.parent.name if payload_path.name == "latest.json" else payload_path.stem
+        if source_name and source_id != source_name:
+            continue
+        rebuilt_sources.append(_normalize_payload_file(workspace_dir, kind, payload_path))
+    build_result = build_workspace(workspace_dir)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "from": from_layer,
+        "rebuilt_sources": sorted(set(rebuilt_sources)),
+        "build": build_result,
+    }
+
+
+def _load_normalized_documents(workspace_dir: str | Path) -> list[dict]:
+    paths = workspace_paths(workspace_dir)
+    documents_by_id: dict[str, dict] = {}
+    for document_path in sorted(paths["normalize_root"].glob("*/documents.json")):
+        for document in _read_json(document_path).get("documents", []):
+            documents_by_id[document["document_id"]] = document
+    from services.workspace.spec_assets import load_latest_spec_asset_documents
+
+    asset_documents, _asset_sources = load_latest_spec_asset_documents(workspace_dir)
+    for document in asset_documents:
+        documents_by_id[document["document_id"]] = document
+    return [documents_by_id[key] for key in sorted(documents_by_id)]
+
+
+def reindex_workspace(workspace_dir: str | Path, *, index_name: str = "pageindex_v1") -> dict:
+    if index_name != "pageindex_v1":
+        raise ValueError("Only pageindex_v1 is supported")
+    _load_workspace_config(workspace_dir)
+    paths = workspace_paths(workspace_dir)
+    documents = _load_normalized_documents(workspace_dir)
+    if not documents:
+        raise ValueError("No normalized documents found. Run build or rebuild first.")
+    page_index = build_retrieval_index(documents)
+    index_dir = paths["index_root"] / index_name
+    page_index_path = index_dir / "page_index.json"
+    _write_json(page_index_path, {"entries": page_index})
+    manifest = {
+        "index_name": index_name,
+        "input_documents_hash": _stable_payload_hash({"documents": documents}),
+        "index_version": "pageindex_v1_current",
+        "created_at": _utc_now(),
+        "page_index_path": str(page_index_path),
+        "page_index_count": len(page_index),
+    }
+    _write_json(index_dir / "manifest.json", manifest)
+    return {
+        "workspace_dir": str(paths["root"]),
+        "index_name": index_name,
+        "page_index_path": str(page_index_path),
+        "manifest_path": str(index_dir / "manifest.json"),
+        "page_index_count": len(page_index),
+    }
+
+
+def _normalize_cache_status(workspace_dir: str | Path, fetch_rows: list[dict]) -> list[dict]:
+    paths = workspace_paths(workspace_dir)
+    fetch_by_source = {row["source_name"]: row for row in fetch_rows}
+    rows: list[dict] = []
+    for source in list_sources(workspace_dir):
+        source_name = source["name"]
+        fetch_row = fetch_by_source.get(source_name)
+        if fetch_row and fetch_row["status"] != "fresh":
+            rows.append({"source_name": source_name, "status": "stale", "reason": f"fetch_{fetch_row['reason']}"})
+            continue
+        fetch_manifest_path = paths["raw"] / source["kind"] / "payloads" / source_name / "fetch-manifest.json"
+        normalize_manifest_path = paths["normalize_root"] / source_name / "manifest.json"
+        if source["kind"] == "pdf":
+            rows.append({"source_name": source_name, "status": "fresh", "reason": "spec_asset_managed"})
+            continue
+        if not fetch_manifest_path.exists():
+            rows.append({"source_name": source_name, "status": "stale", "reason": "missing_fetch_manifest"})
+            continue
+        if not normalize_manifest_path.exists():
+            rows.append({"source_name": source_name, "status": "stale", "reason": "missing_normalize_manifest"})
+            continue
+        fetch_manifest = _read_json(fetch_manifest_path)
+        normalize_manifest = _read_json(normalize_manifest_path)
+        if fetch_manifest.get("payload_hash") != normalize_manifest.get("payload_hash"):
+            rows.append({"source_name": source_name, "status": "stale", "reason": "payload_changed"})
+            continue
+        if normalize_manifest.get("normalize_version") != "workspace_payload_passthrough_v1":
+            rows.append({"source_name": source_name, "status": "stale", "reason": "normalize_version_changed"})
+            continue
+        rows.append({"source_name": source_name, "status": "fresh", "reason": "payload_hash_matches"})
+    return rows
+
+
+def _index_cache_status(workspace_dir: str | Path, normalize_rows: list[dict]) -> dict:
+    paths = workspace_paths(workspace_dir)
+    stale_normalize = [row for row in normalize_rows if row["status"] == "stale"]
+    manifest_path = paths["index_root"] / "pageindex_v1" / "manifest.json"
+    page_index_path = paths["index_root"] / "pageindex_v1" / "page_index.json"
+    if stale_normalize:
+        return {
+            "index_name": "pageindex_v1",
+            "status": "stale",
+            "reason": "normalize_stale",
+            "stale_sources": [row["source_name"] for row in stale_normalize],
+        }
+    if not manifest_path.exists():
+        return {"index_name": "pageindex_v1", "status": "stale", "reason": "missing_index_manifest"}
+    if not page_index_path.exists():
+        return {"index_name": "pageindex_v1", "status": "stale", "reason": "missing_page_index"}
+    documents = _load_normalized_documents(workspace_dir)
+    expected_hash = _stable_payload_hash({"documents": documents})
+    manifest = _read_json(manifest_path)
+    if manifest.get("input_documents_hash") != expected_hash:
+        return {"index_name": "pageindex_v1", "status": "stale", "reason": "documents_changed"}
+    if manifest.get("index_version") != "pageindex_v1_current":
+        return {"index_name": "pageindex_v1", "status": "stale", "reason": "index_version_changed"}
+    return {"index_name": "pageindex_v1", "status": "fresh", "reason": "input_documents_hash_matches"}
+
+
+def _analysis_cache_status(workspace_dir: str | Path, index_row: dict) -> dict:
+    paths = workspace_paths(workspace_dir)
+    rows: list[dict] = []
+    if not paths["runs"].exists():
+        return {"fresh": 0, "stale": 0, "runs": rows}
+    current_snapshot_hashes = {
+        name: _file_sha256(path)
+        for name, path in snapshot_paths(paths["snapshot_root"]).items()
+    }
+    for run_dir in sorted(path for path in paths["runs"].glob("*") if path.is_dir()):
+        manifest_path = run_dir / "analysis-manifest.json"
+        if not manifest_path.exists():
+            continue
+        manifest = _read_json(manifest_path)
+        if index_row["status"] != "fresh":
+            rows.append({"run_id": run_dir.name, "status": "stale", "reason": "index_stale"})
+            continue
+        if manifest.get("snapshot_files") != current_snapshot_hashes:
+            rows.append({"run_id": run_dir.name, "status": "stale", "reason": "snapshot_changed"})
+            continue
+        if manifest.get("analysis_version") != "deep_analysis_v1":
+            rows.append({"run_id": run_dir.name, "status": "stale", "reason": "analysis_version_changed"})
+            continue
+        rows.append({"run_id": run_dir.name, "status": "fresh", "reason": "snapshot_hash_matches"})
+    return {
+        "fresh": len([row for row in rows if row["status"] == "fresh"]),
+        "stale": len([row for row in rows if row["status"] == "stale"]),
+        "runs": rows,
     }
 
 
@@ -471,6 +1064,11 @@ def _payload_files(workspace_dir: str | Path) -> list[tuple[str, Path]]:
             key=lambda path: (path.stat().st_mtime, str(path)),
         )
         files.extend((kind, path) for path in payload_paths)
+        source_payload_paths = sorted(
+            payload_dir.glob("*/latest.json"),
+            key=lambda path: (path.stat().st_mtime, str(path)),
+        )
+        files.extend((kind, path) for path in source_payload_paths)
     return files
 
 
@@ -1503,29 +2101,42 @@ def _watch_summary(
     }
 
 
-def build_workspace(workspace_dir: str | Path) -> dict:
+def build_workspace(workspace_dir: str | Path, *, spec_asset_ids: list[str] | None = None) -> dict:
     _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
-    payload_files = _payload_files(workspace_dir)
-    from services.workspace.spec_assets import load_latest_spec_asset_documents, load_spec_asset_registry
+    from services.workspace.spec_assets import load_latest_spec_asset_documents
 
-    asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir)
-    if not payload_files and not asset_documents:
-        raise ValueError("No workspace payloads or spec assets found. Run fetch or ingest-spec-asset first.")
+    for kind, payload_path in _payload_files(workspace_dir):
+        source_id = payload_path.parent.name if payload_path.name == "latest.json" else payload_path.stem
+        normalize_manifest = paths["normalize_root"] / source_id / "manifest.json"
+        if not normalize_manifest.exists():
+            _normalize_payload_file(workspace_dir, kind, payload_path)
+
+    asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir, asset_ids=spec_asset_ids)
+    normalized_paths = sorted(paths["normalize_root"].glob("*/documents.json"))
+    if not normalized_paths and not asset_documents:
+        raise ValueError("No normalized workspace documents or spec assets found. Run fetch-source, rebuild, or ingest-spec-asset first.")
 
     merged_documents: dict[str, dict] = {}
     sources: dict[str, dict] = {}
-    for kind, payload_path in payload_files:
-        payload = _read_json(payload_path)
-        source_name = f"{kind}:{payload_path.stem}"
-        documents = payload.get("documents", [])
-        payload_synced_at = datetime.fromtimestamp(payload_path.stat().st_mtime, timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    for documents_path in normalized_paths:
+        documents_payload = _read_json(documents_path)
+        documents = documents_payload.get("documents", [])
+        manifest_path = documents_path.parent / "manifest.json"
+        manifest = _read_json(manifest_path) if manifest_path.exists() else {}
+        source_id = str(manifest.get("source_name") or documents_path.parent.name)
+        source_type = str(manifest.get("source_type") or "workspace")
+        source_name = f"{source_type}:{source_id}"
+        normalized_at = manifest.get("created_at") or datetime.fromtimestamp(
+            documents_path.stat().st_mtime,
+            timezone.utc,
+        ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         for document in documents:
             merged_documents[document["document_id"]] = document
         sources[source_name] = {
-            "cursor": payload.get("cursor"),
-            "last_sync": payload_synced_at,
-            "sync_type": payload.get("sync_type", "full"),
+            "cursor": manifest.get("payload_hash"),
+            "last_sync": normalized_at,
+            "sync_type": "normalized",
             "document_count": len(documents),
         }
     for document in asset_documents:
@@ -1539,6 +2150,21 @@ def build_workspace(workspace_dir: str | Path) -> dict:
         documents=[merged_documents[key] for key in sorted(merged_documents)],
         sources=sources,
         created_at=created_at,
+    )
+    documents_payload = {"documents": [merged_documents[key] for key in sorted(merged_documents)]}
+    index_dir = paths["index_root"] / "pageindex_v1"
+    index_page_path = index_dir / "page_index.json"
+    _copy_file(paths["snapshot_root"] / "page_index.json", index_page_path)
+    _write_json(
+        index_dir / "manifest.json",
+        {
+            "index_name": "pageindex_v1",
+            "input_documents_hash": _stable_payload_hash(documents_payload),
+            "index_version": "pageindex_v1_current",
+            "created_at": _utc_now(),
+            "page_index_path": str(index_page_path),
+            "page_index_count": snapshot_report["manifest"]["page_index_count"],
+        },
     )
 
     run_dir = _run_dir(paths, source_name="workspace", command="build")
@@ -1822,6 +2448,80 @@ def query_workspace(
     return payload | {"run_dir": str(run_dir)}
 
 
+def run_workspace_analysis(
+    workspace_dir: str | Path,
+    *,
+    profile_name: str,
+    issue_key: str,
+    use_existing_snapshot: bool = False,
+    llm_backend: LLMBackend | None = None,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    profile = load_run_profile(workspace_dir, profile_name)
+    analysis_config = profile.get("analysis", {})
+    orchestration: dict[str, list[dict]] = {"fetches": [], "skipped": []}
+    if not use_existing_snapshot:
+        fetch_status_by_source = {row["source_name"]: row for row in fetch_cache_status(workspace_dir)}
+        for input_name, input_config in profile.get("inputs", {}).items():
+            if input_name == "spec_assets" or not isinstance(input_config, dict):
+                continue
+            source_name = input_config.get("source")
+            selector_name = input_config.get("selector_profile")
+            if not source_name or not selector_name:
+                continue
+            source_status = fetch_status_by_source.get(source_name, {"status": "stale", "reason": "not_fetched"})
+            if source_status["status"] == "fresh":
+                orchestration["skipped"].append({"source_name": source_name, "reason": "fresh"})
+                continue
+            orchestration["fetches"].append(
+                fetch_workspace_source(workspace_dir, source_name=source_name, selector_profile=selector_name)
+            )
+        spec_asset_ids = profile.get("inputs", {}).get("spec_assets")
+        build_workspace(
+            workspace_dir,
+            spec_asset_ids=list(spec_asset_ids) if isinstance(spec_asset_ids, list) else None,
+        )
+    if llm_backend is None and analysis_config.get("llm_backend") not in (None, "none"):
+        llm_backend = build_llm_backend(
+            backend=analysis_config.get("llm_backend", "none"),
+            model=analysis_config.get("llm_model"),
+            base_url=analysis_config.get("llm_base_url"),
+            api_key=analysis_config.get("llm_api_key"),
+            mock_response=analysis_config.get("llm_mock_response"),
+            timeout_seconds=int(analysis_config.get("llm_timeout_seconds", 120)),
+        )
+    payload = deep_analyze_issue(
+        workspace_dir,
+        issue_key,
+        policies=analysis_config.get("policies", DEFAULT_POLICIES),
+        top_k=int(analysis_config.get("top_k", 5)),
+        prompt_mode=analysis_config.get("llm_prompt_mode", "strict"),
+        llm_backend=llm_backend,
+    )
+    manifest_path = Path(payload["run_dir"]) / "analysis-manifest.json"
+    snapshot_hashes = {
+        name: _file_sha256(path)
+        for name, path in snapshot_paths(workspace_paths(workspace_dir)["snapshot_root"]).items()
+    }
+    analysis_manifest = {
+        "profile": profile_name,
+        "issue_key": issue_key,
+        "snapshot_files": snapshot_hashes,
+        "snapshot_hash": _stable_payload_hash(snapshot_hashes),
+        "analysis_version": "deep_analysis_v1",
+        "prompt_profile_version": analysis_config.get("llm_prompt_mode", "strict"),
+        "created_at": _utc_now(),
+    }
+    _write_json(manifest_path, analysis_manifest)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "profile": profile_name,
+        "analysis_manifest_path": str(manifest_path),
+        "orchestration": orchestration,
+        "analysis": payload,
+    }
+
+
 def status_workspace(workspace_dir: str | Path) -> dict:
     config = _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
@@ -1831,10 +2531,19 @@ def status_workspace(workspace_dir: str | Path) -> dict:
     snapshot = load_snapshot(paths["snapshot_root"])
     export_manifest = _read_json(paths["export_root"] / "manifest.json") if (paths["export_root"] / "manifest.json").exists() else {}
     runs = sorted(path.name for path in paths["runs"].glob("*") if path.is_dir())
+    fetch_rows = fetch_cache_status(workspace_dir)
+    normalize_rows = _normalize_cache_status(workspace_dir, fetch_rows)
+    index_row = _index_cache_status(workspace_dir, normalize_rows)
+    analysis_status = _analysis_cache_status(workspace_dir, index_row)
 
     return {
         "workspace_dir": str(paths["root"]),
         "workspace_version": config.get("workspace_version"),
+        "registry_counts": {
+            "sources": len(list_sources(workspace_dir)),
+            "selectors": len(list_selector_profiles(workspace_dir)),
+            "profiles": len(list_run_profiles(workspace_dir)),
+        },
         "spec_counts": {
             "jira": len(list(paths["jira_specs"].glob("*.json"))),
             "confluence": len(list(paths["confluence_specs"].glob("*.json"))),
@@ -1850,6 +2559,21 @@ def status_workspace(workspace_dir: str | Path) -> dict:
             "jira": len(list(paths["jira_payloads"].glob("*.json"))),
             "confluence": len(list(paths["confluence_payloads"].glob("*.json"))),
             "total": len(payload_files),
+        },
+        "cache": {
+            "fetch": {
+                "fresh": len([row for row in fetch_rows if row["status"] == "fresh"]),
+                "stale": len([row for row in fetch_rows if row["status"] == "stale"]),
+                "disabled": len([row for row in fetch_rows if row["status"] == "disabled"]),
+                "sources": fetch_rows,
+            },
+            "normalize": {
+                "fresh": len([row for row in normalize_rows if row["status"] == "fresh"]),
+                "stale": len([row for row in normalize_rows if row["status"] == "stale"]),
+                "sources": normalize_rows,
+            },
+            "index": index_row,
+            "analysis": analysis_status,
         },
         "snapshot": snapshot.get("manifest", {}),
         "export": export_manifest,

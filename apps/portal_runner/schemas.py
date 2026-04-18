@@ -25,6 +25,8 @@ class PipelineInput:
     topic_slug: str | None = None
     topic_title: str | None = None
     mock_response: str | None = None
+    profile: str | None = None
+    prompt: str | None = None
 
     def public_summary(self) -> dict:
         return {
@@ -44,6 +46,8 @@ class PipelineInput:
             "publish_wiki": self.publish_wiki,
             "topic_slug": self.topic_slug,
             "topic_title": self.topic_title,
+            "profile": self.profile,
+            "prompt": self.prompt,
         }
 
 

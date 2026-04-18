@@ -182,13 +182,20 @@ def load_spec_asset_registry(workspace_dir: str | Path) -> dict:
     return _read_registry(paths["spec_assets_registry"])
 
 
-def load_latest_spec_asset_documents(workspace_dir: str | Path) -> tuple[list[dict], dict[str, dict]]:
+def load_latest_spec_asset_documents(
+    workspace_dir: str | Path,
+    *,
+    asset_ids: list[str] | set[str] | None = None,
+) -> tuple[list[dict], dict[str, dict]]:
     registry = load_spec_asset_registry(workspace_dir)
+    allowed_asset_ids = set(asset_ids or [])
     latest_by_asset: dict[str, dict] = {}
     for entry in registry.get("assets", []):
         asset_id = entry.get("asset_id")
         version = entry.get("version", "")
         if not asset_id:
+            continue
+        if allowed_asset_ids and asset_id not in allowed_asset_ids:
             continue
         previous = latest_by_asset.get(asset_id)
         if previous is None or _version_sort_key(version) > _version_sort_key(previous.get("version")):

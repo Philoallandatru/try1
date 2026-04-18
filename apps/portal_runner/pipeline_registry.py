@@ -65,6 +65,21 @@ PIPELINES: dict[str, PipelineDefinition] = {
             "optional_publish_wiki",
         ],
     ),
+    "profile_prompt_debug": PipelineDefinition(
+        pipeline_id="profile_prompt_debug",
+        label="Profile prompt debug",
+        description="Build a registry-backed workspace profile and ask an LLM to debug Jira plus selected knowledge sources.",
+        required_inputs=["prompt"],
+        accepts_pdf=True,
+        steps=[
+            "validate_config",
+            "store_uploaded_pdf",
+            "workspace_init",
+            "profile_prepare",
+            "profile_prompt_query",
+            "portal_state",
+        ],
+    ),
 }
 
 

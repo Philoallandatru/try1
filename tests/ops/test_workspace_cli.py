@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 import unittest
 
+import yaml
+
 from services.connectors.confluence.connector import load_confluence_sync
 from services.connectors.jira.connector import load_jira_sync
 from services.retrieval.indexing.page_index import load_documents, load_page_index
@@ -61,12 +63,473 @@ class WorkspaceCliTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
             self.assertTrue(Path(payload["config_path"]).exists())
+            self.assertEqual(Path(payload["config_path"]).name, "workspace.yaml")
+            self.assertFalse(Path(temp_dir, "config.json").exists())
             self.assertTrue(Path(temp_dir, "raw", "jira", "specs").exists())
             self.assertTrue(Path(temp_dir, "raw", "confluence", "specs").exists())
             self.assertTrue(Path(temp_dir, "snapshots", "current").exists())
             self.assertTrue(Path(temp_dir, "wiki", "topics.json").exists())
             self.assertTrue(Path(temp_dir, "wiki", "routes.json").exists())
             self.assertTrue(Path(temp_dir, "wiki", "compilation-manifest.json").exists())
+            self.assertTrue(Path(temp_dir, "sources").exists())
+            self.assertTrue(Path(temp_dir, "selectors").exists())
+            self.assertTrue(Path(temp_dir, "profiles").exists())
+            self.assertTrue(Path(temp_dir, ".local", "credentials.example.yaml").exists())
+
+    def test_workspace_cli_source_and_selector_commands(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+
+            add_source = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "add",
+                temp_dir,
+                "jira_lab",
+                "--connector-type",
+                "jira.atlassian_api",
+                "--base-url",
+                "https://jira.example.com",
+                "--credential-ref",
+                "jira_lab_token",
+                "--policy",
+                "team:ssd",
+                "--policy",
+                "public",
+                "--include-comments",
+                "--include-attachments",
+            )
+            self.assertEqual(add_source.returncode, 0, add_source.stderr)
+            add_payload = json.loads(add_source.stdout)
+            self.assertEqual(add_payload["source"]["name"], "jira_lab")
+            self.assertTrue(Path(add_payload["path"]).exists())
+
+            source_list = self._run("scripts/workspace_cli.py", "source", "list", temp_dir)
+            self.assertEqual(source_list.returncode, 0, source_list.stderr)
+            self.assertEqual(json.loads(source_list.stdout)["sources"][0]["name"], "jira_lab")
+
+            source_show = self._run("scripts/workspace_cli.py", "source", "show", temp_dir, "jira_lab")
+            self.assertEqual(source_show.returncode, 0, source_show.stderr)
+            self.assertEqual(json.loads(source_show.stdout)["source"]["connector_type"], "jira.atlassian_api")
+
+            add_selector = self._run(
+                "scripts/workspace_cli.py",
+                "selector",
+                "add",
+                temp_dir,
+                "jira_one_issue",
+                "--source",
+                "jira_lab",
+                "--type",
+                "issue",
+                "--issue-key",
+                "SSD-777",
+            )
+            self.assertEqual(add_selector.returncode, 0, add_selector.stderr)
+            self.assertEqual(json.loads(add_selector.stdout)["selector"]["name"], "jira_one_issue")
+
+            selector_list = self._run("scripts/workspace_cli.py", "selector", "list", temp_dir)
+            self.assertEqual(selector_list.returncode, 0, selector_list.stderr)
+            self.assertEqual(json.loads(selector_list.stdout)["selectors"][0]["name"], "jira_one_issue")
+
+            configure = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "configure",
+                temp_dir,
+                "jira_lab",
+                "--base-url",
+                "https://jira2.example.com",
+                "--auth-mode",
+                "bearer",
+            )
+            self.assertEqual(configure.returncode, 0, configure.stderr)
+            self.assertEqual(json.loads(configure.stdout)["source"]["config"]["base_url"], "https://jira2.example.com")
+
+            set_credential = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "set-credential",
+                temp_dir,
+                "jira_lab",
+                "--credential-ref",
+                "jira_lab_pat",
+            )
+            self.assertEqual(set_credential.returncode, 0, set_credential.stderr)
+            self.assertEqual(json.loads(set_credential.stdout)["source"]["credential_ref"], "jira_lab_pat")
+
+            defaults = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "defaults",
+                temp_dir,
+                "jira_lab",
+                "--refresh-freq-minutes",
+                "15",
+                "--prune-freq-hours",
+                "48",
+                "--download-images",
+                "--page-size",
+                "25",
+            )
+            self.assertEqual(defaults.returncode, 0, defaults.stderr)
+            source_defaults = json.loads(defaults.stdout)["source"]["defaults"]
+            self.assertEqual(source_defaults["refresh_freq_minutes"], 15)
+            self.assertEqual(source_defaults["prune_freq_hours"], 48)
+            self.assertTrue(source_defaults["download_images"])
+            self.assertEqual(source_defaults["page_size"], 25)
+
+            disable = self._run("scripts/workspace_cli.py", "source", "disable", temp_dir, "jira_lab")
+            self.assertEqual(disable.returncode, 0, disable.stderr)
+            self.assertFalse(json.loads(disable.stdout)["source"]["enabled"])
+
+            enable = self._run("scripts/workspace_cli.py", "source", "enable", temp_dir, "jira_lab")
+            self.assertEqual(enable.returncode, 0, enable.stderr)
+            self.assertTrue(json.loads(enable.stdout)["source"]["enabled"])
+
+            test_source = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "test",
+                temp_dir,
+                "jira_lab",
+                "--selector-profile",
+                "jira_one_issue",
+                "--skip-credential-check",
+            )
+            self.assertEqual(test_source.returncode, 0, test_source.stderr)
+            self.assertTrue(json.loads(test_source.stdout)["ok"])
+
+    def test_workspace_cli_fetch_source_writes_latest_history_and_manifest(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+            source_file = Path(temp_dir, "sources", "jira_fixture.yaml")
+            source_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_fixture",
+                        "kind": "jira",
+                        "connector_type": "jira.atlassian_api",
+                        "mode": "fixture",
+                        "config": {"path": "fixtures/connectors/jira/full_sync.json", "auth_mode": "auto"},
+                        "defaults": {"include_comments": True, "include_attachments": True},
+                        "policies": ["team:ssd", "public"],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            selector_file = Path(temp_dir, "selectors", "jira_one_issue.yaml")
+            selector_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_one_issue",
+                        "source": "jira_fixture",
+                        "selector": {"type": "issue", "issue_key": "SSD-101"},
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+
+            result = self._run(
+                "scripts/workspace_cli.py",
+                "fetch-source",
+                temp_dir,
+                "--source",
+                "jira_fixture",
+                "--selector-profile",
+                "jira_one_issue",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue(Path(payload["latest_payload_path"]).exists())
+            self.assertTrue(Path(payload["history_payload_path"]).exists())
+            self.assertTrue(Path(payload["fetch_manifest_path"]).exists())
+            manifest = json.loads(Path(payload["fetch_manifest_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(manifest["source_name"], "jira_fixture")
+            self.assertEqual(manifest["selector_profile"], "jira_one_issue")
+            self.assertEqual(manifest["document_count"], 1)
+            self.assertTrue(manifest["payload_hash"].startswith("sha256:"))
+
+            build = self._run("scripts/workspace_cli.py", "build", temp_dir)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            normalize_manifest = Path(temp_dir, "build", "normalize", "jira_fixture", "manifest.json")
+            index_manifest = Path(temp_dir, "build", "index", "pageindex_v1", "manifest.json")
+            self.assertTrue(normalize_manifest.exists())
+            self.assertTrue(index_manifest.exists())
+            normalize_payload = json.loads(normalize_manifest.read_text(encoding="utf-8"))
+            index_payload = json.loads(index_manifest.read_text(encoding="utf-8"))
+            self.assertEqual(normalize_payload["source_name"], "jira_fixture")
+            self.assertTrue(normalize_payload["payload_hash"].startswith("sha256:"))
+            self.assertEqual(index_payload["index_name"], "pageindex_v1")
+            self.assertTrue(index_payload["input_documents_hash"].startswith("sha256:"))
+
+            status = self._run("scripts/workspace_cli.py", "status", temp_dir)
+            self.assertEqual(status.returncode, 0, status.stderr)
+            status_payload = json.loads(status.stdout)
+            self.assertEqual(status_payload["registry_counts"]["sources"], 1)
+            self.assertEqual(status_payload["registry_counts"]["selectors"], 1)
+            self.assertEqual(status_payload["cache"]["fetch"]["fresh"], 1)
+            self.assertEqual(status_payload["cache"]["fetch"]["stale"], 0)
+
+            selector_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_one_issue",
+                        "source": "jira_fixture",
+                        "selector": {"type": "issue", "issue_key": "SSD-102"},
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            stale_status = self._run("scripts/workspace_cli.py", "status", temp_dir)
+            self.assertEqual(stale_status.returncode, 0, stale_status.stderr)
+            stale_payload = json.loads(stale_status.stdout)
+            self.assertEqual(stale_payload["cache"]["fetch"]["stale"], 1)
+            self.assertEqual(stale_payload["cache"]["fetch"]["sources"][0]["reason"], "selector_changed")
+
+            refresh = self._run("scripts/workspace_cli.py", "refresh", temp_dir)
+            self.assertEqual(refresh.returncode, 0, refresh.stderr)
+            refresh_payload = json.loads(refresh.stdout)
+            self.assertEqual(refresh_payload["refreshed_count"], 1)
+
+            source_refresh = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "refresh",
+                temp_dir,
+                "jira_fixture",
+                "--selector-profile",
+                "jira_one_issue",
+            )
+            self.assertEqual(source_refresh.returncode, 0, source_refresh.stderr)
+            self.assertEqual(json.loads(source_refresh.stdout)["source_name"], "jira_fixture")
+
+            rebuild = self._run("scripts/workspace_cli.py", "rebuild", temp_dir, "--from", "raw", "--source", "jira_fixture")
+            self.assertEqual(rebuild.returncode, 0, rebuild.stderr)
+            self.assertIn("jira_fixture", json.loads(rebuild.stdout)["rebuilt_sources"])
+
+            reindex = self._run("scripts/workspace_cli.py", "reindex", temp_dir, "--index-name", "pageindex_v1")
+            self.assertEqual(reindex.returncode, 0, reindex.stderr)
+            reindex_payload = json.loads(reindex.stdout)
+            self.assertTrue(Path(reindex_payload["page_index_path"]).exists())
+            self.assertEqual(reindex_payload["index_name"], "pageindex_v1")
+
+    def test_workspace_cli_run_analysis_uses_profile_and_existing_snapshot(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self._prepare_workspace_snapshot(temp_dir)
+            Path(temp_dir, "sources").mkdir(exist_ok=True)
+            Path(temp_dir, "selectors").mkdir(exist_ok=True)
+            Path(temp_dir, "profiles").mkdir(exist_ok=True)
+            Path(temp_dir, "sources", "jira_fixture.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_fixture",
+                        "kind": "jira",
+                        "connector_type": "jira.atlassian_api",
+                        "mode": "fixture",
+                        "config": {"path": "fixtures/connectors/jira/full_sync.json"},
+                        "defaults": {},
+                        "policies": ["team:ssd"],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            Path(temp_dir, "selectors", "jira_one_issue.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_one_issue",
+                        "source": "jira_fixture",
+                        "selector": {"type": "issue", "issue_key": "SSD-102"},
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            Path(temp_dir, "profiles", "ssd_deep_analysis_default.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "ssd_deep_analysis_default",
+                        "inputs": {
+                            "jira": {"source": "jira_fixture", "selector_profile": "jira_one_issue"}
+                        },
+                        "analysis": {
+                            "top_k": 3,
+                            "llm_backend": "none",
+                            "llm_prompt_mode": "strict",
+                            "policies": ["team:ssd"],
+                        },
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+
+            result = self._run(
+                "scripts/workspace_cli.py",
+                "run-analysis",
+                temp_dir,
+                "--profile",
+                "ssd_deep_analysis_default",
+                "--issue-key",
+                "SSD-102",
+                "--use-existing-snapshot",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["profile"], "ssd_deep_analysis_default")
+            self.assertEqual(payload["analysis"]["issue_id"], "SSD-102")
+            self.assertTrue(Path(payload["analysis"]["run_dir"]).exists())
+
+    def test_workspace_cli_profile_run_fetches_builds_and_supports_smoke_profile(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+            Path(temp_dir, "sources", "jira_fixture.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_fixture",
+                        "kind": "jira",
+                        "connector_type": "jira.atlassian_api",
+                        "mode": "fixture",
+                        "config": {"path": "fixtures/connectors/jira/incremental_sync.json"},
+                        "defaults": {"include_comments": True},
+                        "policies": ["team:ssd"],
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            Path(temp_dir, "selectors", "jira_one_issue.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "jira_one_issue",
+                        "source": "jira_fixture",
+                        "selector": {"type": "issue", "issue_key": "SSD-102"},
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            Path(temp_dir, "profiles", "ssd_smoke.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "version": 1,
+                        "name": "ssd_smoke",
+                        "inputs": {
+                            "jira": {"source": "jira_fixture", "selector_profile": "jira_one_issue"}
+                        },
+                        "analysis": {
+                            "top_k": 3,
+                            "llm_backend": "mock",
+                            "llm_mock_response": "profile mock answer",
+                            "llm_prompt_mode": "strict",
+                            "policies": ["team:ssd"],
+                        },
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+
+            result = self._run(
+                "scripts/workspace_cli.py",
+                "run-analysis",
+                temp_dir,
+                "--profile",
+                "ssd_smoke",
+                "--issue-key",
+                "SSD-102",
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["profile"], "ssd_smoke")
+            self.assertEqual(len(payload["orchestration"]["fetches"]), 1)
+            self.assertEqual(payload["analysis"]["answer"]["mode"], "local-llm")
+            self.assertEqual(payload["analysis"]["answer"]["text"], "profile mock answer")
+
+            smoke = self._run(
+                "scripts/workspace_cli.py",
+                "smoke-deep-analysis",
+                temp_dir,
+                "--profile",
+                "ssd_smoke",
+                "--issue-key",
+                "SSD-102",
+            )
+            self.assertEqual(smoke.returncode, 0, smoke.stderr)
+            smoke_payload = json.loads(smoke.stdout)
+            self.assertEqual(smoke_payload["profile"], "ssd_smoke")
+            self.assertTrue(Path(smoke_payload["portal_state_path"]).exists())
+
+    def test_workspace_cli_old_fetch_converts_spec_to_registry(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+
+            result = self._run("scripts/workspace_cli.py", "fetch", temp_dir, "project-slice")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue(Path(payload["latest_payload_path"]).exists())
+            self.assertTrue(Path(temp_dir, "sources", "project-slice.yaml").exists())
+            self.assertTrue(Path(temp_dir, "selectors", "project-slice_selector.yaml").exists())
+            self.assertTrue(Path(temp_dir, "build", "normalize", "project-slice", "documents.json").exists())
+
+    def test_workspace_cli_pdf_local_file_source_ingests_spec_asset(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+            add_source = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "add",
+                temp_dir,
+                "sample_pdf",
+                "--connector-type",
+                "pdf.local_file",
+                "--path",
+                "fixtures/corpus/pdf/sample.pdf",
+            )
+            self.assertEqual(add_source.returncode, 0, add_source.stderr)
+            add_selector = self._run(
+                "scripts/workspace_cli.py",
+                "selector",
+                "add",
+                temp_dir,
+                "sample_pdf_file",
+                "--source",
+                "sample_pdf",
+                "--type",
+                "file",
+            )
+            self.assertEqual(add_selector.returncode, 0, add_selector.stderr)
+
+            fetch = self._run(
+                "scripts/workspace_cli.py",
+                "fetch-source",
+                temp_dir,
+                "--source",
+                "sample_pdf",
+                "--selector-profile",
+                "sample_pdf_file",
+            )
+
+            self.assertEqual(fetch.returncode, 0, fetch.stderr)
+            payload = json.loads(fetch.stdout)
+            self.assertEqual(payload["spec_asset"]["asset_id"], "sample_pdf")
+            self.assertTrue(Path(payload["spec_asset"]["page_index_json"]).exists())
 
     def test_workspace_cli_supports_fetch_build_export_query_and_lint(self) -> None:
         with TemporaryDirectory() as temp_dir:

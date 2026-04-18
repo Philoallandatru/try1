@@ -103,6 +103,14 @@
             Mock response
             <input id="runner-mock-response" type="text" value="Portal runner smoke content">
           </label>
+          <label data-runner-field="profile">
+            Profile
+            <input id="runner-profile" type="text" value="portal_debug" placeholder="portal_debug">
+          </label>
+          <label data-runner-field="prompt">
+            Prompt
+            <textarea id="runner-prompt" placeholder="Debug this Jira issue using selected knowledge and cite evidence."></textarea>
+          </label>
           <label data-runner-field="pdf">
             PDF upload
             <input id="runner-pdf" type="file" accept="application/pdf,.pdf">
@@ -120,7 +128,10 @@
           </section>
           <section>
             <h3>Run Detail</h3>
+            <div id="runner-run-actions"></div>
             <div id="runner-detail"></div>
+            <h4>Runner Events</h4>
+            <div id="runner-events"></div>
           </section>
         </div>
       </article>

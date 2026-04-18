@@ -7,7 +7,7 @@ This guide explains how to set up and use the workspace-first operator flow from
 Use this guide when you want:
 
 - a fixed working directory for staged Jira and Confluence validation
-- repeatable source specs instead of long ad hoc command lines
+- repeatable source registry entries instead of long ad hoc command lines
 - a snapshot-first flow for `fetch -> build -> query -> export`
 
 The workspace is an orchestration layer only:
@@ -58,7 +58,12 @@ This creates:
 
 ```text
 .tmp/workspace/
-  config.json
+  workspace.yaml
+  sources/
+  selectors/
+  profiles/
+  .local/
+    credentials.example.yaml
   raw/
     jira/specs/
     jira/payloads/
@@ -77,7 +82,7 @@ This creates:
     reports/
 ```
 
-### `config.json`
+### `workspace.yaml`
 
 The workspace config is lightweight. Current fields:
 
@@ -88,9 +93,110 @@ The workspace config is lightweight. Current fields:
 - `paths.export_dir`
 - `paths.runs_dir`
 
-In the current implementation this file is mostly metadata and defaults. Source-specific behavior is driven by spec files.
+In the current implementation this file is mostly metadata and defaults. Source-specific behavior is driven by the source registry. Existing workspaces with the older `config.json` file remain readable for compatibility, but new workspaces use `workspace.yaml`.
 
-## 3. Source Spec Files
+## 3. Source Registry Workflow
+
+The source registry is the preferred persistent configuration surface for repeated workspace runs.
+
+Create a named Jira source:
+
+```powershell
+python scripts/workspace_cli.py source add .tmp\workspace jira_lab --connector-type jira.atlassian_api --base-url https://jira.example.com --credential-ref jira_lab_token --policy team:ssd --policy public
+```
+
+Create a local PDF source:
+
+```powershell
+python scripts/workspace_cli.py source add .tmp\workspace nvme_pdf --connector-type pdf.local_file --path fixtures/corpus/pdf/sample.pdf
+python scripts/workspace_cli.py selector add .tmp\workspace nvme_pdf_file --source nvme_pdf --type file
+python scripts/workspace_cli.py fetch-source .tmp\workspace --source nvme_pdf --selector-profile nvme_pdf_file
+```
+
+Create a selector profile:
+
+```powershell
+python scripts/workspace_cli.py selector add .tmp\workspace jira_one_issue --source jira_lab --type issue --issue-key SSD-777
+```
+
+Fetch and cache source payload:
+
+```powershell
+python scripts/workspace_cli.py fetch-source .tmp\workspace --source jira_lab --selector-profile jira_one_issue
+```
+
+Refresh stale cached sources:
+
+```powershell
+python scripts/workspace_cli.py refresh .tmp\workspace
+python scripts/workspace_cli.py source refresh .tmp\workspace jira_lab --selector-profile jira_one_issue
+```
+
+Build the snapshot from cached payload:
+
+```powershell
+python scripts/workspace_cli.py build .tmp\workspace
+```
+
+Rebuild from cached raw payload or rebuild only the index:
+
+```powershell
+python scripts/workspace_cli.py rebuild .tmp\workspace --from raw --source jira_lab
+python scripts/workspace_cli.py reindex .tmp\workspace --index-name pageindex_v1
+```
+
+Run analysis from the existing snapshot:
+
+```powershell
+python scripts/workspace_cli.py run-analysis .tmp\workspace --profile ssd_deep_analysis_default --issue-key SSD-777 --use-existing-snapshot
+```
+
+When `--use-existing-snapshot` is omitted, `run-analysis` reads the profile inputs, fetches stale sources, builds the snapshot, and then runs the existing deep-analysis seam. Profile `analysis.llm_backend`, `analysis.llm_model`, `analysis.llm_base_url`, `analysis.llm_api_key`, `analysis.llm_mock_response`, and `analysis.llm_timeout_seconds` are used when the CLI does not provide an explicit backend.
+
+Registry files are YAML:
+
+```text
+workspace/
+  sources/jira_lab.yaml
+  selectors/jira_one_issue.yaml
+  profiles/ssd_deep_analysis_default.yaml
+  .local/credentials.yaml
+```
+
+Credential values should stay in environment variables:
+
+```yaml
+version: 1
+credentials:
+  jira_lab_token:
+    type: bearer_env
+    env: JIRA_TOKEN
+  jira_lab_pat:
+    type: bearer_inline
+    value: "<token>"
+```
+
+Source maintenance commands:
+
+```powershell
+python scripts/workspace_cli.py source configure .tmp\workspace jira_lab --base-url https://jira.example.com --auth-mode auto
+python scripts/workspace_cli.py source set-credential .tmp\workspace jira_lab --credential-ref jira_lab_token
+python scripts/workspace_cli.py source defaults .tmp\workspace jira_lab --include-comments --include-attachments --refresh-freq-minutes 30
+python scripts/workspace_cli.py source test .tmp\workspace jira_lab --selector-profile jira_one_issue
+python scripts/workspace_cli.py source disable .tmp\workspace jira_lab
+python scripts/workspace_cli.py source enable .tmp\workspace jira_lab
+```
+
+The `status` command reports the cache DAG:
+
+```text
+cache.fetch      source config/selector/refresh freshness
+cache.normalize  raw-payload-to-documents freshness
+cache.index      normalized-documents-to-PageIndex freshness
+cache.analysis   snapshot-to-analysis freshness for profile runs
+```
+
+## 4. Legacy Source Spec Files
 
 Each `fetch` operation is driven by one JSON spec file.
 
@@ -232,7 +338,7 @@ Supported `scope.type` values:
 }
 ```
 
-## 4. Workspace CLI Commands and Parameters
+## 5. Workspace CLI Commands and Parameters
 
 ### `init`
 
@@ -650,7 +756,7 @@ Current implementation note:
 - it does not yet use filesystem events
 - it does not watch `raw/files/`
 
-## 5. End-to-End Flows
+## 6. End-to-End Flows
 
 ### Demo from zero
 
@@ -764,7 +870,7 @@ python scripts/workspace_cli.py build .tmp\workspace
 python scripts/workspace_cli.py export .tmp\workspace
 ```
 
-## 6. Equivalent Lower-Level CLI Examples
+## 7. Equivalent Lower-Level CLI Examples
 
 ### Confluence subtree via `platform_cli.py connector`
 
@@ -810,13 +916,13 @@ python scripts/platform_cli.py sync-export `
   --output-md-dir .tmp\export-docs
 ```
 
-## 7. Current Boundaries
+## 8. Current Boundaries
 
-- Source specs are currently JSON, not YAML.
+- Source registry files are YAML; legacy `fetch <workspace> <spec>` specs remain JSON for compatibility and are internally converted into source/selector registry entries before fetching.
 - Confluence subtree fetch is currently bounded to the `atlassian-api` backend.
 - `watch` is intentionally simple and optimized for operator workflows, not high-scale event processing.
 
-## 8. Running the Wiki Site Locally
+## 9. Running the Wiki Site Locally
 
 The generated wiki site is MkDocs-compatible. Install the site renderer in your local environment:
 

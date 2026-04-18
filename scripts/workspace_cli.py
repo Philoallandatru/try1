@@ -12,27 +12,44 @@ if str(ROOT) not in sys.path:
 from apps.portal.portal_state import build_portal_state, write_portal_state
 from services.analysis.llm_backends import build_llm_backend
 from services.workspace import (
+    add_workspace_selector,
+    add_workspace_source,
     build_workspace,
     build_workspace_site,
     compile_workspace_wiki,
+    configure_workspace_source,
     control_workspace_run,
     deep_analyze_issue,
     export_workspace,
+    fetch_workspace_source,
     fetch_workspace_spec,
     ingest_spec_asset,
     inbox_workspace,
     init_workspace,
     inspect_workspace_run,
+    list_workspace_selectors,
+    list_workspace_sources,
     lint_workspace,
     list_workspace_runs,
     load_workspace_run_artifact,
     publish_workspace_wiki,
     query_workspace,
+    rebuild_workspace,
+    refresh_workspace,
+    refresh_workspace_source,
+    reindex_workspace,
     route_workspace,
+    run_workspace_analysis,
+    set_workspace_source_credential,
+    set_workspace_source_enabled,
     smoke_deep_analysis_workspace,
+    show_workspace_selector,
+    show_workspace_source,
     status_workspace,
     submit_workspace_run_to_prefect,
     sync_workspace_run_prefect_state,
+    test_workspace_source,
+    update_workspace_source_defaults,
     watch_workspace,
 )
 
@@ -96,8 +113,100 @@ def main() -> int:
     fetch_parser.add_argument("workspace")
     fetch_parser.add_argument("spec")
 
+    source_parser = subparsers.add_parser("source")
+    source_subparsers = source_parser.add_subparsers(dest="source_command", required=True)
+    source_add = source_subparsers.add_parser("add")
+    source_add.add_argument("workspace")
+    source_add.add_argument("name")
+    source_add.add_argument("--connector-type", required=True)
+    source_add.add_argument("--base-url")
+    source_add.add_argument("--path")
+    source_add.add_argument("--credential-ref")
+    source_add.add_argument("--policy", action="append")
+    source_add.add_argument("--include-comments", action="store_true", default=True)
+    source_add.add_argument("--include-attachments", action="store_true", default=True)
+    source_list = source_subparsers.add_parser("list")
+    source_list.add_argument("workspace")
+    source_show = source_subparsers.add_parser("show")
+    source_show.add_argument("workspace")
+    source_show.add_argument("name")
+    source_configure = source_subparsers.add_parser("configure")
+    source_configure.add_argument("workspace")
+    source_configure.add_argument("name")
+    source_configure.add_argument("--base-url")
+    source_configure.add_argument("--auth-mode")
+    source_configure.add_argument("--path")
+    source_credential = source_subparsers.add_parser("set-credential")
+    source_credential.add_argument("workspace")
+    source_credential.add_argument("name")
+    source_credential.add_argument("--credential-ref")
+    source_defaults = source_subparsers.add_parser("defaults")
+    source_defaults.add_argument("workspace")
+    source_defaults.add_argument("name")
+    source_defaults.add_argument("--include-comments", action="store_true")
+    source_defaults.add_argument("--no-include-comments", action="store_true")
+    source_defaults.add_argument("--include-attachments", action="store_true")
+    source_defaults.add_argument("--no-include-attachments", action="store_true")
+    source_defaults.add_argument("--include-image-metadata", action="store_true")
+    source_defaults.add_argument("--no-include-image-metadata", action="store_true")
+    source_defaults.add_argument("--download-images", action="store_true")
+    source_defaults.add_argument("--no-download-images", action="store_true")
+    source_defaults.add_argument("--refresh-freq-minutes", type=int)
+    source_defaults.add_argument("--prune-freq-hours", type=int)
+    source_defaults.add_argument("--page-size", type=int)
+    source_test = source_subparsers.add_parser("test")
+    source_test.add_argument("workspace")
+    source_test.add_argument("name")
+    source_test.add_argument("--selector-profile")
+    source_test.add_argument("--skip-credential-check", action="store_true")
+    source_enable = source_subparsers.add_parser("enable")
+    source_enable.add_argument("workspace")
+    source_enable.add_argument("name")
+    source_disable = source_subparsers.add_parser("disable")
+    source_disable.add_argument("workspace")
+    source_disable.add_argument("name")
+    source_refresh = source_subparsers.add_parser("refresh")
+    source_refresh.add_argument("workspace")
+    source_refresh.add_argument("name")
+    source_refresh.add_argument("--selector-profile", required=True)
+
+    selector_parser = subparsers.add_parser("selector")
+    selector_subparsers = selector_parser.add_subparsers(dest="selector_command", required=True)
+    selector_add = selector_subparsers.add_parser("add")
+    selector_add.add_argument("workspace")
+    selector_add.add_argument("name")
+    selector_add.add_argument("--source", required=True)
+    selector_add.add_argument("--type", required=True)
+    selector_add.add_argument("--issue-key")
+    selector_add.add_argument("--project-key")
+    selector_add.add_argument("--page-id")
+    selector_add.add_argument("--root-page-id")
+    selector_add.add_argument("--max-depth", type=int)
+    selector_list = selector_subparsers.add_parser("list")
+    selector_list.add_argument("workspace")
+    selector_show = selector_subparsers.add_parser("show")
+    selector_show.add_argument("workspace")
+    selector_show.add_argument("name")
+
+    fetch_source_parser = subparsers.add_parser("fetch-source")
+    fetch_source_parser.add_argument("workspace")
+    fetch_source_parser.add_argument("--source", required=True)
+    fetch_source_parser.add_argument("--selector-profile", required=True)
+
+    refresh_parser = subparsers.add_parser("refresh")
+    refresh_parser.add_argument("workspace")
+
     build_parser = subparsers.add_parser("build")
     build_parser.add_argument("workspace")
+
+    rebuild_parser = subparsers.add_parser("rebuild")
+    rebuild_parser.add_argument("workspace")
+    rebuild_parser.add_argument("--from", dest="from_layer", default="raw")
+    rebuild_parser.add_argument("--source")
+
+    reindex_parser = subparsers.add_parser("reindex")
+    reindex_parser.add_argument("workspace")
+    reindex_parser.add_argument("--index-name", default="pageindex_v1")
 
     export_parser = subparsers.add_parser("export")
     export_parser.add_argument("workspace")
@@ -182,6 +291,20 @@ def main() -> int:
     deep_analyze_parser.add_argument("--output-answer-md")
     _add_llm_backend_args(deep_analyze_parser)
 
+    run_analysis_parser = subparsers.add_parser("run-analysis")
+    run_analysis_parser.add_argument("workspace")
+    run_analysis_parser.add_argument("--profile", required=True)
+    run_analysis_parser.add_argument("--issue-key", required=True)
+    run_analysis_parser.add_argument("--use-existing-snapshot", action="store_true")
+    _add_llm_backend_args(run_analysis_parser)
+
+    rerun_analysis_parser = subparsers.add_parser("rerun-analysis")
+    rerun_analysis_parser.add_argument("workspace")
+    rerun_analysis_parser.add_argument("--profile", required=True)
+    rerun_analysis_parser.add_argument("--issue-key", required=True)
+    rerun_analysis_parser.add_argument("--use-existing-snapshot", action="store_true", default=True)
+    _add_llm_backend_args(rerun_analysis_parser)
+
     control_run_parser = subparsers.add_parser("control-run")
     control_run_parser.add_argument("workspace")
     control_run_parser.add_argument("run")
@@ -217,8 +340,9 @@ def main() -> int:
 
     smoke_parser = subparsers.add_parser("smoke-deep-analysis")
     smoke_parser.add_argument("workspace")
-    smoke_parser.add_argument("--jira-spec", required=True)
-    smoke_parser.add_argument("--confluence-spec", required=True)
+    smoke_parser.add_argument("--profile")
+    smoke_parser.add_argument("--jira-spec")
+    smoke_parser.add_argument("--confluence-spec")
     smoke_parser.add_argument("--issue-key", required=True)
     smoke_parser.add_argument("--spec-pdf")
     smoke_parser.add_argument("--spec-asset-id")
@@ -251,8 +375,143 @@ def main() -> int:
         return _print_json(init_workspace(args.workspace))
     if args.command == "fetch":
         return _print_json(fetch_workspace_spec(args.workspace, args.spec))
+    if args.command == "source":
+        try:
+            if args.source_command == "add":
+                return _print_json(
+                    add_workspace_source(
+                        args.workspace,
+                        args.name,
+                        connector_type=args.connector_type,
+                        base_url=args.base_url,
+                        path=args.path,
+                        credential_ref=args.credential_ref,
+                        policies=args.policy,
+                        include_comments=args.include_comments,
+                        include_attachments=args.include_attachments,
+                    )
+                )
+            if args.source_command == "list":
+                return _print_json(list_workspace_sources(args.workspace))
+            if args.source_command == "show":
+                return _print_json(show_workspace_source(args.workspace, args.name))
+            if args.source_command == "configure":
+                return _print_json(
+                    configure_workspace_source(
+                        args.workspace,
+                        args.name,
+                        base_url=args.base_url,
+                        auth_mode=args.auth_mode,
+                        path=args.path,
+                    )
+                )
+            if args.source_command == "set-credential":
+                return _print_json(
+                    set_workspace_source_credential(
+                        args.workspace,
+                        args.name,
+                        credential_ref=args.credential_ref,
+                    )
+                )
+            if args.source_command == "defaults":
+                include_comments = True if args.include_comments else False if args.no_include_comments else None
+                include_attachments = True if args.include_attachments else False if args.no_include_attachments else None
+                include_image_metadata = (
+                    True if args.include_image_metadata else False if args.no_include_image_metadata else None
+                )
+                download_images = True if args.download_images else False if args.no_download_images else None
+                return _print_json(
+                    update_workspace_source_defaults(
+                        args.workspace,
+                        args.name,
+                        include_comments=include_comments,
+                        include_attachments=include_attachments,
+                        include_image_metadata=include_image_metadata,
+                        download_images=download_images,
+                        refresh_freq_minutes=args.refresh_freq_minutes,
+                        prune_freq_hours=args.prune_freq_hours,
+                        page_size=args.page_size,
+                    )
+                )
+            if args.source_command == "test":
+                return _print_json(
+                    test_workspace_source(
+                        args.workspace,
+                        args.name,
+                        selector_profile=args.selector_profile,
+                        skip_credential_check=args.skip_credential_check,
+                    )
+                )
+            if args.source_command == "enable":
+                return _print_json(set_workspace_source_enabled(args.workspace, args.name, enabled=True))
+            if args.source_command == "disable":
+                return _print_json(set_workspace_source_enabled(args.workspace, args.name, enabled=False))
+            if args.source_command == "refresh":
+                return _print_json(
+                    refresh_workspace_source(
+                        args.workspace,
+                        args.name,
+                        selector_profile=args.selector_profile,
+                    )
+                )
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "selector":
+        try:
+            if args.selector_command == "add":
+                return _print_json(
+                    add_workspace_selector(
+                        args.workspace,
+                        args.name,
+                        source=args.source,
+                        selector_type=args.type,
+                        issue_key=args.issue_key,
+                        project_key=args.project_key,
+                        page_id=args.page_id,
+                        root_page_id=args.root_page_id,
+                        max_depth=args.max_depth,
+                    )
+                )
+            if args.selector_command == "list":
+                return _print_json(list_workspace_selectors(args.workspace))
+            if args.selector_command == "show":
+                return _print_json(show_workspace_selector(args.workspace, args.name))
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "fetch-source":
+        try:
+            return _print_json(
+                fetch_workspace_source(
+                    args.workspace,
+                    source_name=args.source,
+                    selector_profile=args.selector_profile,
+                )
+            )
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "refresh":
+        try:
+            return _print_json(refresh_workspace(args.workspace))
+        except ValueError as error:
+            parser.error(str(error))
     if args.command == "build":
         return _print_json(build_workspace(args.workspace))
+    if args.command == "rebuild":
+        try:
+            return _print_json(
+                rebuild_workspace(
+                    args.workspace,
+                    from_layer=args.from_layer,
+                    source_name=args.source,
+                )
+            )
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "reindex":
+        try:
+            return _print_json(reindex_workspace(args.workspace, index_name=args.index_name))
+        except ValueError as error:
+            parser.error(str(error))
     if args.command == "export":
         return _print_json(export_workspace(args.workspace))
     if args.command == "ingest-spec-asset":
@@ -374,6 +633,19 @@ def main() -> int:
         if args.output_answer_md:
             payload["output_answer_md"] = _write_text_output(args.output_answer_md, payload["answer"]["text"])
         return _print_json(payload)
+    if args.command in {"run-analysis", "rerun-analysis"}:
+        try:
+            return _print_json(
+                run_workspace_analysis(
+                    args.workspace,
+                    profile_name=args.profile,
+                    issue_key=args.issue_key,
+                    use_existing_snapshot=args.use_existing_snapshot,
+                    llm_backend=_build_llm_backend_from_args(parser, args),
+                )
+            )
+        except ValueError as error:
+            parser.error(str(error))
     if args.command == "control-run":
         try:
             return _print_json(
@@ -428,6 +700,28 @@ def main() -> int:
         except (ValueError, RuntimeError) as error:
             parser.error(str(error))
     if args.command == "smoke-deep-analysis":
+        if args.profile:
+            try:
+                payload = run_workspace_analysis(
+                    args.workspace,
+                    profile_name=args.profile,
+                    issue_key=args.issue_key,
+                    use_existing_snapshot=False,
+                    llm_backend=_build_llm_backend_from_args(parser, args),
+                )
+            except ValueError as error:
+                parser.error(str(error))
+            portal_state_output = args.portal_state_output or str(Path(args.workspace) / "portal_state.json")
+            write_portal_state(
+                portal_state_output,
+                query=args.issue_key,
+                allowed_policies=set(payload["analysis"].get("allowed_policies", args.policies)),
+                workspace_dir=args.workspace,
+            )
+            payload["portal_state_path"] = portal_state_output
+            return _print_json(payload)
+        if not args.jira_spec or not args.confluence_spec:
+            parser.error("--jira-spec and --confluence-spec are required unless --profile is provided")
         try:
             payload = smoke_deep_analysis_workspace(
                 args.workspace,

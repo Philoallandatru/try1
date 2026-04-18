@@ -56,6 +56,37 @@ http://127.0.0.1:8787
 
 For LAN access, open `http://<server-ip>:8787` from another machine.
 
+## Concise CLI Smoke Test
+
+After the server is up, you can submit one real-data run without using the browser:
+
+```powershell
+python scripts/run_portal_runner_smoke.py `
+  --base-url http://127.0.0.1:8787 `
+  --runner-token "<runner-token>" `
+  --pipeline jira_pdf_qa_smoke `
+  --jira-issue-key SSD-102 `
+  --confluence-scope page `
+  --confluence-page-id 123456 `
+  --spec-asset-id nvme-spec-mineru
+```
+
+If you want to upload a PDF instead of reusing a spec asset:
+
+```powershell
+python scripts/run_portal_runner_smoke.py `
+  --base-url http://127.0.0.1:8787 `
+  --runner-token "<runner-token>" `
+  --pipeline full_real_data_smoke `
+  --jira-issue-key SSD-102 `
+  --confluence-page-id 123456 `
+  --pdf fixtures/corpus/pdf/sample.pdf `
+  --preferred-parser pypdf `
+  --publish-wiki
+```
+
+The script prints a short summary and exits non-zero if the run finishes as `failed` or `cancelled`.
+
 ## Security
 
 - `server.runner_token` is required when binding beyond localhost.
@@ -71,8 +102,35 @@ For LAN access, open `http://<server-ip>:8787` from another machine.
 - `pdf_ingest_smoke`
 - `jira_pdf_qa_smoke`
 - `full_real_data_smoke`
+- `profile_prompt_debug`
 
 The portal displays each run with step status, duration, the latest log lines, and artifact links.
+
+## Prompt Debug Workflow
+
+Use `profile_prompt_debug` when the goal is to ask an LLM a debugging prompt over Jira plus selected knowledge sources.
+
+Recommended flow:
+
+1. Choose `Profile prompt debug` in the portal.
+2. Enter a natural-language prompt, for example `Debug this Jira issue using firmware knowledge and cite relevant evidence.`
+3. Optionally enter a Jira issue key.
+4. Optionally select a Confluence page, page tree, or space slice.
+5. Optionally select a reusable spec asset or upload a PDF.
+6. Submit the run.
+
+The runner creates a registry-backed workspace for the run:
+
+- `workspace.yaml`
+- `sources/*.yaml`
+- `selectors/*.yaml`
+- `profiles/*.yaml`
+- cached source payloads
+- normalized documents
+- PageIndex artifacts
+- a prompt-query artifact
+
+The LLM backend comes from `llm:` in the runner config, unless a mock response is supplied in the form.
 
 ## Jira QA Workflow
 

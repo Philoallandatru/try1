@@ -13,7 +13,16 @@ from apps.portal_runner.schemas import PipelineInput
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.analysis.llm_backends import MockLLMBackend, build_llm_backend
 from services.ops.orchestration import load_source_payload
-from services.workspace import build_workspace, deep_analyze_issue, init_workspace, publish_workspace_wiki
+from services.workspace import (
+    build_workspace,
+    deep_analyze_issue,
+    fetch_workspace_source,
+    init_workspace,
+    publish_workspace_wiki,
+    query_workspace,
+    run_workspace_analysis,
+)
+from services.workspace.source_registry import write_run_profile, write_selector_profile, write_source
 from services.workspace.spec_assets import ingest_spec_asset, load_spec_asset_registry
 
 
@@ -122,10 +131,19 @@ class PortalPipelineRunner:
                 self._run_step(run_id, "deep_analysis", lambda: self._deep_analysis(run_id, pipeline_input, context))
                 self._run_step(run_id, "portal_state", lambda: self._portal_state(run_id, context, pipeline_input))
                 self._run_step(run_id, "optional_publish_wiki", lambda: self._optional_publish_wiki(run_id, pipeline_input, context))
+            elif definition.pipeline_id == "profile_prompt_debug":
+                self._run_step(run_id, "workspace_init", lambda: self._workspace_init(run_id, context))
+                self._run_step(run_id, "profile_prepare", lambda: self._profile_prepare(run_id, pipeline_input, context))
+                self._run_step(run_id, "profile_prompt_query", lambda: self._profile_prompt_query(run_id, pipeline_input, context))
+                self._run_step(run_id, "portal_state", lambda: self._portal_state(run_id, context, pipeline_input))
             else:
                 raise PipelineExecutionError(f"No executor registered for {definition.pipeline_id}")
 
             self.storage.mark_run_status(run_id, "succeeded")
+        except PipelineExecutionError as exc:
+            manifest = self.storage.read_manifest(run_id)
+            if manifest.get("status") != "cancelled":
+                self.storage.mark_run_status(run_id, "failed", error=str(exc))
         except Exception as exc:
             self.storage.mark_run_status(run_id, "failed", error=str(exc))
         finally:
@@ -273,6 +291,219 @@ class PortalPipelineRunner:
         artifact = self.storage.save_artifact(run_id, "workspace-build", result)
         self.storage.update_step(run_id, "workspace_build", status="running", artifacts={"workspace-build": artifact})
         return result
+
+    def _profile_prepare(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
+        profile_name = pipeline_input.profile or "portal_debug"
+        inputs: dict[str, dict | list[str]] = {}
+        if pipeline_input.jira_issue_key:
+            write_source(
+                context["workspace_dir"],
+                {
+                    "version": 1,
+                    "name": "portal_jira",
+                    "kind": "jira",
+                    "mode": "live",
+                    "connector_type": "jira.atlassian_api",
+                    "config": {
+                        "base_url": self.config.jira.base_url,
+                        "auth_mode": self.config.jira.auth_mode,
+                        "username": self.config.jira.username,
+                        "password": self.config.jira.password,
+                        "token": self.config.jira.token,
+                    },
+                    "defaults": {"fetch_backend": "atlassian-api", "include_comments": True},
+                    "policies": ["team:ssd", "public"],
+                },
+            )
+            write_selector_profile(
+                context["workspace_dir"],
+                {
+                    "version": 1,
+                    "name": "portal_jira_issue",
+                    "source": "portal_jira",
+                    "selector": {"type": "issue", "issue_key": pipeline_input.jira_issue_key},
+                },
+            )
+            inputs["jira"] = {"source": "portal_jira", "selector_profile": "portal_jira_issue"}
+
+        confluence_selector = self._optional_confluence_selector(pipeline_input)
+        if confluence_selector:
+            write_source(
+                context["workspace_dir"],
+                {
+                    "version": 1,
+                    "name": "portal_confluence",
+                    "kind": "confluence",
+                    "mode": "live",
+                    "connector_type": "confluence.atlassian_api",
+                    "config": {
+                        "base_url": self.config.confluence.base_url,
+                        "auth_mode": self.config.confluence.auth_mode,
+                        "username": self.config.confluence.username,
+                        "password": self.config.confluence.password,
+                        "token": self.config.confluence.token,
+                    },
+                    "defaults": {"fetch_backend": "atlassian-api", "include_attachments": True},
+                    "policies": ["team:ssd", "public"],
+                },
+            )
+            write_selector_profile(
+                context["workspace_dir"],
+                {
+                    "version": 1,
+                    "name": "portal_confluence_selector",
+                    "source": "portal_confluence",
+                    "selector": confluence_selector,
+                },
+            )
+            inputs["confluence"] = {
+                "source": "portal_confluence",
+                "selector_profile": "portal_confluence_selector",
+            }
+
+        spec_asset_id = self._profile_spec_asset(run_id, pipeline_input, context)
+        if spec_asset_id:
+            inputs["spec_assets"] = [spec_asset_id]
+
+        if not inputs:
+            raise ValueError("Profile prompt debug requires at least one Jira, Confluence, PDF upload, or spec asset input.")
+
+        write_run_profile(
+            context["workspace_dir"],
+            {
+                "version": 1,
+                "name": profile_name,
+                "inputs": inputs,
+                "analysis": {
+                    "top_k": 5,
+                    "llm_backend": "mock" if pipeline_input.mock_response else self.config.llm.backend,
+                    "llm_model": self.config.llm.model,
+                    "llm_base_url": self.config.llm.base_url,
+                    "llm_api_key": self.config.llm.api_key,
+                    "llm_mock_response": pipeline_input.mock_response or self.config.llm.mock_response,
+                    "llm_timeout_seconds": self.config.llm.timeout_seconds,
+                    "llm_prompt_mode": "strict",
+                    "policies": ["team:ssd", "public"],
+                },
+            },
+        )
+        artifact = self.storage.save_artifact(
+            run_id,
+            "profile-registry",
+            {"profile": profile_name, "inputs": inputs},
+        )
+        self.storage.update_step(run_id, "profile_prepare", status="running", artifacts={"profile-registry": artifact})
+        return {"profile": profile_name, "input_count": len(inputs)}
+
+    def _profile_spec_asset(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> str | None:
+        upload = self.storage.read_manifest(run_id).get("upload")
+        if upload:
+            result = ingest_spec_asset(
+                context["workspace_dir"],
+                spec_pdf=upload["path"],
+                asset_id=pipeline_input.spec_asset_id or _asset_id_from_run(run_id),
+                display_name=pipeline_input.topic_title or "Portal Debug Spec",
+                preferred_parser=pipeline_input.preferred_parser or self.config.pipeline_config(pipeline_input.pipeline_id).preferred_parser,
+            )
+            return result["asset_id"]
+        if pipeline_input.spec_asset_id:
+            self._copy_shared_spec_asset(
+                asset_id=pipeline_input.spec_asset_id,
+                target_workspace=context["workspace_dir"],
+            )
+            return pipeline_input.spec_asset_id
+        return None
+
+    def _profile_prompt_query(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
+        profile_name = pipeline_input.profile or "portal_debug"
+        question = pipeline_input.prompt or ""
+        if pipeline_input.jira_issue_key and pipeline_input.jira_issue_key not in question:
+            question = f"{question}\n\nJira issue: {pipeline_input.jira_issue_key}"
+
+        if question.strip():
+            self._fetch_profile_sources(context["workspace_dir"], profile_name)
+            from services.workspace.source_registry import load_run_profile
+
+            profile = load_run_profile(context["workspace_dir"], profile_name)
+            spec_asset_ids = profile.get("inputs", {}).get("spec_assets")
+            build_workspace(
+                context["workspace_dir"],
+                spec_asset_ids=list(spec_asset_ids) if isinstance(spec_asset_ids, list) else None,
+            )
+            result = query_workspace(
+                context["workspace_dir"],
+                question=question,
+                top_k=int(profile.get("analysis", {}).get("top_k", 5)),
+                policies=profile.get("analysis", {}).get("policies", ["team:ssd", "public"]),
+                prompt_mode=profile.get("analysis", {}).get("llm_prompt_mode", "strict"),
+                llm_backend=self._llm_backend(pipeline_input),
+            )
+        elif pipeline_input.jira_issue_key:
+            result = run_workspace_analysis(
+                context["workspace_dir"],
+                profile_name=profile_name,
+                issue_key=pipeline_input.jira_issue_key,
+                llm_backend=self._llm_backend(pipeline_input),
+            )
+        else:
+            raise ValueError("prompt is required when jira_issue_key is not provided.")
+
+        artifact = self.storage.save_artifact(run_id, "profile-prompt-result", _compact_result(result))
+        self.storage.update_step(
+            run_id,
+            "profile_prompt_query",
+            status="running",
+            artifacts={"profile-prompt-result": artifact},
+        )
+        return {
+            "profile": profile_name,
+            "answer_mode": result.get("answer", {}).get("mode"),
+            "run_dir": result.get("run_dir"),
+        }
+
+    def _fetch_profile_sources(self, workspace_dir: str | Path, profile_name: str) -> None:
+        from services.workspace.source_registry import fetch_cache_status, load_run_profile
+
+        profile = load_run_profile(workspace_dir, profile_name)
+        status_by_source = {row["source_name"]: row for row in fetch_cache_status(workspace_dir)}
+        for input_config in profile.get("inputs", {}).values():
+            if not isinstance(input_config, dict):
+                continue
+            source_name = input_config.get("source")
+            selector_profile = input_config.get("selector_profile")
+            if not source_name or not selector_profile:
+                continue
+            if status_by_source.get(source_name, {}).get("status") == "fresh":
+                continue
+            fetch_workspace_source(workspace_dir, source_name=source_name, selector_profile=selector_profile)
+
+    def _optional_confluence_selector(self, pipeline_input: PipelineInput) -> dict | None:
+        if not any(
+            [
+                pipeline_input.confluence_page_id,
+                pipeline_input.confluence_page_ids,
+                pipeline_input.confluence_root_page_id,
+                pipeline_input.confluence_space_key,
+            ]
+        ):
+            return None
+        scope = pipeline_input.confluence_scope or "page"
+        selector = {"type": "page" if scope == "pages" else scope}
+        if scope == "page":
+            selector["page_id"] = pipeline_input.confluence_page_id
+        elif scope == "pages":
+            selector["page_ids"] = pipeline_input.confluence_page_ids
+        elif scope == "page_tree":
+            selector["root_page_id"] = pipeline_input.confluence_root_page_id
+            selector["max_depth"] = pipeline_input.confluence_max_depth
+        elif scope == "space_slice":
+            selector["space_key"] = pipeline_input.confluence_space_key
+            selector["label"] = pipeline_input.confluence_label
+            selector["modified_from"] = pipeline_input.confluence_modified_from
+            selector["modified_to"] = pipeline_input.confluence_modified_to
+        else:
+            raise ValueError(f"Unsupported Confluence scope: {scope}")
+        return {key: value for key, value in selector.items() if value is not None}
 
     def _deep_analysis(self, run_id: str, pipeline_input: PipelineInput, context: dict) -> dict:
         if not pipeline_input.jira_issue_key:
@@ -432,6 +663,8 @@ class PortalPipelineRunner:
             raise ValueError("jira_pdf_qa_smoke requires a PDF upload or spec_asset_id.")
         if "pdf" in required_inputs and not upload:
             raise ValueError("PDF upload is required.")
+        if "prompt" in required_inputs and not pipeline_input.prompt:
+            raise ValueError("prompt is required.")
 
 
 def _logs_from_result(result: dict | None) -> list[str]:

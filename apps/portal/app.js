@@ -117,6 +117,8 @@ const runnerState = {
   pollTimer: null,
 };
 
+const RUNNER_TERMINAL_STATUSES = new Set(["succeeded", "failed", "cancelled"]);
+
 function runnerHeaders() {
   return runnerState.token ? { Authorization: `Bearer ${runnerState.token}` } : {};
 }
@@ -146,6 +148,26 @@ function setRunnerStatus(message, failed = false) {
   const target = document.getElementById("runner-status");
   target.textContent = message;
   target.className = failed ? "failed" : "";
+}
+
+function renderRunnerEvents(target, rows) {
+  target.innerHTML = "";
+  if (!rows.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "No runner events recorded yet.";
+    target.appendChild(empty);
+    return;
+  }
+  rows.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "runner-event-row";
+    item.innerHTML = `
+      <strong>${row.event}</strong>
+      <span>${row.created_at || "-"}</span>
+      <code>${JSON.stringify(row).slice(0, 240)}</code>
+    `;
+    target.appendChild(item);
+  });
 }
 
 function renderPipelineOptions(payload) {
@@ -190,21 +212,24 @@ function updateRunnerFormForPipeline() {
   const required = new Set((selected.dataset.requiredInputs || "").split(",").filter(Boolean));
   const acceptsPdf = selected.dataset.acceptsPdf === "true";
   const pipelineId = selected.value;
+  const isProfilePromptDebug = pipelineId === "profile_prompt_debug";
   const visibility = {
-    jira_issue_key: required.has("jira_issue_key"),
-    confluence_selector: required.has("confluence_selector") || required.has("confluence_page_id"),
-    confluence_page_id: required.has("confluence_page_id") || (required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page"),
-    confluence_page_ids: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "pages",
-    confluence_root_page_id: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page_tree",
-    confluence_max_depth: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "page_tree",
-    confluence_space_key: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "space_slice",
-    confluence_label: required.has("confluence_selector") && document.getElementById("runner-confluence-scope").value === "space_slice",
+    jira_issue_key: required.has("jira_issue_key") || isProfilePromptDebug,
+    confluence_selector: required.has("confluence_selector") || required.has("confluence_page_id") || isProfilePromptDebug,
+    confluence_page_id: required.has("confluence_page_id") || ((required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "page"),
+    confluence_page_ids: (required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "pages",
+    confluence_root_page_id: (required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "page_tree",
+    confluence_max_depth: (required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "page_tree",
+    confluence_space_key: (required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "space_slice",
+    confluence_label: (required.has("confluence_selector") || isProfilePromptDebug) && document.getElementById("runner-confluence-scope").value === "space_slice",
     pdf: acceptsPdf,
-    spec_asset: pipelineId === "jira_pdf_qa_smoke",
+    spec_asset: pipelineId === "jira_pdf_qa_smoke" || isProfilePromptDebug,
     spec_asset_id: pipelineId === "pdf_ingest_smoke" || (acceptsPdf && document.getElementById("runner-spec-asset").value === ""),
     publish_wiki: pipelineId === "full_real_data_smoke",
     topic: pipelineId === "full_real_data_smoke",
-    mock_response: pipelineId === "full_real_data_smoke",
+    mock_response: pipelineId === "full_real_data_smoke" || isProfilePromptDebug,
+    profile: isProfilePromptDebug,
+    prompt: isProfilePromptDebug,
   };
   document.querySelectorAll("[data-runner-field]").forEach((field) => {
     const name = field.dataset.runnerField;
@@ -224,7 +249,7 @@ function renderRunnerRuns(payload) {
     const status = document.createElement("span");
     status.textContent = `${run.status} / ${run.run_id}`;
     const request = document.createElement("small");
-    request.textContent = [run.request?.jira_issue_key, run.request?.confluence_page_id].filter(Boolean).join(" / ");
+    request.textContent = [run.request?.jira_issue_key, run.request?.confluence_page_id, run.request?.profile].filter(Boolean).join(" / ");
     button.append(title, document.createElement("br"), status, document.createElement("br"), request);
     button.addEventListener("click", () => {
       runnerState.selectedRunId = run.run_id;
@@ -234,9 +259,12 @@ function renderRunnerRuns(payload) {
   });
 }
 
-function renderRunnerDetail(manifest) {
+function renderRunnerDetail(manifest, events) {
   const target = document.getElementById("runner-detail");
+  const actions = document.getElementById("runner-run-actions");
+  const eventTarget = document.getElementById("runner-events");
   target.innerHTML = "";
+  actions.innerHTML = "";
   const heading = document.createElement("div");
   const statusClass = manifest.status === "failed" ? "runner-status failed" : "runner-status";
   heading.innerHTML = `
@@ -245,6 +273,23 @@ function renderRunnerDetail(manifest) {
     <p><code>${manifest.run_id}</code></p>
   `;
   target.appendChild(heading);
+  if (!RUNNER_TERMINAL_STATUSES.has(manifest.status)) {
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.id = "runner-cancel";
+    cancelButton.className = "runner-secondary-action";
+    cancelButton.textContent = "Cancel Run";
+    cancelButton.addEventListener("click", async () => {
+      try {
+        await runnerFetch(`/api/runs/${manifest.run_id}/cancel`, { method: "POST" });
+        setRunnerStatus(`Cancel requested for ${manifest.run_id}`);
+        await refreshRunnerRuns();
+      } catch (error) {
+        setRunnerStatus(error.message, true);
+      }
+    });
+    actions.appendChild(cancelButton);
+  }
 
   (manifest.steps || []).forEach((step) => {
     const card = document.createElement("div");
@@ -286,11 +331,15 @@ function renderRunnerDetail(manifest) {
     });
     target.appendChild(list);
   }
+  renderRunnerEvents(eventTarget, events || []);
 }
 
 async function loadRunnerDetail(runId) {
-  const manifest = await runnerFetch(`/api/runs/${runId}`);
-  renderRunnerDetail(manifest);
+  const [manifest, eventPayload] = await Promise.all([
+    runnerFetch(`/api/runs/${runId}`),
+    runnerFetch(`/api/runs/${runId}/events`),
+  ]);
+  renderRunnerDetail(manifest, eventPayload.events || []);
 }
 
 async function refreshRunnerRuns() {
@@ -359,6 +408,8 @@ function wireRunnerPanel() {
     form.append("topic_slug", document.getElementById("runner-topic-slug").value);
     form.append("topic_title", document.getElementById("runner-topic-title").value);
     form.append("mock_response", document.getElementById("runner-mock-response").value);
+    form.append("profile", document.getElementById("runner-profile").value);
+    form.append("prompt", document.getElementById("runner-prompt").value);
     const file = document.getElementById("runner-pdf").files[0];
     if (file) {
       form.append("pdf", file);
@@ -398,6 +449,8 @@ function saveRunnerForm() {
     topicSlug: document.getElementById("runner-topic-slug").value,
     topicTitle: document.getElementById("runner-topic-title").value,
     mockResponse: document.getElementById("runner-mock-response").value,
+    profile: document.getElementById("runner-profile").value,
+    prompt: document.getElementById("runner-prompt").value,
     publishWiki: document.getElementById("runner-publish-wiki").checked,
   };
   localStorage.setItem("portalRunnerForm", JSON.stringify(values));
@@ -427,6 +480,8 @@ function restoreRunnerForm() {
   assign("runner-topic-slug", values.topicSlug);
   assign("runner-topic-title", values.topicTitle);
   assign("runner-mock-response", values.mockResponse);
+  assign("runner-profile", values.profile);
+  assign("runner-prompt", values.prompt);
   document.getElementById("runner-publish-wiki").checked = values.publishWiki !== false;
 }
 

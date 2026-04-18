@@ -676,3 +676,50 @@ Key invariants:
 - run detail includes manifest, control events, artifact inventory, and a compact result summary
 - artifact reads return JSON payloads for `.json` artifacts and text content for markdown/text artifacts
 - artifact lookup uses the run manifest inventory rather than guessing file locations when possible
+
+## 23. Workspace Source Registry Contract
+
+Produced by:
+
+- `services/workspace/source_registry.py`
+- `scripts/workspace_cli.py source`
+- `scripts/workspace_cli.py selector`
+- `scripts/workspace_cli.py fetch-source`
+- `scripts/workspace_cli.py refresh`
+- `scripts/workspace_cli.py rebuild`
+- `scripts/workspace_cli.py reindex`
+- `scripts/workspace_cli.py run-analysis`
+
+Current registry files:
+
+- `workspace.yaml`
+- `sources/<source-name>.yaml`
+- `selectors/<selector-name>.yaml`
+- `profiles/<profile-name>.yaml`
+- `.local/credentials.yaml`
+
+Current cache files:
+
+- `raw/<kind>/payloads/<source-name>/latest.json`
+- `raw/<kind>/payloads/<source-name>/fetch-manifest.json`
+- `raw/<kind>/payloads/<source-name>/history/*.json`
+- `build/normalize/<source-name>/manifest.json`
+- `build/normalize/<source-name>/documents.json`
+- `build/index/pageindex_v1/manifest.json`
+
+Key invariants:
+
+- registry files are local workspace configuration and are not runtime payload cache files
+- `workspace.yaml` is the default workspace config; older `config.json` files are read-only compatible
+- source names are stable identifiers used by payload cache and build manifests
+- credentials support `bearer_env` and `bearer_inline`; env references are preferred for durable local workspaces
+- `pdf.local_file` sources are represented as registry sources and write reusable spec assets under `raw/files/spec_assets/`
+- fetch cache invalidation is driven by source config hash, selector hash, and optional refresh frequency
+- cached raw payloads live under `raw/<kind>/payloads/<source>/latest.json` and `history/*.json`
+- `refresh <workspace>` only refetches stale sources with a previous selector profile in their fetch manifest
+- `rebuild <workspace> --from raw` rebuilds normalize artifacts from cached payloads and assembles the snapshot without refetching
+- `reindex <workspace>` rebuilds `build/index/pageindex_v1/page_index.json` from normalized documents without refetching
+- `run-analysis <workspace> --profile ...` fetches stale profile inputs and builds before analysis unless `--use-existing-snapshot` is supplied
+- `smoke-deep-analysis <workspace> --profile ...` routes through the profile analysis path
+- `status <workspace>` exposes `cache.fetch`, `cache.normalize`, `cache.index`, and `cache.analysis` freshness
+- `snapshots/current/` remains limited to `manifest.json`, `documents.json`, and `page_index.json`

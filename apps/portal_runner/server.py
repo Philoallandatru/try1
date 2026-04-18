@@ -81,6 +81,8 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         topic_slug: str | None = Form(None),
         topic_title: str | None = Form(None),
         mock_response: str | None = Form(None),
+        profile: str | None = Form(None),
+        prompt: str | None = Form(None),
         pdf: UploadFile | None = File(None),
     ) -> dict:
         upload = None
@@ -108,6 +110,8 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             topic_slug=_blank_to_none(topic_slug),
             topic_title=_blank_to_none(topic_title),
             mock_response=_blank_to_none(mock_response),
+            profile=_blank_to_none(profile),
+            prompt=_blank_to_none(prompt),
         )
         try:
             manifest = runner.create_run(
