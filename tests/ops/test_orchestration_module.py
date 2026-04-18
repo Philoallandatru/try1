@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from tempfile import TemporaryDirectory
 import unittest
 
 from services.ops.orchestration import run_multi_sync_health, run_sync_health
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class OpsOrchestrationModuleTest(unittest.TestCase):

@@ -463,19 +463,22 @@ def fetch_confluence_page_sync(
             download_images=download_images,
             image_download_dir=image_download_dir,
         )
-        documents = [
-            _page_to_document(
-                page,
-                source_uri=(
-                    page.get("_links", {}).get("webui")
-                    if str(page.get("_links", {}).get("webui", "")).startswith("http")
-                    else f"{base_url.rstrip('/')}{page.get('_links', {}).get('webui', f'/pages/viewpage.action?pageId={page['id']}')}"
-                ),
-                incremental=bool(payload.get("cursor") or modified_from or modified_to),
-                acl_policy=acl_policy,
+        documents = []
+        for page in payload.get("pages", []):
+            webui = page.get("_links", {}).get("webui")
+            if str(webui or "").startswith("http"):
+                source_uri = webui
+            else:
+                fallback_webui = f"/pages/viewpage.action?pageId={page['id']}"
+                source_uri = f"{base_url.rstrip('/')}{webui or fallback_webui}"
+            documents.append(
+                _page_to_document(
+                    page,
+                    source_uri=source_uri,
+                    incremental=bool(payload.get("cursor") or modified_from or modified_to),
+                    acl_policy=acl_policy,
+                )
             )
-            for page in payload.get("pages", [])
-        ]
         next_cursor = cursor
         if documents:
             next_cursor = max(document["metadata"]["sync_cursor"] for document in documents)

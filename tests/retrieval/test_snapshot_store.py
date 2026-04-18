@@ -1,11 +1,13 @@
-from pathlib import Path
-from tempfile import TemporaryDirectory
+from __future__ import annotations
+
 import json
+from pathlib import Path
 import unittest
 
 from services.connectors.jira.connector import load_jira_sync
 from services.retrieval.persistence.snapshot_store import create_snapshot, load_snapshot, refresh_snapshot
 from services.retrieval.toolkit import load_document_snapshot
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class SnapshotStoreTest(unittest.TestCase):

@@ -4,9 +4,8 @@ from pathlib import Path
 from typing import Iterable
 import json
 
-from services.retrieval.citations.assembler import assemble_citation, build_source_inspection
+from services.retrieval.engine import PAGE_INDEX_ENGINE
 from services.retrieval.indexing.page_index import build_page_index, load_page_index
-from services.retrieval.search.hybrid_search import search_page_index
 
 
 def load_document_snapshot(path: str | Path) -> list[dict]:
@@ -28,7 +27,7 @@ def search_index(
     allowed_policies: set[str],
     top_k: int = 10,
 ) -> list[dict]:
-    return search_page_index(entries, query, allowed_policies, top_k=top_k)
+    return PAGE_INDEX_ENGINE.search(entries, query, allowed_policies, top_k=top_k)
 
 
 def search_documents(
@@ -46,13 +45,7 @@ def citation_for_index(
     allowed_policies: set[str],
     top_k: int = 10,
 ) -> dict:
-    results = search_index(entries, query, allowed_policies, top_k=top_k)
-    if not results:
-        return {"citation": None, "inspection": None}
-    return {
-        "citation": assemble_citation(results[0]),
-        "inspection": build_source_inspection(results[0]),
-    }
+    return PAGE_INDEX_ENGINE.citation(entries, query, allowed_policies, top_k=top_k)
 
 
 def citation_for_documents(

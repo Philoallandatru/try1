@@ -53,9 +53,28 @@ Supported commands:
 
 - `init <workspace>`
 - `fetch <workspace> <spec>`
+- `source add <workspace> <name> --connector-type ... --base-url ...`
+- `source configure <workspace> <name> --base-url ... --auth-mode ...`
+- `source set-credential <workspace> <name> --credential-ref ...`
+- `source defaults <workspace> <name> --refresh-freq-minutes ...`
+- `source test <workspace> <name> [--selector-profile ...]`
+- `source enable <workspace> <name>`
+- `source disable <workspace> <name>`
+- `source refresh <workspace> <name> --selector-profile ...`
+- `source list <workspace>`
+- `source show <workspace> <name>`
+- `selector add <workspace> <name> --source ... --type ...`
+- `selector list <workspace>`
+- `selector show <workspace> <name>`
+- `fetch-source <workspace> --source ... --selector-profile ...`
+- `refresh <workspace>`
 - `build <workspace>`
+- `rebuild <workspace> --from raw [--source ...]`
+- `reindex <workspace> --index-name pageindex_v1`
 - `export <workspace>`
 - `query <workspace> "<question>"`
+- `run-analysis <workspace> --profile ... --issue-key ... [--use-existing-snapshot]`
+- `rerun-analysis <workspace> --profile ... --issue-key ... --use-existing-snapshot`
 - `status <workspace>`
 - `lint <workspace>`
 - `watch <workspace>`
@@ -64,7 +83,12 @@ Recommended workspace layout:
 
 ```text
 <workspace>/
-  config.json
+  workspace.yaml
+  sources/
+  selectors/
+  profiles/
+  .local/
+    credentials.example.yaml
   raw/
     jira/specs/
     jira/payloads/
@@ -80,10 +104,19 @@ Usage model:
 
 - `init` creates the fixed workspace layout and starter spec files.
 - `fetch` resolves a saved source spec and writes the normalized sync payload into `raw/*/payloads/`.
-- `build` rebuilds `snapshots/current/` from the current payload set.
+- `source` manages named Jira and Confluence source registry files under `sources/*.yaml`.
+- `source add --connector-type pdf.local_file --path ...` registers a local PDF file source that writes reusable spec assets.
+- `selector` manages reusable source selectors under `selectors/*.yaml`.
+- `fetch-source` fetches through the registry and writes `latest.json`, `history/*.json`, and `fetch-manifest.json`.
+- `refresh` refetches stale registry sources that have prior fetch manifests.
+- `rebuild` rebuilds normalize artifacts from cached raw payloads and then assembles a snapshot.
+- `reindex` rebuilds the `build/index/pageindex_v1/page_index.json` artifact from normalized documents.
+- `build` assembles `snapshots/current/` from current normalized documents and spec assets.
 - `export` emits Markdown plus `page_index.json` from the current snapshot.
 - `query` searches the snapshot PageIndex directly and can optionally call a local LLM backend.
+- `run-analysis` and `rerun-analysis` execute profile-driven Jira analysis through the existing snapshot and deep-analysis seam. Without `--use-existing-snapshot`, `run-analysis` fetches stale profile inputs and builds before analysis.
 - `status` reports spec counts, payload counts, snapshot manifest, and latest export state.
+- `status` also reports the `fetch -> normalize -> index -> analysis` cache DAG.
 - `lint` checks workspace integrity and stale snapshot/export conditions.
 - `watch` polls workspace spec/payload changes and can run a bootstrap pass with `--run-once`.
 

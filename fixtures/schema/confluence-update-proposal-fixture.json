@@ -1,0 +1,41 @@
+{
+  "proposal_id": "proposal-ssd-102-v1",
+  "source_issue_key": "SSD-102",
+  "candidate_pages": [
+    {
+      "page_id": "CONF-201",
+      "title": "Telemetry Architecture",
+      "space_key": "SSDENG"
+    }
+  ],
+  "knowledge_action": "revise",
+  "proposed_delta": "Clarify NAND write telemetry limits and reference the affected validation flow.",
+  "supporting_evidence": [
+    {
+      "document": "SSD-102",
+      "version": "2026.04.05",
+      "page": null,
+      "section": "Root Cause",
+      "clause": null,
+      "evidence_span": [
+        "LNDF(224)获取NAND写入量异常"
+      ]
+    },
+    {
+      "document": "CONF-201",
+      "version": "3",
+      "page": null,
+      "section": "Telemetry Pipeline",
+      "clause": null,
+      "evidence_span": [
+        "Telemetry Architecture"
+      ]
+    }
+  ],
+  "confidence": 0.82,
+  "open_questions": [
+    "Whether the workaround should be documented as temporary or permanent."
+  ],
+  "status": "draft",
+  "version": "v1"
+}

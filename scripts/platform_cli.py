@@ -19,6 +19,7 @@ from scripts.gates.check_module_contracts import main as module_check_main
 from scripts.gates.check_repo_shape import main as repo_check_main
 from services.eval.real_pdf_validation import validate_real_pdfs
 from scripts.gates.run_phase1_gate import evaluate_phase1_gate
+from services.analysis.deep_analysis import build_deep_analysis_from_documents
 from services.analysis.jira_issue_analysis import (
     build_confluence_wiki_summary_payload,
     build_jira_batch_spec_report,
@@ -923,6 +924,19 @@ def main() -> int:
     sync_export_parser.add_argument("--confluence-insecure", action="store_true")
     _add_prefixed_confluence_fetch_args(sync_export_parser)
 
+    deep_analyze_parser = subparsers.add_parser("deep-analyze")
+    deep_analyze_parser.add_argument("--issue-key", required=True)
+    deep_analyze_parser.add_argument("--snapshot-dir", required=True)
+    deep_analyze_parser.add_argument("--policies", nargs="*", default=["team:ssd", "public"])
+    deep_analyze_parser.add_argument("--top-k", type=int, default=5)
+    deep_analyze_parser.add_argument("--output-answer-md")
+    _add_llm_backend_args(deep_analyze_parser)
+
+    cluster_parser = subparsers.add_parser("cluster")
+    cluster_parser.add_argument("--snapshot-dir", required=True)
+    cluster_parser.add_argument("--strategy", choices=["by_issue_family", "by_component", "by_label", "by_tag", "composite"], default="composite")
+    cluster_parser.add_argument("--output-json")
+
     args = parser.parse_args()
 
     if args.command == "adr-check":
@@ -1551,6 +1565,33 @@ def main() -> int:
                 },
             }
         )
+    if args.command == "deep-analyze":
+        from services.retrieval.persistence.snapshot_store import snapshot_paths as _snapshot_paths
+        snap_paths = _snapshot_paths(args.snapshot_dir)
+        documents = load_document_snapshot(snap_paths["documents"])
+        try:
+            payload = build_deep_analysis_from_documents(
+                documents=documents,
+                issue_id=args.issue_key,
+                allowed_policies=set(args.policies),
+                top_k=args.top_k,
+                prompt_mode=args.llm_prompt_mode,
+                llm_backend=_build_llm_backend_from_args(parser, args),
+            )
+        except ValueError as error:
+            parser.error(str(error))
+        if args.output_answer_md:
+            payload["output_answer_md"] = _write_text_output(args.output_answer_md, payload["answer"]["text"])
+        return _print_json(payload)
+    if args.command == "cluster":
+        from services.analysis.clustering import cluster_jira_issues
+        snap_paths = snapshot_paths(args.snapshot_dir)
+        documents = load_document_snapshot(snap_paths["documents"])
+        jira_documents = [doc for doc in documents if doc.get("source_type") == "jira"]
+        payload = cluster_jira_issues(jira_documents, strategy=args.strategy)
+        if args.output_json:
+            payload["output_json"] = _write_json_output(args.output_json, payload)
+        return _print_json(payload)
     return 1
 
 

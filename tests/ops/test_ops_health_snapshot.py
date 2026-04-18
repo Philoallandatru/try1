@@ -1,10 +1,12 @@
-from tempfile import TemporaryDirectory
+from __future__ import annotations
+
 import unittest
 
-from services.retrieval.toolkit import load_document_snapshot
-from services.retrieval.persistence.snapshot_store import create_snapshot, refresh_snapshot
-from services.connectors.jira.connector import load_jira_sync
 from services.ops.health import build_ops_health
+from services.connectors.jira.connector import load_jira_sync
+from services.retrieval.persistence.snapshot_store import create_snapshot, refresh_snapshot
+from services.retrieval.toolkit import load_document_snapshot
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class OpsHealthSnapshotTest(unittest.TestCase):

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-import tempfile
 import unittest
 from types import SimpleNamespace
 
 from scripts.eval.run_real_pdf_validation import _write_markdown
 from services.eval.real_pdf_validation import _normalize_line, _title_from_pdf, build_validation_report
+from tests.temp_utils import temporary_directory
 
 
 def _document(
@@ -256,7 +256,7 @@ class RealPdfValidationTest(unittest.TestCase):
             },
         }
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with temporary_directory("real-pdf-validation") as tmpdir:
             target = Path(tmpdir) / "report.md"
             _write_markdown(report, target, "qwen2.5:1.5b")
             rendered = target.read_text(encoding="utf-8")

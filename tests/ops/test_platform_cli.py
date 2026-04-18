@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
 import subprocess
 import sys
-from tempfile import TemporaryDirectory
 import unittest
 
+from services.connectors.confluence.connector import load_confluence_sync
+from services.connectors.jira.connector import load_jira_sync
+from services.retrieval.indexing.page_index import load_documents
+from services.retrieval.persistence.snapshot_store import write_snapshot
 from services.retrieval.search.hybrid_search import search_page_index
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class PlatformCliTest(unittest.TestCase):
@@ -32,6 +38,35 @@ class PlatformCliTest(unittest.TestCase):
         confluence_results = search_page_index(page_index, "queue wait", {"team:ssd"})
         self.assertTrue(any(result["document_id"] == "SSD-102" for result in jira_results))
         self.assertTrue(any(result["document_id"] == "CONF-202" for result in confluence_results))
+
+    def _write_cross_source_snapshot(self, snapshot_dir: str) -> None:
+        jira_documents = load_jira_sync(Path("fixtures/connectors/jira/incremental_sync.json"))["documents"]
+        confluence_documents = load_confluence_sync(Path("fixtures/connectors/confluence/page_sync.json"))["documents"]
+        spec_documents = load_documents(Path("fixtures/retrieval/pageindex_corpus.json"))
+        write_snapshot(
+            snapshot_dir,
+            documents=[*jira_documents, *confluence_documents, *spec_documents],
+            sources={
+                "jira": {
+                    "cursor": "jira-test",
+                    "last_sync": "2026-04-15T00:00:00Z",
+                    "sync_type": "incremental",
+                    "document_count": len(jira_documents),
+                },
+                "confluence": {
+                    "cursor": "conf-test",
+                    "last_sync": "2026-04-15T00:00:00Z",
+                    "sync_type": "full",
+                    "document_count": len(confluence_documents),
+                },
+                "spec": {
+                    "cursor": "spec-test",
+                    "last_sync": "2026-04-15T00:00:00Z",
+                    "sync_type": "manual",
+                    "document_count": len(spec_documents),
+                },
+            },
+        )
 
     def test_cli_eval_outputs_metrics(self) -> None:
         result = self._run("eval")
@@ -289,6 +324,47 @@ class PlatformCliTest(unittest.TestCase):
         self.assertEqual(payload["answer"]["backend"], "mock")
         self.assertEqual(payload["answer"]["text"], "Mock local model answer")
         self.assertIn("Separate direct evidence from reasonable inference", payload["ai_prompt"])
+
+    def test_cli_deep_analyze_builds_cross_source_payload(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self._write_cross_source_snapshot(temp_dir)
+            output_answer_md = Path(temp_dir) / "deep-analysis-answer.md"
+
+            result = self._run(
+                "deep-analyze",
+                "--issue-key",
+                "SSD-102",
+                "--snapshot-dir",
+                temp_dir,
+                "--policies",
+                "team:ssd",
+                "--output-answer-md",
+                str(output_answer_md),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["issue_id"], "SSD-102")
+            self.assertIn("routing", payload)
+            self.assertIn("analysis_profile", payload)
+            self.assertIn("answer", payload)
+            self.assertEqual(payload["output_answer_md"], str(output_answer_md))
+            self.assertEqual(output_answer_md.read_text(encoding="utf-8"), payload["answer"]["text"])
+
+    def test_cli_deep_analyze_rejects_non_jira_ids(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self._write_cross_source_snapshot(temp_dir)
+
+            result = self._run(
+                "deep-analyze",
+                "--issue-key",
+                "CONF-201",
+                "--snapshot-dir",
+                temp_dir,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Document is not a Jira issue: CONF-201", result.stderr)
 
     def test_cli_retrieval_consume_supports_pdf_source(self) -> None:
         result = self._run(

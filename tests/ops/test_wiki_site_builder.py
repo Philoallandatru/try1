@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import unittest
 
 from services.retrieval.toolkit import load_document_snapshot
 from services.wiki_site.builder import build_export_package, build_wiki_site
+from tests.temp_utils import temporary_directory as TemporaryDirectory
 
 
 class WikiSiteBuilderTest(unittest.TestCase):
