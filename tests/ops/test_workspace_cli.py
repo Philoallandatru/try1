@@ -307,6 +307,99 @@ class WorkspaceCliTest(unittest.TestCase):
             self.assertEqual(update_payload["profile"]["analysis"]["llm_prompt_mode"], "strict")
             self.assertEqual(update_payload["profile"]["inputs"]["jira"]["source"], "jira_lab")
 
+    def test_workspace_cli_source_registry_pipeline_uses_only_cli_objects(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
+
+            add_jira = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "add",
+                temp_dir,
+                "jira_fixture",
+                "--connector-type",
+                "jira.atlassian_api",
+                "--mode",
+                "fixture",
+                "--path",
+                "fixtures/connectors/jira/incremental_sync.json",
+                "--policy",
+                "team:ssd",
+            )
+            self.assertEqual(add_jira.returncode, 0, add_jira.stderr)
+            self.assertEqual(json.loads(add_jira.stdout)["source"]["mode"], "fixture")
+
+            add_confluence = self._run(
+                "scripts/workspace_cli.py",
+                "source",
+                "add",
+                temp_dir,
+                "conf_fixture",
+                "--connector-type",
+                "confluence.atlassian_api",
+                "--mode",
+                "fixture",
+                "--path",
+                "fixtures/connectors/confluence/page_sync.json",
+                "--policy",
+                "team:ssd",
+            )
+            self.assertEqual(add_confluence.returncode, 0, add_confluence.stderr)
+
+            add_selector = self._run(
+                "scripts/workspace_cli.py",
+                "selector",
+                "add",
+                temp_dir,
+                "jira_one_issue",
+                "--source",
+                "jira_fixture",
+                "--type",
+                "issue",
+                "--issue-key",
+                "SSD-102",
+            )
+            self.assertEqual(add_selector.returncode, 0, add_selector.stderr)
+
+            add_profile = self._run(
+                "scripts/workspace_cli.py",
+                "profile",
+                "add",
+                temp_dir,
+                "ssd_default",
+                "--input",
+                "jira=jira_fixture:jira_one_issue",
+                "--top-k",
+                "3",
+                "--policy",
+                "team:ssd",
+                "--llm-backend",
+                "none",
+            )
+            self.assertEqual(add_profile.returncode, 0, add_profile.stderr)
+
+            result = self._run(
+                "scripts/workspace_cli.py",
+                "analyze-jira",
+                temp_dir,
+                "--profile",
+                "ssd_default",
+                "--issue-key",
+                "SSD-102",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            manifest = json.loads(Path(payload["analysis_manifest_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(manifest["selected_sources"], ["jira_fixture"])
+            self.assertEqual(manifest["selected_selector_profiles"], ["jira_one_issue"])
+            self.assertEqual(payload["analysis"]["issue_id"], "SSD-102")
+
+            snapshot_documents = json.loads(
+                (Path(manifest["snapshot_dir"]) / "documents.json").read_text(encoding="utf-8")
+            )["documents"]
+            self.assertTrue(snapshot_documents)
+            self.assertTrue(all(document["source_type"] == "jira" for document in snapshot_documents))
+
     def test_workspace_cli_selector_add_supports_extended_jira_and_confluence_fields(self) -> None:
         with TemporaryDirectory() as temp_dir:
             self.assertEqual(self._run("scripts/workspace_cli.py", "init", temp_dir).returncode, 0)
