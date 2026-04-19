@@ -77,15 +77,13 @@ uv pip install -U "mineru[all]"
 
 ### Local LLM
 
-Local LLM support is optional and only used when `--llm-backend` is set. Ollama is a system application, not a Python package, so do not add it to `pyproject.toml`.
+Local LLM support is optional and only used when `--llm-backend` is set.
 
-For Ollama:
+For LM Studio (recommended for local testing):
 
-```powershell
-ollama --version
-ollama list
-ollama pull qwen2.5:1.5b
-```
+1. Download and install LM Studio from https://lmstudio.ai/
+2. Load a model (e.g., `qwen-9b` or similar)
+3. Start the local server (default: `http://127.0.0.1:1234/v1`)
 
 Example:
 
@@ -93,13 +91,14 @@ Example:
 python scripts/platform_cli.py jira-report `
   --jira-path fixtures/connectors/jira/incremental_sync.json `
   --updated-on-date 2026-04-05 `
-  --llm-backend ollama `
-  --llm-model qwen2.5:1.5b `
+  --llm-backend openai-compatible `
+  --llm-model qwen-9b `
+  --llm-base-url http://127.0.0.1:1234/v1 `
   --llm-prompt-mode strict `
   --output-answer-md .tmp/jira-report-answer.md
 ```
 
-For local OpenAI-compatible servers such as LM Studio, vLLM, or llama.cpp server:
+For other local OpenAI-compatible servers such as vLLM or llama.cpp server:
 
 ```powershell
 python scripts/platform_cli.py jira-spec-qa `
@@ -244,8 +243,9 @@ python scripts/platform_cli.py retrieval-consume `
   --token $env:CONF_TOKEN `
   --space-key SSD `
   --question "What changed in the latency budget page?" `
-  --llm-backend ollama `
-  --llm-model qwen2.5:1.5b `
+  --llm-backend openai-compatible `
+  --llm-model qwen-9b `
+  --llm-base-url http://127.0.0.1:1234/v1 `
   --output-answer-md .tmp\live-confluence-answer.md
 ```
 

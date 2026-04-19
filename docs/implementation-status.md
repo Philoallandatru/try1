@@ -209,7 +209,7 @@ Current validation entrypoints:
 - `docs/modules/jira-analysis-reporting.md` defines the Jira report and Jira-plus-spec QA module contract and is enforced by `scripts/gates/check_module_contracts.py`.
 - `scripts/platform_cli.py jira-report` supports `--updated-from-iso/--updated-to-iso`, `--updated-on-date`, and `--updated-at-iso`.
 - `scripts/platform_cli.py jira-batch-spec-report` runs Jira-plus-spec QA for each issue selected by the Jira time filter.
-- `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-backend none|mock|ollama|openai-compatible`, defaulting to `none`.
+- `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-backend none|mock|openai-compatible`, defaulting to `none`. Use LM Studio for local LLM validation.
 - `scripts/platform_cli.py jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` support `--llm-prompt-mode strict|balanced|exploratory`, defaulting to `strict`.
 - `jira-batch-spec-report` now forwards `--prompt-template` into each per-issue QA payload instead of treating it as a report-summary template.
 - `tests/ops/test_platform_cli_live_orchestration.py` validates the live dual-source orchestration path without introducing network dependencies.

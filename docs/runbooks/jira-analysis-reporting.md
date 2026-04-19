@@ -52,8 +52,9 @@ python scripts/platform_cli.py jira-report `
   --jira-path fixtures/connectors/jira/incremental_sync.json `
   --updated-from-iso 2026-04-05T09:00:00Z `
   --updated-to-iso 2026-04-05T10:00:00Z `
-  --llm-backend ollama `
-  --llm-model qwen2.5:7b `
+  --llm-backend openai-compatible `
+  --llm-model qwen-9b `
+  --llm-base-url http://127.0.0.1:1234/v1 `
   --llm-prompt-mode strict `
   --output-md .tmp/jira-report.md `
   --output-answer-md .tmp/jira-report-answer.md
@@ -63,6 +64,8 @@ Expected result:
 
 - `markdown` and `.tmp/jira-report.md` preserve the raw Jira issue report.
 - `answer.mode` is `local-llm`.
+- `answer.backend` is `openai-compatible`.
+- `.tmp/jira-report-answer.md` contains the LM Studio model summary.
 - `.tmp/jira-report-answer.md` contains the local-model summary.
 - The prompt requires `Executive summary`, `Issue table`, and `Follow-up actions`.
 
@@ -107,24 +110,7 @@ Expected result:
 
 ## Generate Jira-Plus-Spec QA With A Local Model
 
-Use Ollama when a local Ollama server is running:
-
-```powershell
-python scripts/platform_cli.py jira-spec-qa `
-  --jira-path fixtures/connectors/jira/incremental_sync.json `
-  --jira-issue-id SSD-102 `
-  --spec-corpus fixtures/retrieval/pageindex_corpus.json `
-  --spec-document-id nvme-spec-v1 `
-  --question "Does this issue relate to NVMe flush command evidence?" `
-  --llm-backend ollama `
-  --llm-model qwen2.5:7b `
-  --llm-base-url http://localhost:11434 `
-  --llm-prompt-mode strict `
-  --output-answer-md .tmp/jira-spec-answer-llm.md
-```
-
-Use an OpenAI-compatible local server, such as LM Studio, vLLM, or llama.cpp
-server:
+Use LM Studio (recommended for local validation):
 
 ```powershell
 python scripts/platform_cli.py jira-spec-qa `
@@ -134,14 +120,16 @@ python scripts/platform_cli.py jira-spec-qa `
   --spec-document-id nvme-spec-v1 `
   --question "Does this issue relate to NVMe flush command evidence?" `
   --llm-backend openai-compatible `
-  --llm-model local-model `
-  --llm-base-url http://localhost:1234/v1
+  --llm-model qwen-9b `
+  --llm-base-url http://127.0.0.1:1234/v1 `
+  --llm-prompt-mode strict `
+  --output-answer-md .tmp/jira-spec-answer-llm.md
 ```
 
 Expected result:
 
 - `answer.mode` is `local-llm`.
-- `answer.backend` is `ollama` or `openai-compatible`.
+- `answer.backend` is `openai-compatible`.
 - `retrieval.citations` and `ai_prompt` remain present for audit.
 - The LLM answer must be reviewed against the citations before sharing.
 

@@ -13,7 +13,7 @@ This module covers:
 - Jira-plus-selected-spec retrieval payloads
 - batch Jira-plus-selected-spec report payloads for filtered issues
 - extractive draft answers grounded in retrieved Jira and spec evidence
-- optional local LLM answer generation for explicit `mock`, `ollama`, and `openai-compatible` backends
+- optional local LLM answer generation for explicit `mock` and `openai-compatible` backends (use LM Studio for local validation)
 - optional Markdown file export for reports and answers
 - fixture-backed and live Jira Server CLI paths
 
@@ -92,7 +92,7 @@ This module does not cover:
    Keep `jira-report`, `jira-spec-qa`, and `jira-batch-spec-report` JSON-first, with optional Markdown export flags for report and answer artifacts.
 
 7. Keep local LLM execution opt-in.
-   Support `--llm-backend none|ollama|openai-compatible`, with `mock` reserved for deterministic tests.
+   Support `--llm-backend none|openai-compatible`, with `mock` reserved for deterministic tests. Use LM Studio for local validation.
 
 8. Make prompt strictness explicit.
    Default to `strict`; allow `balanced` and `exploratory` only through `--llm-prompt-mode`.

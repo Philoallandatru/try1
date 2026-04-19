@@ -121,7 +121,7 @@ Run a retrieval query against the current snapshot:
 
 ```powershell
 python scripts/workspace_cli.py query .tmp\workspace "black screen"
-python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend openai-compatible --llm-model qwen-9b --llm-base-url http://127.0.0.1:1234/v1
 ```
 
 Export the derived Markdown/PageIndex bundle:
