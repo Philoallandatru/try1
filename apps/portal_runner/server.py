@@ -35,6 +35,7 @@ from apps.portal_runner.product_api import (
 )
 from apps.portal_runner.runner import PortalPipelineRunner
 from apps.portal_runner.schemas import PipelineInput
+from apps.portal_runner.source_routes import create_source_router
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -385,6 +386,11 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         StaticFiles(directory=portal_web_dist if portal_web_dist.exists() else legacy_portal_root, html=True),
         name="portal",
     )
+
+    # Include unified Source API v2 routes
+    source_router = create_source_router(str(config.workspace.root))
+    app.include_router(source_router)
+
     return app
 
 

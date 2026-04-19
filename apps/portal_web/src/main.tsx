@@ -220,6 +220,10 @@ type SourceFormValues = {
   token: string;
   selectorName: string;
   selectorValue: string;
+  filePath: string;
+  fileType: string;
+  parser: string;
+  originalFilename: string;
 };
 type ProfileFormValues = {
   name: string;
@@ -647,6 +651,10 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
       token: "",
       selectorName: "",
       selectorValue: "",
+      filePath: "",
+      fileType: "pdf",
+      parser: "auto",
+      originalFilename: "",
     },
   });
   const sources = useQuery({
@@ -657,20 +665,30 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
   const watchedKind = form.watch("kind");
   const watchedName = form.watch("name");
   const watchedBaseUrl = form.watch("baseUrl");
+  const watchedFilePath = form.watch("filePath");
   const watchedSelectorValue = form.watch("selectorValue");
+  const isFileUpload = watchedKind === "file_upload";
   const sourceCreated = Boolean((sources.data?.sources || []).some((source) => source.name === watchedName));
   const selectedSource = (sources.data?.sources || []).find((source) => source.name === watchedName);
   const sourceTested = Boolean(selectedSource && selectedSource.status !== "stale");
   const sourceFetched = Boolean(selectedSource && (selectedSource.document_count || 0) > 0);
-  const sourceSteps = [
-    { label: "Source Details", ok: Boolean(watchedKind && watchedName && watchedBaseUrl) },
-    { label: "Authentication", ok: true },
-    { label: "Selector", ok: Boolean(watchedSelectorValue) },
-    { label: "Test", ok: sourceTested },
-    { label: "Fetch", ok: sourceFetched },
-  ];
+  const sourceSteps = isFileUpload
+    ? [
+        { label: "File Details", ok: Boolean(watchedKind && watchedName && watchedFilePath) },
+        { label: "Test", ok: sourceTested },
+        { label: "Parse", ok: sourceFetched },
+      ]
+    : [
+        { label: "Source Details", ok: Boolean(watchedKind && watchedName && watchedBaseUrl) },
+        { label: "Authentication", ok: true },
+        { label: "Selector", ok: Boolean(watchedSelectorValue) },
+        { label: "Test", ok: sourceTested },
+        { label: "Fetch", ok: sourceFetched },
+      ];
   const currentSelector = selectedSource?.selector || sources.data?.selectors.find((row) => row.source === watchedName);
-  const canAdvanceDetails = Boolean(watchedKind && watchedName && watchedBaseUrl);
+  const canAdvanceDetails = isFileUpload
+    ? Boolean(watchedKind && watchedName && watchedFilePath)
+    : Boolean(watchedKind && watchedName && watchedBaseUrl);
   const canAdvanceSelector = Boolean(watchedSelectorValue);
   const resetSourceWizard = () => {
     form.reset({
@@ -680,30 +698,55 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
       token: "",
       selectorName: "",
       selectorValue: "",
+      filePath: "",
+      fileType: "pdf",
+      parser: "auto",
+      originalFilename: "",
     });
     setWizardStep(0);
   };
   const createSource = useMutation({
     mutationFn: (values: SourceFormValues) => {
-      const isJira = values.kind === "jira";
-      return apiJson(
-        "/api/workspace/sources",
-        z.unknown(),
-        {
-          method: "POST",
-          body: JSON.stringify({
-            workspace_dir: workspaceDir,
-            name: values.name,
-            connector_type: isJira ? "jira.atlassian_api" : "confluence.atlassian_api",
-            base_url: values.baseUrl,
-            token: values.token,
-            defaults: { fetch_backend: "native", include_comments: true, include_attachments: true },
-            selector: isJira
-              ? { name: values.selectorName || `${values.name}_issue`, type: "issue", issue_key: values.selectorValue }
-              : { name: values.selectorName || `${values.name}_space`, type: "space_slice", space_key: values.selectorValue },
-          }),
-        },
-      );
+      if (values.kind === "file_upload") {
+        // File Upload source
+        return apiJson(
+          "/api/workspace/sources",
+          z.unknown(),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              workspace_dir: workspaceDir,
+              name: values.name,
+              connector_type: "file_upload.local",
+              file_path: values.filePath,
+              file_type: values.fileType,
+              parser: values.parser,
+              original_filename: values.originalFilename || values.filePath.split(/[/\\]/).pop(),
+            }),
+          },
+        );
+      } else {
+        // Jira or Confluence source
+        const isJira = values.kind === "jira";
+        return apiJson(
+          "/api/workspace/sources",
+          z.unknown(),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              workspace_dir: workspaceDir,
+              name: values.name,
+              connector_type: isJira ? "jira.atlassian_api" : "confluence.atlassian_api",
+              base_url: values.baseUrl,
+              token: values.token,
+              defaults: { fetch_backend: "native", include_comments: true, include_attachments: true },
+              selector: isJira
+                ? { name: values.selectorName || `${values.name}_issue`, type: "issue", issue_key: values.selectorValue }
+                : { name: values.selectorName || `${values.name}_space`, type: "space_slice", space_key: values.selectorValue },
+            }),
+          },
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sources", workspaceDir] });
@@ -744,7 +787,7 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
         <div className="section-heading">
           <p className="eyebrow">Sources</p>
           <h2>Connect Data Sources</h2>
-          <p>Add Jira and Confluence sources, test them, then refresh data into the workspace.</p>
+          <p>Add Jira, Confluence, or File Upload sources, test them, then refresh data into the workspace.</p>
         </div>
         <Stepper steps={sourceSteps} />
         <form className="stack-form" onSubmit={form.handleSubmit((values) => createSource.mutate(values))}>
@@ -755,20 +798,48 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
                 <select {...form.register("kind")}>
                   <option value="jira">Jira</option>
                   <option value="confluence">Confluence</option>
+                  <option value="file_upload">File Upload</option>
                 </select>
               </label>
               <label>
                 Source name
-                <input {...form.register("name", { required: true })} placeholder="ssd_jira" />
+                <input {...form.register("name", { required: true })} placeholder={watchedKind === "file_upload" ? "nvme_spec" : "ssd_jira"} />
               </label>
-              <label>
-                Base URL
-                <input {...form.register("baseUrl", { required: true })} placeholder="https://jira.example.com" />
-              </label>
+              {watchedKind === "file_upload" ? (
+                <>
+                  <label>
+                    File path
+                    <input {...form.register("filePath", { required: true })} placeholder="D:\specs\nvme.pdf" />
+                  </label>
+                  <label>
+                    File type
+                    <select {...form.register("fileType")}>
+                      <option value="pdf">PDF</option>
+                      <option value="docx">DOCX</option>
+                      <option value="xlsx">XLSX</option>
+                      <option value="pptx">PPTX</option>
+                      <option value="image">Image</option>
+                    </select>
+                  </label>
+                  <label>
+                    Parser
+                    <select {...form.register("parser")}>
+                      <option value="auto">Auto (MinerU + fallback)</option>
+                      <option value="mineru">MinerU</option>
+                      <option value="pypdf">PyPDF</option>
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <label>
+                  Base URL
+                  <input {...form.register("baseUrl", { required: true })} placeholder="https://jira.example.com" />
+                </label>
+              )}
               <WizardActions
-                primaryLabel="Next: Authentication"
+                primaryLabel={watchedKind === "file_upload" ? "Next: Test File" : "Next: Authentication"}
                 primaryDisabled={!canAdvanceDetails}
-                onPrimary={() => setWizardStep(1)}
+                onPrimary={() => setWizardStep(watchedKind === "file_upload" ? 3 : 1)}
               />
             </>
           )}
@@ -808,27 +879,47 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
           )}
           {wizardStep === 3 && (
             <>
-              <div className="notice">Source saved. Test the configured connector before fetching data.</div>
+              <div className="notice">
+                {isFileUpload
+                  ? "File source saved. Test file accessibility before parsing."
+                  : "Source saved. Test the configured connector before fetching data."}
+              </div>
               <WizardActions
                 backLabel="Back"
-                onBack={() => setWizardStep(2)}
-                primaryLabel={testSource.isPending ? "Testing..." : "Test Connection"}
-                primaryDisabled={!currentSelector || testSource.isPending}
-                onPrimary={() => currentSelector && testSource.mutate({ name: watchedName, selector: currentSelector.name })}
+                onBack={() => setWizardStep(isFileUpload ? 0 : 2)}
+                primaryLabel={testSource.isPending ? "Testing..." : (isFileUpload ? "Test File" : "Test Connection")}
+                primaryDisabled={isFileUpload ? testSource.isPending : (!currentSelector || testSource.isPending)}
+                onPrimary={() => {
+                  if (isFileUpload) {
+                    testSource.mutate({ name: watchedName, selector: "" });
+                  } else if (currentSelector) {
+                    testSource.mutate({ name: watchedName, selector: currentSelector.name });
+                  }
+                }}
               />
             </>
           )}
           {wizardStep === 4 && (
             <>
               <div className={sourceFetched ? "notice" : "advanced-grid"}>
-                {sourceFetched ? `${selectedSource?.document_count || 0} documents fetched.` : "Connection is ready. Fetch data into the workspace."}
+                {sourceFetched
+                  ? `${selectedSource?.document_count || 0} documents ${isFileUpload ? "parsed" : "fetched"}.`
+                  : isFileUpload
+                  ? "File is accessible. Parse the file into the workspace."
+                  : "Connection is ready. Fetch data into the workspace."}
               </div>
               <WizardActions
                 backLabel="Back"
                 onBack={() => setWizardStep(3)}
-                primaryLabel={refresh.isPending ? "Fetching..." : "Fetch Data"}
-                primaryDisabled={!currentSelector || refresh.isPending}
-                onPrimary={() => currentSelector && refresh.mutate({ name: watchedName, selector: currentSelector.name })}
+                primaryLabel={refresh.isPending ? (isFileUpload ? "Parsing..." : "Fetching...") : (isFileUpload ? "Parse File" : "Fetch Data")}
+                primaryDisabled={isFileUpload ? refresh.isPending : (!currentSelector || refresh.isPending)}
+                onPrimary={() => {
+                  if (isFileUpload) {
+                    refresh.mutate({ name: watchedName, selector: "" });
+                  } else if (currentSelector) {
+                    refresh.mutate({ name: watchedName, selector: currentSelector.name });
+                  }
+                }}
               />
               <button className="secondary-action" onClick={resetSourceWizard} type="button">
                 <Plus size={16} /> Add another source
