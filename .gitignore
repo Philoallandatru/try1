@@ -9,4 +9,6 @@ __pycache__/
 *.egg-info/
 .tmp/
 .local/
+apps/portal_web/dist/
+apps/portal_web/node_modules/
 .DS_Store
