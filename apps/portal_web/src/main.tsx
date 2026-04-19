@@ -3,6 +3,32 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Search,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Play,
+  Database,
+  FileText,
+  Settings,
+  BarChart3,
+  Clock,
+  ChevronRight,
+  ExternalLink,
+  Download,
+  Upload,
+  Loader2,
+  Info,
+  AlertTriangle,
+  Check,
+  X,
+  Copy,
+  FileCheck,
+} from "lucide-react";
 import "./styles.css";
 
 const workspaceSchema = z.object({
@@ -316,19 +342,19 @@ function App() {
         <div className="nav-group-label">Workspace</div>
         <nav>
           {[
-            ["analyze", "Analyze"],
-            ["runs", "Runs"],
-            ["sources", "Sources"],
-            ["profiles", "Profiles"],
-            ["wiki", "Wiki"],
-            ["reports", "Reports"],
-            ["spec", "Spec Lab"],
-          ].map(([id, label]) => (
+            { id: "analyze", label: "Analyze", icon: Search },
+            { id: "runs", label: "Runs", icon: Clock },
+            { id: "sources", label: "Sources", icon: Database },
+            { id: "profiles", label: "Profiles", icon: Settings },
+            { id: "wiki", label: "Wiki", icon: FileText },
+            { id: "reports", label: "Reports", icon: BarChart3 },
+            { id: "spec", label: "Spec Lab", icon: FileText },
+          ].map(({ id, label, icon: Icon }) => (
             <button className={page === id ? "active" : ""} key={id} onClick={() => setPage(id as Page)} type="button">
-              {label}
+              <Icon size={18} /> {label}
             </button>
           ))}
-          <a href="/admin/">Admin</a>
+          <a href="/admin/"><ExternalLink size={18} /> Admin</a>
         </nav>
         <div className="nav-footer">
           <span className="status-dot" aria-hidden="true" />
@@ -532,7 +558,7 @@ function AnalyzePage({
             </select>
           </label>
           <button disabled={!setupComplete || mutation.isPending} type="submit">
-            {mutation.isPending ? "Running..." : "Run"}
+            {mutation.isPending ? <><RefreshCw size={16} className="spin" /> Running...</> : <><Play size={16} /> Run Analysis</>}
           </button>
         </form>
       </div>
@@ -552,13 +578,13 @@ function SetupChecklist({ items, onNavigate }: { items: SetupItem[]; onNavigate:
           <strong>{complete} / {items.length} ready</strong>
         </div>
         <span className={complete === items.length ? "setup-badge ready" : "setup-badge"}>
-          {complete === items.length ? "Ready" : "Action needed"}
+          {complete === items.length ? <><CheckCircle2 size={14} /> Ready</> : <><AlertCircle size={14} /> Action needed</>}
         </span>
       </div>
       <div className="setup-items">
         {items.map((item) => (
           <button className={item.ok ? "setup-item ready" : "setup-item"} key={item.label} onClick={() => onNavigate(item.target)} type="button">
-            <span>{item.ok ? "OK" : "!"}</span>
+            <span>{item.ok ? <Check size={16} /> : <AlertTriangle size={16} />}</span>
             <strong>{item.label}</strong>
             <small>{item.detail}</small>
           </button>
@@ -573,7 +599,7 @@ function Stepper({ steps }: { steps: { label: string; ok: boolean }[] }) {
     <div className="stepper" aria-label="Setup steps">
       {steps.map((step, index) => (
         <div className={step.ok ? "step ready" : "step"} key={step.label}>
-          <span>{index + 1}</span>
+          <span>{step.ok ? <CheckCircle2 size={16} /> : index + 1}</span>
           <strong>{step.label}</strong>
         </div>
       ))}
@@ -805,7 +831,7 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
                 onPrimary={() => currentSelector && refresh.mutate({ name: watchedName, selector: currentSelector.name })}
               />
               <button className="secondary-action" onClick={resetSourceWizard} type="button">
-                Add another source
+                <Plus size={16} /> Add another source
               </button>
             </>
           )}
@@ -825,10 +851,10 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
             <span>{source.enabled === false ? "disabled" : "enabled"}</span>
             <div className="row-actions">
               <button disabled={!selector || testSource.isPending} type="button" onClick={() => selector && testSource.mutate({ name: source.name, selector: selector.name })}>
-                Test
+                {testSource.isPending ? <Loader2 size={14} className="spin" /> : <Play size={14} />} Test
               </button>
               <button disabled={!selector || refresh.isPending} type="button" onClick={() => selector && refresh.mutate({ name: source.name, selector: selector.name })}>
-                Refresh
+                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Refresh
               </button>
             </div>
           </div>
@@ -1033,13 +1059,13 @@ function ProfilesPage({
                   }
                 }}
               >
-                Duplicate
+                <Copy size={14} /> Duplicate
               </button>
               <button type="button" onClick={() => validateProfile.mutate(profile.name)}>
-                Validate
+                <FileCheck size={14} /> Validate
               </button>
               <button type="button" onClick={() => setDefaultProfile.mutate(profile.name)}>
-                Set default
+                <CheckCircle2 size={14} /> Set default
               </button>
             </div>
           </div>
@@ -1179,10 +1205,10 @@ function RunsPage({ workspaceDir, onRerun }: { workspaceDir: string; onRerun: (r
             </div>
             <div className="row-actions">
               <button disabled={rerun.isPending || !runDetail.data} type="button" onClick={() => rerun.mutate()}>
-                {rerun.isPending ? "Rerunning..." : "Rerun same issue/profile"}
+                {rerun.isPending ? <><Loader2 size={14} className="spin" /> Rerunning...</> : <><Play size={14} /> Rerun same issue/profile</>}
               </button>
               <button disabled={verifyRun.isPending || !selected.run_id} type="button" onClick={() => verifyRun.mutate(selected.run_id)}>
-                {verifyRun.isPending ? "Verifying..." : "Verify with LM Studio qwen-9b"}
+                {verifyRun.isPending ? <><Loader2 size={14} className="spin" /> Verifying...</> : <><CheckCircle2 size={14} /> Verify with LM Studio qwen-9b</>}
               </button>
             </div>
             {analysisArtifact.isLoading && <p>Loading run summary...</p>}
@@ -1418,7 +1444,7 @@ function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
             <input {...form.register("mineruPythonExe")} placeholder="Optional if mineru is on PATH" />
           </label>
           <button disabled={ingest.isPending} type="submit">
-            {ingest.isPending ? "Parsing..." : "Parse Once With MinerU"}
+            {ingest.isPending ? <><Loader2 size={16} className="spin" /> Parsing...</> : <><Upload size={16} /> Parse Once With MinerU</>}
           </button>
         </form>
         {gate.error && <div className="error">{String(gate.error.message)}</div>}

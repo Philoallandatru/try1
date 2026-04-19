@@ -513,9 +513,9 @@ Parameters:
   - writes the selected answer text to a Markdown file
 - `--llm-backend`
   - optional
-  - `none`, `mock`, `ollama`, `openai-compatible`
+  - `none`, `mock`, `openai-compatible`
 - `--llm-model`
-  - required when backend is `ollama` or `openai-compatible`
+  - required when backend is `openai-compatible`
 - `--llm-base-url`
   - required when backend is `openai-compatible`
 - `--llm-api-key`
@@ -543,8 +543,7 @@ Examples:
 ```powershell
 python scripts/workspace_cli.py query .tmp\workspace "black screen"
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend mock --llm-mock-response "Mock workspace answer"
-python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend ollama --llm-model qwen2.5:7b
-python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend openai-compatible --llm-model local-model --llm-base-url http://localhost:1234/v1
+python scripts/workspace_cli.py query .tmp\workspace "black screen" --llm-backend openai-compatible --llm-model qwen-9b --llm-base-url http://127.0.0.1:1234/v1
 python scripts/workspace_cli.py query .tmp\workspace "black screen" --output-answer-md .tmp\workspace-answer.md
 ```
 
@@ -571,7 +570,7 @@ Parameters:
   - writes the selected answer text to a Markdown file
 - `--llm-backend`
   - optional
-  - `none`, `mock`, `ollama`, `openai-compatible`
+  - `none`, `mock`, `openai-compatible`
 - `--llm-prompt-mode`
   - optional
   - `strict`, `balanced`, `exploratory`

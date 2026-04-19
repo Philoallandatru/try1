@@ -29,11 +29,12 @@ Install local wiki rendering dependencies:
 python -m pip install mkdocs mkdocs-material
 ```
 
-Optional local LLMs:
+Optional local LLM setup:
 
-```powershell
-ollama pull qwen2.5:7b
-```
+For LM Studio:
+1. Download and install LM Studio from https://lmstudio.ai/
+2. Load a model (e.g., qwen-9b)
+3. Start the local server (default: http://127.0.0.1:1234/v1)
 
 ## 2. Optional Live Credentials
 
