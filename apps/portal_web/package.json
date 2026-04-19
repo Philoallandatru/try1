@@ -1,0 +1,26 @@
+{
+  "name": "ssd-knowledge-portal-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.10",
+    "@tanstack/react-table": "^8.21.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.68.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}

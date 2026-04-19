@@ -6,6 +6,8 @@ from uuid import uuid4
 import hashlib
 import json
 import re
+import time
+from threading import RLock
 
 from apps.portal_runner.schemas import PipelineDefinition, PipelineInput
 
@@ -21,6 +23,7 @@ class PortalRunnerStorage:
     def __init__(self, *, runs_root: str | Path, uploads_root: str | Path) -> None:
         self.runs_root = Path(runs_root)
         self.uploads_root = Path(uploads_root)
+        self._manifest_lock = RLock()
         self.runs_root.mkdir(parents=True, exist_ok=True)
         self.uploads_root.mkdir(parents=True, exist_ok=True)
 
@@ -71,7 +74,13 @@ class PortalRunnerStorage:
         return _read_json(self.run_dir(run_id) / "manifest.json")
 
     def write_manifest(self, run_id: str, manifest: dict) -> None:
-        _write_json(self.run_dir(run_id) / "manifest.json", manifest)
+        with self._manifest_lock:
+            path = self.run_dir(run_id) / "manifest.json"
+            if path.exists() and not manifest.get("cancel_requested"):
+                current = _read_json(path)
+                if current.get("cancel_requested"):
+                    manifest = {**manifest, "cancel_requested": True}
+            _write_json(path, manifest)
 
     def append_event(self, run_id: str, payload: dict) -> None:
         event = {"created_at": utc_now(), **payload}
@@ -218,7 +227,16 @@ def _read_json(path: Path) -> dict:
 
 def _write_json(path: Path, payload: dict | list) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=_json_default) + "\n", encoding="utf-8")
+    temp_path = path.with_name(f"{path.name}.{uuid4().hex}.tmp")
+    temp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=_json_default) + "\n", encoding="utf-8")
+    for attempt in range(5):
+        try:
+            temp_path.replace(path)
+            return
+        except PermissionError:
+            if attempt == 4:
+                raise
+            time.sleep(0.02)
 
 
 def _json_default(value: object) -> object:

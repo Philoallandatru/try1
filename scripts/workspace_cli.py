@@ -55,6 +55,7 @@ from services.workspace import (
     update_workspace_source_defaults,
     update_workspace_profile,
     validate_workspace_profile,
+    verify_workspace_run_with_llm,
     watch_workspace,
 )
 
@@ -342,6 +343,11 @@ def main() -> int:
     run_artifact_parser.add_argument("workspace")
     run_artifact_parser.add_argument("run")
     run_artifact_parser.add_argument("artifact_type")
+
+    verify_run_parser = subparsers.add_parser("verify-run-llm")
+    verify_run_parser.add_argument("workspace")
+    verify_run_parser.add_argument("run")
+    _add_llm_backend_args(verify_run_parser)
 
     inbox_parser = subparsers.add_parser("inbox")
     inbox_parser.add_argument("workspace")
@@ -725,6 +731,14 @@ def main() -> int:
     if args.command == "run-artifact":
         try:
             return _print_json(load_workspace_run_artifact(args.workspace, args.run, args.artifact_type))
+        except ValueError as error:
+            parser.error(str(error))
+    if args.command == "verify-run-llm":
+        llm_backend = _build_llm_backend_from_args(parser, args)
+        if llm_backend is None:
+            parser.error("--llm-backend must be ollama or openai-compatible for verify-run-llm")
+        try:
+            return _print_json(verify_workspace_run_with_llm(args.workspace, args.run, llm_backend=llm_backend))
         except ValueError as error:
             parser.error(str(error))
     if args.command == "inbox":

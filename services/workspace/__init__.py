@@ -45,6 +45,7 @@ from services.workspace.workspace import (
     update_workspace_source_defaults,
     update_workspace_profile,
     validate_workspace_profile,
+    verify_workspace_run_with_llm,
     verify_workspace_site_build,
     watch_workspace,
 )
@@ -95,6 +96,7 @@ __all__ = [
     "update_workspace_source_defaults",
     "update_workspace_profile",
     "validate_workspace_profile",
+    "verify_workspace_run_with_llm",
     "ingest_spec_asset",
     "verify_workspace_site_build",
     "watch_workspace",

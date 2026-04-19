@@ -1,0 +1,34 @@
+{
+  "sync_type": "full",
+  "cursor": "demo-confluence-001",
+  "pages": [
+    {
+      "id": "CONF-DEMO-1",
+      "space": "SSDENG",
+      "title": "NVMe Resume Timeout Debug Guide",
+      "version": {"number": 1, "when": "2026-04-18T09:00:00Z"},
+      "body": {"storage": {"value": "<h1>Symptom Definition</h1><p>Device enumerates successfully after resume.</p><p>First admin or I/O command times out; retry may succeed.</p><h1>Key Debug Evidence</h1><p>CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.</p><h1>Common Root Cause Patterns</h1><p>Controller ready bit asserted before queue restore fully completes.</p>"}}
+    },
+    {
+      "id": "CONF-DEMO-2",
+      "space": "SSDENG",
+      "title": "Vendor Log Page Field Definition - NAND Write Counters",
+      "version": {"number": 1, "when": "2026-04-18T09:10:00Z"},
+      "body": {"storage": {"value": "<h1>Problem Statement</h1><p>Total NAND write can appear smaller than host write when accounting is wrong.</p><h1>Field Definition</h1><p>Host Write, NAND Write, TLC Write, and Internal Write have separate accounting scopes.</p><h1>Known Pitfalls</h1><p>Some versions do not count TLC fold writes into total NAND write.</p>"}}
+    },
+    {
+      "id": "CONF-DEMO-3",
+      "space": "SSDENG",
+      "title": "SPOR Rebuild Flow Ordering Notes",
+      "version": {"number": 1, "when": "2026-04-18T09:20:00Z"},
+      "body": {"storage": {"value": "<h1>Required Ordering</h1><p>Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.</p><h1>Failure Mode</h1><p>If free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.</p><h1>Observable Symptoms</h1><p>Power cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.</p>"}}
+    },
+    {
+      "id": "CONF-DEMO-4",
+      "space": "SSDENG",
+      "title": "APST / Low Power Tuning Checklist",
+      "version": {"number": 1, "when": "2026-04-18T09:30:00Z"},
+      "body": {"storage": {"value": "<h1>Scope</h1><p>MobileMark, PCMark Modern Office, and idle residency low-load scenarios.</p><h1>Checklist</h1><p>APST entry mask, exit latency budget, NVMe power state residency, PCIe ASPM / L1 Substate cooperation, background task timer.</p><h1>Common Regression Patterns</h1><p>Performance tuning disables low-power entries while tool mode name remains unchanged.</p>"}}
+    }
+  ]
+}

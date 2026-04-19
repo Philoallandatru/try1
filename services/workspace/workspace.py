@@ -3413,6 +3413,135 @@ def load_workspace_run_artifact(
     }
 
 
+def verify_workspace_run_with_llm(
+    workspace_dir: str | Path,
+    run_ref: str | Path,
+    *,
+    llm_backend: LLMBackend,
+) -> dict:
+    _load_workspace_config(workspace_dir)
+    run_dir = _resolve_run_dir(workspace_dir, run_ref)
+    manifest = load_run_manifest(run_dir)
+    artifact_paths = _artifact_path_by_type(run_dir, manifest)
+    result_path = artifact_paths.get("deep_analysis_result")
+    if result_path is None or not result_path.exists():
+        raise ValueError(f"Run does not have a deep_analysis_result artifact: {run_ref}")
+    result = _read_json(result_path)
+    prompt = _build_llm_verification_prompt(result)
+    verification = {
+        "run_id": manifest["run_id"],
+        "issue_id": result.get("issue_id"),
+        "title": result.get("title"),
+        "backend": llm_backend.name,
+        "mode": "local-llm-verification",
+        "prompt_version": "deep-analysis-verifier-v1",
+        "verification_text": llm_backend.generate(prompt).strip(),
+        "source_artifact": str(result_path),
+        "created_at": _utc_now(),
+    }
+    target_path = run_dir / "llm_verification.json"
+    history_path = run_dir / "llm_verification_history.json"
+    if history_path.exists():
+        history_payload = _read_json(history_path)
+    else:
+        history_payload = {"verifications": []}
+    history_payload.setdefault("verifications", [])
+    history_payload["verifications"].append(verification)
+    history_payload["latest"] = verification
+    _write_json(target_path, verification)
+    _write_json(history_path, history_payload)
+    input_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    updated_manifest = json.loads(json.dumps(manifest))
+    updated_manifest["artifacts"] = [
+        artifact
+        for artifact in updated_manifest.get("artifacts", [])
+        if artifact.get("artifact_type") not in {"llm_verification", "llm_verification_history"}
+    ]
+    updated_manifest["artifacts"].extend(
+        [
+            build_artifact_record(
+                artifact_type="llm_verification",
+                path=str(target_path),
+                step_name="llm_verifier",
+                step_version="v1",
+                input_hash=input_hash,
+                depends_on=["deep_analysis_result"],
+                engine=llm_backend.name,
+                prompt_version="deep-analysis-verifier-v1",
+            ),
+            build_artifact_record(
+                artifact_type="llm_verification_history",
+                path=str(history_path),
+                step_name="llm_verifier",
+                step_version="v1",
+                input_hash=input_hash,
+                depends_on=["deep_analysis_result"],
+                engine=llm_backend.name,
+                prompt_version="deep-analysis-verifier-v1",
+            ),
+        ]
+    )
+    updated_manifest["updated_at"] = _utc_now()
+    manifest_path = write_run_manifest(run_dir, updated_manifest)
+    return {
+        "workspace_dir": str(workspace_paths(workspace_dir)["root"]),
+        "run_id": manifest["run_id"],
+        "artifact_type": "llm_verification",
+        "artifact_path": str(target_path),
+        "history_artifact_path": str(history_path),
+        "verification_count": len(history_payload["verifications"]),
+        "run_manifest_path": str(manifest_path),
+        "verification": verification,
+    }
+
+
+def _build_llm_verification_prompt(result: dict) -> str:
+    answer = result.get("answer", {})
+    shared_bundle = result.get("shared_retrieval_bundle", {})
+    citations = shared_bundle.get("citations", [])
+    section_outputs = result.get("section_outputs", {})
+    citation_lines = []
+    for citation in citations[:8]:
+        citation_lines.append(
+            "- "
+            + " | ".join(
+                str(part)
+                for part in [
+                    citation.get("document_id") or citation.get("document"),
+                    citation.get("title"),
+                    citation.get("page"),
+                    citation.get("section") or citation.get("clause"),
+                ]
+                if part not in (None, "")
+            )
+        )
+    section_lines = []
+    for section_name, section in sorted(section_outputs.items()):
+        section_answer = section.get("answer", {})
+        text = str(section_answer.get("text") or "")[:900]
+        section_lines.append(f"## {section_name}\n{text}")
+    return "\n".join(
+        [
+            "You are verifying an SSD Jira deep-analysis result.",
+            "Use only the supplied result summary and citation inventory.",
+            "Return concise findings with these headings: Verdict, Evidence Fit, Gaps, Recommended Next Actions.",
+            "",
+            f"Issue: {result.get('issue_id')}",
+            f"Title: {result.get('title')}",
+            f"Analysis profile: {result.get('analysis_profile')}",
+            "",
+            "Primary answer:",
+            str(answer.get("text") or "")[:1600],
+            "",
+            "Top citations:",
+            "\n".join(citation_lines) or "- none",
+            "",
+            "Section outputs:",
+            "\n\n".join(section_lines) or "none",
+        ]
+    )
+
+
 def _clear_rebuilt_artifact_staleness(manifest: dict, artifact_types: set[str]) -> dict:
     updated = json.loads(json.dumps(manifest))
     for artifact in updated.get("artifacts", []):
