@@ -379,30 +379,43 @@ Phase 2:                    索引构建 → BM25 索引 → 检索
 - [x] Task #15: 文档索引管理 ✅ (Commit: 37a0851)
 - [x] Task #16: Golden Dataset 创建 ✅ (Commit: fe268db)
 - [x] Task #17: 评估框架 ✅ (Commit: 7b6e629)
-- [ ] Task #18: 检索 API 端点
-- [ ] Task #19: 检索 UI
+- [x] Task #18: 检索 API 端点 ✅ (Commit: 9a43d35)
+- [x] Task #19: 检索 UI ✅ (Commit: bf870d6)
 - [ ] Task #20: Phase 2 集成测试
 
-**完成度**: 4/7 (57%)
+**完成度**: 6/7 (86%)
 
 ### 最新完成任务
 
-#### Task #17: 评估框架 ✅
+#### Task #19: 检索 UI ✅
 
 **实现内容**:
-- RetrievalEvaluator: 检索质量评估器
-  * Precision@K: 精确率指标
-  * Recall@K: 召回率指标
-  * MAP (Mean Average Precision): 平均精度均值
-  * NDCG (Normalized Discounted Cumulative Gain): 归一化折损累积增益
-  * MRR (Mean Reciprocal Rank): 平均倒数排名
+- SearchPage 组件: 完整的检索界面
+  * 搜索框: 支持中英文查询输入
+  * 索引状态卡片: 显示索引文档数量和重建按钮
+  * 搜索结果列表: 显示文档标题、摘要、评分、来源
+  * 文档详情面板: 显示完整文档内容和元数据
+  * 响应式设计: 支持桌面和移动端
 
-**测试结果**:
-- ✅ MAP: 0.67 (目标 > 0.6)
-- ✅ MRR: 0.82 (目标 > 0.6)
-- ✅ NDCG@5: 0.72
-- ✅ Precision@5: 0.31
-- ✅ Recall@5: 0.78 (目标 > 0.7)
-- ✅ 所有评估指标测试通过
+**UI 特性**:
+- ✅ 实时搜索结果展示
+- ✅ 结果评分显示 (BM25 score)
+- ✅ 文档来源和 ID 标识
+- ✅ 点击查看完整文档内容
+- ✅ 索引统计信息展示
+- ✅ 一键重建索引功能
+- ✅ 错误处理和加载状态
 
-**下一步**: Task #18 - 检索 API 端点
+**CSS 样式**:
+- 新增 `.search-grid` 布局
+- 新增 `.search-result-card` 卡片样式
+- 新增 `.document-detail` 详情面板
+- 新增 `.index-status-card` 状态卡片
+- 响应式断点适配
+
+**集成**:
+- 与 `/api/retrieval/search` API 集成
+- 与 `/api/retrieval/index/stats` API 集成
+- 与 `/api/retrieval/index/build` API 集成
+
+**下一步**: Task #20 - Phase 2 集成测试
