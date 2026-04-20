@@ -370,3 +370,41 @@ Phase 2:                    索引构建 → BM25 索引 → 检索
 4. **是否需要 SPLADE 增强**？（可以先用 BM25，不够再加）
 
 请确认后我就开始实施！
+
+---
+
+## 当前进度
+
+- [x] Task #14: BM25 检索核心 ✅ (Commit: 4b92cfb)
+- [x] Task #15: 文档索引管理 ✅ (Commit: 37a0851)
+- [ ] Task #16: Golden Dataset 创建
+- [ ] Task #17: 评估框架
+- [ ] Task #18: 检索 API 端点
+- [ ] Task #19: 检索 UI
+- [ ] Task #20: Phase 2 集成测试
+
+**完成度**: 2/7 (29%)
+
+### Task #15 完成详情
+
+**实现内容**:
+- DocumentDatabase: 文档存储和管理
+  * 支持文档 CRUD 操作
+  * 支持按数据源过滤
+  * 支持索引状态跟踪（indexed_at 字段）
+  * 支持查询未索引和过期文档
+
+- IndexManager: 索引生命周期管理
+  * 全量索引构建（build_full_index）
+  * 增量索引更新（update_index_incremental）
+  * 索引持久化和加载
+  * 索引统计和健康检查
+
+**测试结果**:
+- ✅ 文档数据库操作测试通过
+- ✅ 全量索引构建测试通过
+- ✅ 检索功能测试通过
+- ✅ 增量更新测试通过
+- ✅ 健康检查测试通过
+
+**下一步**: Task #16 - Golden Dataset 创建
