@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Calendar, FileText, TrendingUp, Clock, Loader2, RefreshCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ReportSection {
   title: string;
@@ -150,23 +151,8 @@ export function DailyReportPage({ workspaceDir }: DailyReportPageProps) {
                 .map((section, index) => (
                   <div key={index} className="report-section">
                     <h3>{section.title}</h3>
-                    <div className="section-content">
-                      {section.content.split("\n").map((line, i) => {
-                        if (line.trim().startsWith("- **")) {
-                          // Parse markdown list items with bold issue IDs
-                          const match = line.match(/- \*\*([^*]+)\*\*: (.+)/);
-                          if (match) {
-                            const [, issueId, rest] = match;
-                            return (
-                              <div key={i} className="issue-item">
-                                <span className="issue-id">{issueId}</span>
-                                <span className="issue-text">{rest}</span>
-                              </div>
-                            );
-                          }
-                        }
-                        return line.trim() ? <p key={i}>{line}</p> : null;
-                      })}
+                    <div className="section-content markdown-body">
+                      <ReactMarkdown>{section.content}</ReactMarkdown>
                     </div>
                   </div>
                 ))}

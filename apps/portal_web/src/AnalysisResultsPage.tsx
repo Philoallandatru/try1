@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileText, Clock, TrendingUp, Search } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface AnalysisResult {
   issue_id: string;
@@ -114,8 +115,8 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
             loading ? (
               <div className="loading">Loading analysis...</div>
             ) : (
-              <div className="analysis-content">
-                <pre>{analysisContent}</pre>
+              <div className="analysis-content markdown-body">
+                <ReactMarkdown>{analysisContent}</ReactMarkdown>
               </div>
             )
           ) : (
