@@ -37,6 +37,8 @@ from apps.portal_runner.runner import PortalPipelineRunner
 from apps.portal_runner.schemas import PipelineInput
 from apps.portal_runner.source_routes import create_source_router
 from apps.portal_runner.retrieval_routes import create_retrieval_router
+from apps.portal_runner.analysis_routes import create_analysis_router
+from apps.portal_runner.analysis_websocket import create_websocket_router
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -395,6 +397,14 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include Retrieval API routes
     retrieval_router = create_retrieval_router(str(config.workspace.root))
     app.include_router(retrieval_router)
+
+    # Include Analysis API routes
+    analysis_router = create_analysis_router(require_auth=require_auth)
+    app.include_router(analysis_router)
+
+    # Include WebSocket routes
+    websocket_router = create_websocket_router()
+    app.include_router(websocket_router)
 
     return app
 

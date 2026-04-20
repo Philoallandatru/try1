@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AnalysisResultsPage } from "./AnalysisResultsPage";
 import {
   CheckCircle2,
   XCircle,
@@ -231,7 +233,7 @@ type SetupItem = {
   label: string;
   ok: boolean;
   detail: string;
-  target: Page;
+  target: string;
 };
 type EvidenceCoverage = {
   jiraFound: boolean;
@@ -320,11 +322,11 @@ function readRecent(key: string): string[] {
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("ssdPortalToken") || "");
-  const [page, setPage] = useState<Page>("analyze");
   const [workspaceDir, setWorkspaceDir] = useState("");
   const [workspaceName, setWorkspaceName] = useState("real-workspace");
   const [latestResult, setLatestResult] = useState<AnalyzeResult | null>(null);
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const workspaces = useQuery({
     queryKey: ["workspaces", token],
@@ -374,18 +376,23 @@ function App() {
         <div className="nav-group-label">Workspace</div>
         <nav>
           {[
-            { id: "analyze", label: "Analyze", icon: Search },
-            { id: "search", label: "Search", icon: FileText },
-            { id: "runs", label: "Runs", icon: Clock },
-            { id: "sources", label: "Sources", icon: Database },
-            { id: "profiles", label: "Profiles", icon: Settings },
-            { id: "wiki", label: "Wiki", icon: FileText },
-            { id: "reports", label: "Reports", icon: BarChart3 },
-            { id: "spec", label: "Spec Lab", icon: FileText },
+            { id: "/", label: "Analyze", icon: Search },
+            { id: "/search", label: "Search", icon: FileText },
+            { id: "/runs", label: "Runs", icon: Clock },
+            { id: "/analysis", label: "Analysis", icon: BarChart3 },
+            { id: "/sources", label: "Sources", icon: Database },
+            { id: "/profiles", label: "Profiles", icon: Settings },
+            { id: "/wiki", label: "Wiki", icon: FileText },
+            { id: "/reports", label: "Reports", icon: BarChart3 },
+            { id: "/spec", label: "Spec Lab", icon: FileText },
           ].map(({ id, label, icon: Icon }) => (
-            <button className={page === id ? "active" : ""} key={id} onClick={() => setPage(id as Page)} type="button">
+            <Link
+              to={id}
+              key={id}
+              className={location.pathname === id ? "active" : ""}
+            >
               <Icon size={18} /> {label}
-            </button>
+            </Link>
           ))}
           <a href="/admin/"><ExternalLink size={18} /> Admin</a>
         </nav>
@@ -434,32 +441,33 @@ function App() {
 
         {!token ? (
           <EmptyState title="Connect the runner" body="Enter the local runner token to load workspaces, sources, profiles, and runs." />
-        ) : page === "analyze" ? (
-          <AnalyzePage
-            workspaceDir={selectedWorkspace}
-            profiles={profiles.data?.profiles || []}
-            sources={sources.data?.sources || []}
-            latestResult={latestResult}
-            onResult={setLatestResult}
-            onNavigate={setPage}
-          />
-        ) : page === "runs" ? (
-          <RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />
-        ) : page === "sources" ? (
-          <SourcesPage workspaceDir={selectedWorkspace} />
-        ) : page === "profiles" ? (
-          <ProfilesPage
-            workspaceDir={selectedWorkspace}
-            profiles={profiles.data?.profiles || []}
-            sources={sources.data?.sources || []}
-            selectors={sources.data?.selectors || []}
-          />
-        ) : page === "spec" ? (
-          <SpecLabPage workspaceDir={selectedWorkspace} />
-        ) : page === "search" ? (
-          <SearchPage workspaceDir={selectedWorkspace} />
         ) : (
-          <ModulePlaceholder page={page} latestResult={latestResult} />
+          <Routes>
+            <Route path="/" element={
+              <AnalyzePage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                latestResult={latestResult}
+                onResult={setLatestResult}
+              />
+            } />
+            <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
+            <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/profiles" element={
+              <ProfilesPage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                selectors={sources.data?.selectors || []}
+              />
+            } />
+            <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
+            <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
+          </Routes>
         )}
       </main>
     </div>
@@ -472,15 +480,14 @@ function AnalyzePage({
   sources,
   latestResult,
   onResult,
-  onNavigate,
 }: {
   workspaceDir: string;
   profiles: Profile[];
   sources: Source[];
   latestResult: AnalyzeResult | null;
   onResult: (result: AnalyzeResult) => void;
-  onNavigate: (page: Page) => void;
 }) {
+  const navigate = useNavigate();
   const [recentIssues] = useState(readRecent("issues"));
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const form = useForm({ defaultValues: { issueKey: recentIssues[0] || "", profile: profiles[0]?.name || "" } });
@@ -535,7 +542,7 @@ function AnalyzePage({
           <p>Run PageIndex-first analysis over Jira, Confluence, and spec evidence.</p>
         </div>
 
-        <SetupChecklist items={setupItems} onNavigate={onNavigate} />
+        <SetupChecklist items={setupItems} onNavigate={(page) => navigate(`/${page}`)} />
 
         <div className="message-stack">
           <article className="message system-message">
@@ -603,7 +610,7 @@ function AnalyzePage({
   );
 }
 
-function SetupChecklist({ items, onNavigate }: { items: SetupItem[]; onNavigate: (page: Page) => void }) {
+function SetupChecklist({ items, onNavigate }: { items: SetupItem[]; onNavigate: (page: string) => void }) {
   const complete = items.filter((item) => item.ok).length;
   return (
     <div className="setup-checklist">
@@ -1611,6 +1618,34 @@ function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
   );
 }
 
+// Highlight matching text in search results
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+
+  const terms = query.trim().split(/\s+/);
+  let result: React.ReactNode = text;
+
+  terms.forEach((term) => {
+    if (term.length < 2) return;
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts: React.ReactNode[] = [];
+
+    if (typeof result === 'string') {
+      const matches = result.split(regex);
+      matches.forEach((part, i) => {
+        if (regex.test(part)) {
+          parts.push(<mark key={i}>{part}</mark>);
+        } else {
+          parts.push(part);
+        }
+      });
+      result = parts;
+    }
+  });
+
+  return result;
+}
+
 function SearchPage({ workspaceDir }: { workspaceDir: string }) {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<z.infer<typeof searchResultSchema>[]>([]);
@@ -1680,16 +1715,19 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
           <p>Search across all indexed documents using BM25 retrieval with Chinese/English support.</p>
         </div>
 
-        <div className="index-status-card">
+        <div className="index-status-card" data-testid="index-status-card">
           <div className="index-status-header">
             <div>
               <p className="eyebrow">Index Status</p>
-              <strong>{totalDocs} documents indexed</strong>
+              <strong data-testid="document-count">{totalDocs} documents indexed</strong>
             </div>
             <button
+              data-testid="rebuild-index-button"
               disabled={buildIndex.isPending}
               type="button"
               onClick={() => buildIndex.mutate()}
+              aria-busy={buildIndex.isPending}
+              aria-label={buildIndex.isPending ? "Building index" : "Rebuild index"}
             >
               {buildIndex.isPending ? (
                 <><Loader2 size={16} className="spin" /> Building...</>
@@ -1704,7 +1742,7 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
             </p>
           )}
           {buildIndex.error && (
-            <div className="error">
+            <div className="error" role="alert">
               <XCircle size={16} /> {String(buildIndex.error.message)}
             </div>
           )}
@@ -1712,17 +1750,24 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
 
         <div className="search-box">
           <input
+            data-testid="search-input"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Enter your search query (支持中英文)..."
-            disabled={!indexReady}
+            disabled={!indexReady || isSearching}
+            aria-label="Search documents"
+            aria-describedby={!indexReady ? "search-help" : undefined}
+            aria-invalid={!!searchError}
           />
           <button
+            data-testid="search-button"
             type="button"
             onClick={handleSearch}
             disabled={!indexReady || !query.trim() || isSearching}
+            aria-busy={isSearching}
+            aria-label={isSearching ? "Searching" : "Search"}
           >
             {isSearching ? (
               <><Loader2 size={16} className="spin" /> Searching...</>
@@ -1733,33 +1778,41 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
         </div>
 
         {!indexReady && (
-          <div className="notice">
+          <div className="notice" id="search-help" role="status">
             No documents indexed yet. Build the index first by clicking "Rebuild Index" above.
           </div>
         )}
 
+        {isSearching && (
+          <div role="status" aria-live="polite" className="sr-only">
+            Searching for {query}...
+          </div>
+        )}
+
         {searchError && (
-          <div className="error">
+          <div className="error" role="alert" aria-live="assertive">
             <XCircle size={16} /> Search failed: {searchError}
           </div>
         )}
 
         {searchResults.length > 0 && (
-          <div className="search-results">
+          <div className="search-results" data-testid="search-results">
             <p className="eyebrow">{searchResults.length} results</p>
             {searchResults.map((result, index) => (
               <button
                 key={result.doc_id}
+                data-testid={`search-result-${index}`}
                 className={selectedDoc?.doc_id === result.doc_id ? "search-result-card active" : "search-result-card"}
                 onClick={() => setSelectedDoc(result)}
                 type="button"
+                aria-label={`Result ${index + 1}: ${result.document.title || result.doc_id}`}
               >
                 <div className="search-result-header">
-                  <strong>#{index + 1} {result.document.title || result.doc_id}</strong>
+                  <strong>#{index + 1} {highlightText(result.document.title || result.doc_id, query)}</strong>
                   <span className="search-score">Score: {result.score.toFixed(3)}</span>
                 </div>
                 <p className="search-result-snippet">
-                  {result.document.content?.substring(0, 200) || "No content preview"}
+                  {highlightText(result.document.content?.substring(0, 200) || "No content preview", query)}
                   {(result.document.content?.length ?? 0) > 200 && "..."}
                 </p>
                 <div className="search-result-meta">
@@ -1854,6 +1907,7 @@ function ResultView({ result }: { result: AnalyzeResult | null }) {
     </div>
   );
 }
+
 
 function ModulePlaceholder({ page, latestResult }: { page: Page; latestResult: AnalyzeResult | null }) {
   const title = page === "wiki" ? "Wiki" : page === "reports" ? "Reports" : "Spec Lab";
@@ -1969,8 +2023,10 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 );
