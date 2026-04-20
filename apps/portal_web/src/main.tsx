@@ -1,8 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AnalysisResultsPage } from "./AnalysisResultsPage";
+import { DailyReportPage } from "./DailyReportPage";
+import { BatchAnalysisPage } from "./BatchAnalysisPage";
 import {
   CheckCircle2,
   XCircle,
@@ -28,6 +32,8 @@ import {
   X,
   Copy,
   FileCheck,
+  Calendar,
+  Layers,
 } from "lucide-react";
 import "./styles.css";
 
@@ -193,6 +199,34 @@ const verifyRunSchema = z.object({
   }).passthrough(),
 });
 
+const searchResultSchema = z.object({
+  doc_id: z.string(),
+  score: z.number(),
+  document: z.object({
+    id: z.string(),
+    title: z.string().optional(),
+    content: z.string().optional(),
+    source: z.string().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
+
+const searchResponseSchema = z.object({
+  status: z.string(),
+  query: z.string(),
+  results: z.array(searchResultSchema),
+  total: z.number(),
+});
+
+const indexStatsSchema = z.object({
+  status: z.string(),
+  stats: z.object({
+    total_documents: z.number(),
+    index_size_bytes: z.number().optional(),
+    last_updated: z.string().optional(),
+  }),
+});
+
 type Workspace = z.infer<typeof workspaceSchema>;
 type Profile = z.infer<typeof profileSchema>;
 type Source = z.infer<typeof sourceSchema>;
@@ -203,7 +237,7 @@ type SetupItem = {
   label: string;
   ok: boolean;
   detail: string;
-  target: Page;
+  target: string;
 };
 type EvidenceCoverage = {
   jiraFound: boolean;
@@ -220,6 +254,10 @@ type SourceFormValues = {
   token: string;
   selectorName: string;
   selectorValue: string;
+  filePath: string;
+  fileType: string;
+  parser: string;
+  originalFilename: string;
 };
 type ProfileFormValues = {
   name: string;
@@ -241,7 +279,7 @@ type SpecIngestValues = {
   mineruPythonExe: string;
 };
 
-type Page = "analyze" | "runs" | "sources" | "profiles" | "wiki" | "reports" | "spec";
+type Page = "analyze" | "runs" | "sources" | "profiles" | "wiki" | "reports" | "spec" | "search";
 
 const queryClient = new QueryClient();
 
@@ -288,11 +326,11 @@ function readRecent(key: string): string[] {
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("ssdPortalToken") || "");
-  const [page, setPage] = useState<Page>("analyze");
   const [workspaceDir, setWorkspaceDir] = useState("");
   const [workspaceName, setWorkspaceName] = useState("real-workspace");
   const [latestResult, setLatestResult] = useState<AnalyzeResult | null>(null);
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const workspaces = useQuery({
     queryKey: ["workspaces", token],
@@ -342,17 +380,25 @@ function App() {
         <div className="nav-group-label">Workspace</div>
         <nav>
           {[
-            { id: "analyze", label: "Analyze", icon: Search },
-            { id: "runs", label: "Runs", icon: Clock },
-            { id: "sources", label: "Sources", icon: Database },
-            { id: "profiles", label: "Profiles", icon: Settings },
-            { id: "wiki", label: "Wiki", icon: FileText },
-            { id: "reports", label: "Reports", icon: BarChart3 },
-            { id: "spec", label: "Spec Lab", icon: FileText },
+            { id: "/", label: "Analyze", icon: Search },
+            { id: "/search", label: "Search", icon: FileText },
+            { id: "/runs", label: "Runs", icon: Clock },
+            { id: "/analysis", label: "Analysis", icon: BarChart3 },
+            { id: "/daily-report", label: "Daily Report", icon: Calendar },
+            { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
+            { id: "/sources", label: "Sources", icon: Database },
+            { id: "/profiles", label: "Profiles", icon: Settings },
+            { id: "/wiki", label: "Wiki", icon: FileText },
+            { id: "/reports", label: "Reports", icon: BarChart3 },
+            { id: "/spec", label: "Spec Lab", icon: FileText },
           ].map(({ id, label, icon: Icon }) => (
-            <button className={page === id ? "active" : ""} key={id} onClick={() => setPage(id as Page)} type="button">
+            <Link
+              to={id}
+              key={id}
+              className={location.pathname === id ? "active" : ""}
+            >
               <Icon size={18} /> {label}
-            </button>
+            </Link>
           ))}
           <a href="/admin/"><ExternalLink size={18} /> Admin</a>
         </nav>
@@ -401,30 +447,35 @@ function App() {
 
         {!token ? (
           <EmptyState title="Connect the runner" body="Enter the local runner token to load workspaces, sources, profiles, and runs." />
-        ) : page === "analyze" ? (
-          <AnalyzePage
-            workspaceDir={selectedWorkspace}
-            profiles={profiles.data?.profiles || []}
-            sources={sources.data?.sources || []}
-            latestResult={latestResult}
-            onResult={setLatestResult}
-            onNavigate={setPage}
-          />
-        ) : page === "runs" ? (
-          <RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />
-        ) : page === "sources" ? (
-          <SourcesPage workspaceDir={selectedWorkspace} />
-        ) : page === "profiles" ? (
-          <ProfilesPage
-            workspaceDir={selectedWorkspace}
-            profiles={profiles.data?.profiles || []}
-            sources={sources.data?.sources || []}
-            selectors={sources.data?.selectors || []}
-          />
-        ) : page === "spec" ? (
-          <SpecLabPage workspaceDir={selectedWorkspace} />
         ) : (
-          <ModulePlaceholder page={page} latestResult={latestResult} />
+          <Routes>
+            <Route path="/" element={
+              <AnalyzePage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                latestResult={latestResult}
+                onResult={setLatestResult}
+              />
+            } />
+            <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
+            <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
+            <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/profiles" element={
+              <ProfilesPage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                selectors={sources.data?.selectors || []}
+              />
+            } />
+            <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
+            <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
+          </Routes>
         )}
       </main>
     </div>
@@ -437,15 +488,14 @@ function AnalyzePage({
   sources,
   latestResult,
   onResult,
-  onNavigate,
 }: {
   workspaceDir: string;
   profiles: Profile[];
   sources: Source[];
   latestResult: AnalyzeResult | null;
   onResult: (result: AnalyzeResult) => void;
-  onNavigate: (page: Page) => void;
 }) {
+  const navigate = useNavigate();
   const [recentIssues] = useState(readRecent("issues"));
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const form = useForm({ defaultValues: { issueKey: recentIssues[0] || "", profile: profiles[0]?.name || "" } });
@@ -500,7 +550,7 @@ function AnalyzePage({
           <p>Run PageIndex-first analysis over Jira, Confluence, and spec evidence.</p>
         </div>
 
-        <SetupChecklist items={setupItems} onNavigate={onNavigate} />
+        <SetupChecklist items={setupItems} onNavigate={(page) => navigate(`/${page}`)} />
 
         <div className="message-stack">
           <article className="message system-message">
@@ -568,7 +618,7 @@ function AnalyzePage({
   );
 }
 
-function SetupChecklist({ items, onNavigate }: { items: SetupItem[]; onNavigate: (page: Page) => void }) {
+function SetupChecklist({ items, onNavigate }: { items: SetupItem[]; onNavigate: (page: string) => void }) {
   const complete = items.filter((item) => item.ok).length;
   return (
     <div className="setup-checklist">
@@ -647,6 +697,10 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
       token: "",
       selectorName: "",
       selectorValue: "",
+      filePath: "",
+      fileType: "pdf",
+      parser: "auto",
+      originalFilename: "",
     },
   });
   const sources = useQuery({
@@ -657,20 +711,30 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
   const watchedKind = form.watch("kind");
   const watchedName = form.watch("name");
   const watchedBaseUrl = form.watch("baseUrl");
+  const watchedFilePath = form.watch("filePath");
   const watchedSelectorValue = form.watch("selectorValue");
+  const isFileUpload = watchedKind === "file_upload";
   const sourceCreated = Boolean((sources.data?.sources || []).some((source) => source.name === watchedName));
   const selectedSource = (sources.data?.sources || []).find((source) => source.name === watchedName);
   const sourceTested = Boolean(selectedSource && selectedSource.status !== "stale");
   const sourceFetched = Boolean(selectedSource && (selectedSource.document_count || 0) > 0);
-  const sourceSteps = [
-    { label: "Source Details", ok: Boolean(watchedKind && watchedName && watchedBaseUrl) },
-    { label: "Authentication", ok: true },
-    { label: "Selector", ok: Boolean(watchedSelectorValue) },
-    { label: "Test", ok: sourceTested },
-    { label: "Fetch", ok: sourceFetched },
-  ];
+  const sourceSteps = isFileUpload
+    ? [
+        { label: "File Details", ok: Boolean(watchedKind && watchedName && watchedFilePath) },
+        { label: "Test", ok: sourceTested },
+        { label: "Parse", ok: sourceFetched },
+      ]
+    : [
+        { label: "Source Details", ok: Boolean(watchedKind && watchedName && watchedBaseUrl) },
+        { label: "Authentication", ok: true },
+        { label: "Selector", ok: Boolean(watchedSelectorValue) },
+        { label: "Test", ok: sourceTested },
+        { label: "Fetch", ok: sourceFetched },
+      ];
   const currentSelector = selectedSource?.selector || sources.data?.selectors.find((row) => row.source === watchedName);
-  const canAdvanceDetails = Boolean(watchedKind && watchedName && watchedBaseUrl);
+  const canAdvanceDetails = isFileUpload
+    ? Boolean(watchedKind && watchedName && watchedFilePath)
+    : Boolean(watchedKind && watchedName && watchedBaseUrl);
   const canAdvanceSelector = Boolean(watchedSelectorValue);
   const resetSourceWizard = () => {
     form.reset({
@@ -680,30 +744,55 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
       token: "",
       selectorName: "",
       selectorValue: "",
+      filePath: "",
+      fileType: "pdf",
+      parser: "auto",
+      originalFilename: "",
     });
     setWizardStep(0);
   };
   const createSource = useMutation({
     mutationFn: (values: SourceFormValues) => {
-      const isJira = values.kind === "jira";
-      return apiJson(
-        "/api/workspace/sources",
-        z.unknown(),
-        {
-          method: "POST",
-          body: JSON.stringify({
-            workspace_dir: workspaceDir,
-            name: values.name,
-            connector_type: isJira ? "jira.atlassian_api" : "confluence.atlassian_api",
-            base_url: values.baseUrl,
-            token: values.token,
-            defaults: { fetch_backend: "native", include_comments: true, include_attachments: true },
-            selector: isJira
-              ? { name: values.selectorName || `${values.name}_issue`, type: "issue", issue_key: values.selectorValue }
-              : { name: values.selectorName || `${values.name}_space`, type: "space_slice", space_key: values.selectorValue },
-          }),
-        },
-      );
+      if (values.kind === "file_upload") {
+        // File Upload source
+        return apiJson(
+          "/api/workspace/sources",
+          z.unknown(),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              workspace_dir: workspaceDir,
+              name: values.name,
+              connector_type: "file_upload.local",
+              file_path: values.filePath,
+              file_type: values.fileType,
+              parser: values.parser,
+              original_filename: values.originalFilename || values.filePath.split(/[/\\]/).pop(),
+            }),
+          },
+        );
+      } else {
+        // Jira or Confluence source
+        const isJira = values.kind === "jira";
+        return apiJson(
+          "/api/workspace/sources",
+          z.unknown(),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              workspace_dir: workspaceDir,
+              name: values.name,
+              connector_type: isJira ? "jira.atlassian_api" : "confluence.atlassian_api",
+              base_url: values.baseUrl,
+              token: values.token,
+              defaults: { fetch_backend: "native", include_comments: true, include_attachments: true },
+              selector: isJira
+                ? { name: values.selectorName || `${values.name}_issue`, type: "issue", issue_key: values.selectorValue }
+                : { name: values.selectorName || `${values.name}_space`, type: "space_slice", space_key: values.selectorValue },
+            }),
+          },
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sources", workspaceDir] });
@@ -744,7 +833,7 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
         <div className="section-heading">
           <p className="eyebrow">Sources</p>
           <h2>Connect Data Sources</h2>
-          <p>Add Jira and Confluence sources, test them, then refresh data into the workspace.</p>
+          <p>Add Jira, Confluence, or File Upload sources, test them, then refresh data into the workspace.</p>
         </div>
         <Stepper steps={sourceSteps} />
         <form className="stack-form" onSubmit={form.handleSubmit((values) => createSource.mutate(values))}>
@@ -755,20 +844,48 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
                 <select {...form.register("kind")}>
                   <option value="jira">Jira</option>
                   <option value="confluence">Confluence</option>
+                  <option value="file_upload">File Upload</option>
                 </select>
               </label>
               <label>
                 Source name
-                <input {...form.register("name", { required: true })} placeholder="ssd_jira" />
+                <input {...form.register("name", { required: true })} placeholder={watchedKind === "file_upload" ? "nvme_spec" : "ssd_jira"} />
               </label>
-              <label>
-                Base URL
-                <input {...form.register("baseUrl", { required: true })} placeholder="https://jira.example.com" />
-              </label>
+              {watchedKind === "file_upload" ? (
+                <>
+                  <label>
+                    File path
+                    <input {...form.register("filePath", { required: true })} placeholder="D:\specs\nvme.pdf" />
+                  </label>
+                  <label>
+                    File type
+                    <select {...form.register("fileType")}>
+                      <option value="pdf">PDF</option>
+                      <option value="docx">DOCX</option>
+                      <option value="xlsx">XLSX</option>
+                      <option value="pptx">PPTX</option>
+                      <option value="image">Image</option>
+                    </select>
+                  </label>
+                  <label>
+                    Parser
+                    <select {...form.register("parser")}>
+                      <option value="auto">Auto (MinerU + fallback)</option>
+                      <option value="mineru">MinerU</option>
+                      <option value="pypdf">PyPDF</option>
+                    </select>
+                  </label>
+                </>
+              ) : (
+                <label>
+                  Base URL
+                  <input {...form.register("baseUrl", { required: true })} placeholder="https://jira.example.com" />
+                </label>
+              )}
               <WizardActions
-                primaryLabel="Next: Authentication"
+                primaryLabel={watchedKind === "file_upload" ? "Next: Test File" : "Next: Authentication"}
                 primaryDisabled={!canAdvanceDetails}
-                onPrimary={() => setWizardStep(1)}
+                onPrimary={() => setWizardStep(watchedKind === "file_upload" ? 3 : 1)}
               />
             </>
           )}
@@ -808,27 +925,47 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
           )}
           {wizardStep === 3 && (
             <>
-              <div className="notice">Source saved. Test the configured connector before fetching data.</div>
+              <div className="notice">
+                {isFileUpload
+                  ? "File source saved. Test file accessibility before parsing."
+                  : "Source saved. Test the configured connector before fetching data."}
+              </div>
               <WizardActions
                 backLabel="Back"
-                onBack={() => setWizardStep(2)}
-                primaryLabel={testSource.isPending ? "Testing..." : "Test Connection"}
-                primaryDisabled={!currentSelector || testSource.isPending}
-                onPrimary={() => currentSelector && testSource.mutate({ name: watchedName, selector: currentSelector.name })}
+                onBack={() => setWizardStep(isFileUpload ? 0 : 2)}
+                primaryLabel={testSource.isPending ? "Testing..." : (isFileUpload ? "Test File" : "Test Connection")}
+                primaryDisabled={isFileUpload ? testSource.isPending : (!currentSelector || testSource.isPending)}
+                onPrimary={() => {
+                  if (isFileUpload) {
+                    testSource.mutate({ name: watchedName, selector: "" });
+                  } else if (currentSelector) {
+                    testSource.mutate({ name: watchedName, selector: currentSelector.name });
+                  }
+                }}
               />
             </>
           )}
           {wizardStep === 4 && (
             <>
               <div className={sourceFetched ? "notice" : "advanced-grid"}>
-                {sourceFetched ? `${selectedSource?.document_count || 0} documents fetched.` : "Connection is ready. Fetch data into the workspace."}
+                {sourceFetched
+                  ? `${selectedSource?.document_count || 0} documents ${isFileUpload ? "parsed" : "fetched"}.`
+                  : isFileUpload
+                  ? "File is accessible. Parse the file into the workspace."
+                  : "Connection is ready. Fetch data into the workspace."}
               </div>
               <WizardActions
                 backLabel="Back"
                 onBack={() => setWizardStep(3)}
-                primaryLabel={refresh.isPending ? "Fetching..." : "Fetch Data"}
-                primaryDisabled={!currentSelector || refresh.isPending}
-                onPrimary={() => currentSelector && refresh.mutate({ name: watchedName, selector: currentSelector.name })}
+                primaryLabel={refresh.isPending ? (isFileUpload ? "Parsing..." : "Fetching...") : (isFileUpload ? "Parse File" : "Fetch Data")}
+                primaryDisabled={isFileUpload ? refresh.isPending : (!currentSelector || refresh.isPending)}
+                onPrimary={() => {
+                  if (isFileUpload) {
+                    refresh.mutate({ name: watchedName, selector: "" });
+                  } else if (currentSelector) {
+                    refresh.mutate({ name: watchedName, selector: currentSelector.name });
+                  }
+                }}
               />
               <button className="secondary-action" onClick={resetSourceWizard} type="button">
                 <Plus size={16} /> Add another source
@@ -838,30 +975,53 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
         </form>
       </div>
 
-      <ListPanel title="Configured Sources">
+      <ListPanel title="Sync Status Dashboard">
         {(sources.data?.sources || []).map((source) => {
           const selector = source.selector || sources.data?.selectors.find((row) => row.source === source.name);
+          const statusIcon = source.status === "ready" ? <CheckCircle2 size={16} className="status-icon-success" /> :
+                            source.status === "error" ? <XCircle size={16} className="status-icon-error" /> :
+                            source.status === "syncing" ? <Loader2 size={16} className="spin status-icon-pending" /> :
+                            <AlertCircle size={16} className="status-icon-warning" />;
           return (
-          <div className="list-row" key={source.name}>
-            <strong>{source.name}</strong>
-            <span>{source.kind} / {source.connector_type}</span>
-            <span>{source.status || "not refreshed"} / {source.document_count ?? 0} docs</span>
-            <span>last refresh: {source.last_refresh || "-"}</span>
-            <span>selector: {selector?.name || "not set"}</span>
-            <span>{source.enabled === false ? "disabled" : "enabled"}</span>
+          <div className="list-row sync-status-row" key={source.name}>
+            <div className="sync-status-header">
+              <strong>{source.name}</strong>
+              <span className="sync-status-badge">{statusIcon} {source.status || "not synced"}</span>
+            </div>
+            <div className="sync-status-details">
+              <span><Database size={14} /> {source.kind} / {source.connector_type}</span>
+              <span><FileText size={14} /> {source.document_count ?? 0} documents</span>
+              <span><Clock size={14} /> Last sync: {source.last_refresh || "Never"}</span>
+              <span><Settings size={14} /> Selector: {selector?.name || "not set"}</span>
+              <span className={source.enabled === false ? "status-disabled" : "status-enabled"}>
+                {source.enabled === false ? "Disabled" : "Enabled"}
+              </span>
+            </div>
+            {source.status_reason && (
+              <div className="sync-status-reason">
+                <AlertTriangle size={14} /> {source.status_reason}
+              </div>
+            )}
             <div className="row-actions">
               <button disabled={!selector || testSource.isPending} type="button" onClick={() => selector && testSource.mutate({ name: source.name, selector: selector.name })}>
                 {testSource.isPending ? <Loader2 size={14} className="spin" /> : <Play size={14} />} Test
               </button>
               <button disabled={!selector || refresh.isPending} type="button" onClick={() => selector && refresh.mutate({ name: source.name, selector: selector.name })}>
-                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Refresh
+                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Sync
               </button>
             </div>
           </div>
           );
         })}
-        {testSource.error && <div className="error">{String(testSource.error.message)}</div>}
-        {refresh.error && <div className="error">{String(refresh.error.message)}</div>}
+        {(sources.data?.sources || []).length === 0 && (
+          <div className="empty-state">
+            <Database size={48} />
+            <p>No data sources configured yet</p>
+            <p className="empty-state-hint">Use the wizard above to add your first source</p>
+          </div>
+        )}
+        {testSource.error && <div className="error"><XCircle size={16} /> Test failed: {String(testSource.error.message)}</div>}
+        {refresh.error && <div className="error"><XCircle size={16} /> Sync failed: {String(refresh.error.message)}</div>}
       </ListPanel>
     </section>
   );
@@ -1466,6 +1626,262 @@ function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
   );
 }
 
+// Highlight matching text in search results
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+
+  const terms = query.trim().split(/\s+/);
+  let result: React.ReactNode = text;
+
+  terms.forEach((term) => {
+    if (term.length < 2) return;
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts: React.ReactNode[] = [];
+
+    if (typeof result === 'string') {
+      const matches = result.split(regex);
+      matches.forEach((part, i) => {
+        if (regex.test(part)) {
+          parts.push(<mark key={i}>{part}</mark>);
+        } else {
+          parts.push(part);
+        }
+      });
+      result = parts;
+    }
+  });
+
+  return result;
+}
+
+function SearchPage({ workspaceDir }: { workspaceDir: string }) {
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<z.infer<typeof searchResultSchema>[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<z.infer<typeof searchResultSchema> | null>(null);
+
+  const indexStats = useQuery({
+    queryKey: ["index-stats", workspaceDir],
+    queryFn: () => apiJson(`/api/retrieval/index/stats?workspace_dir=${encodeURIComponent(workspaceDir)}`, indexStatsSchema),
+    enabled: Boolean(workspaceDir),
+  });
+
+  const queryClient = useQueryClient();
+
+  const buildIndex = useMutation({
+    mutationFn: () =>
+      apiJson(
+        "/api/retrieval/index/build",
+        z.object({ status: z.string(), indexed_documents: z.number() }),
+        {
+          method: "POST",
+          body: JSON.stringify({ workspace_dir: workspaceDir }),
+        },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["index-stats", workspaceDir] });
+    },
+  });
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const response = await apiJson(
+        "/api/retrieval/search",
+        searchResponseSchema,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            workspace_dir: workspaceDir,
+            query: query.trim(),
+            top_k: 10,
+          }),
+        },
+      );
+      setSearchResults(response.results);
+    } catch (error) {
+      setSearchError(String(error));
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const totalDocs = indexStats.data?.stats.total_documents ?? 0;
+  const indexReady = totalDocs > 0;
+
+  return (
+    <section className="page-grid search-grid">
+      <div className="primary-surface">
+        <div className="section-heading">
+          <p className="eyebrow">Search</p>
+          <h2>Knowledge Retrieval</h2>
+          <p>Search across all indexed documents using BM25 retrieval with Chinese/English support.</p>
+        </div>
+
+        <div className="index-status-card" data-testid="index-status-card">
+          <div className="index-status-header">
+            <div>
+              <p className="eyebrow">Index Status</p>
+              <strong data-testid="document-count">{totalDocs} documents indexed</strong>
+            </div>
+            <button
+              data-testid="rebuild-index-button"
+              disabled={buildIndex.isPending}
+              type="button"
+              onClick={() => buildIndex.mutate()}
+              aria-busy={buildIndex.isPending}
+              aria-label={buildIndex.isPending ? "Building index" : "Rebuild index"}
+            >
+              {buildIndex.isPending ? (
+                <><Loader2 size={16} className="spin" /> Building...</>
+              ) : (
+                <><RefreshCw size={16} /> Rebuild Index</>
+              )}
+            </button>
+          </div>
+          {indexStats.data?.stats.last_updated && (
+            <p className="index-status-detail">
+              Last updated: {indexStats.data.stats.last_updated}
+            </p>
+          )}
+          {buildIndex.error && (
+            <div className="error" role="alert">
+              <XCircle size={16} /> {String(buildIndex.error.message)}
+            </div>
+          )}
+        </div>
+
+        <div className="search-box">
+          <input
+            data-testid="search-input"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="Enter your search query (支持中英文)..."
+            disabled={!indexReady || isSearching}
+            aria-label="Search documents"
+            aria-describedby={!indexReady ? "search-help" : undefined}
+            aria-invalid={!!searchError}
+          />
+          <button
+            data-testid="search-button"
+            type="button"
+            onClick={handleSearch}
+            disabled={!indexReady || !query.trim() || isSearching}
+            aria-busy={isSearching}
+            aria-label={isSearching ? "Searching" : "Search"}
+          >
+            {isSearching ? (
+              <><Loader2 size={16} className="spin" /> Searching...</>
+            ) : (
+              <><Search size={16} /> Search</>
+            )}
+          </button>
+        </div>
+
+        {!indexReady && (
+          <div className="notice" id="search-help" role="status">
+            No documents indexed yet. Build the index first by clicking "Rebuild Index" above.
+          </div>
+        )}
+
+        {isSearching && (
+          <div role="status" aria-live="polite" className="sr-only">
+            Searching for {query}...
+          </div>
+        )}
+
+        {searchError && (
+          <div className="error" role="alert" aria-live="assertive">
+            <XCircle size={16} /> Search failed: {searchError}
+          </div>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="search-results" data-testid="search-results">
+            <p className="eyebrow">{searchResults.length} results</p>
+            {searchResults.map((result, index) => (
+              <button
+                key={result.doc_id}
+                data-testid={`search-result-${index}`}
+                className={selectedDoc?.doc_id === result.doc_id ? "search-result-card active" : "search-result-card"}
+                onClick={() => setSelectedDoc(result)}
+                type="button"
+                aria-label={`Result ${index + 1}: ${result.document.title || result.doc_id}`}
+              >
+                <div className="search-result-header">
+                  <strong>#{index + 1} {highlightText(result.document.title || result.doc_id, query)}</strong>
+                  <span className="search-score">Score: {result.score.toFixed(3)}</span>
+                </div>
+                <p className="search-result-snippet">
+                  {highlightText(result.document.content?.substring(0, 200) || "No content preview", query)}
+                  {(result.document.content?.length ?? 0) > 200 && "..."}
+                </p>
+                <div className="search-result-meta">
+                  <span><Database size={14} /> {result.document.source || "unknown"}</span>
+                  <span><FileText size={14} /> {result.doc_id}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {searchResults.length === 0 && query && !isSearching && !searchError && (
+          <div className="empty-state">
+            <Search size={48} />
+            <p>No results found for "{query}"</p>
+            <p className="empty-state-hint">Try different keywords or rebuild the index</p>
+          </div>
+        )}
+      </div>
+
+      {selectedDoc ? (
+        <div className="result-surface document-detail">
+          <div className="section-heading">
+            <p className="eyebrow">Document Detail</p>
+            <h3>{selectedDoc.document.title || selectedDoc.doc_id}</h3>
+          </div>
+          <div className="document-meta-grid">
+            <MetricCard label="Score" value={selectedDoc.score.toFixed(3)} />
+            <MetricCard label="Source" value={selectedDoc.document.source || "unknown"} />
+            <MetricCard label="Doc ID" value={selectedDoc.doc_id} />
+          </div>
+          <section>
+            <p className="eyebrow">Content</p>
+            <div className="document-content">
+              {selectedDoc.document.content || "No content available"}
+            </div>
+          </section>
+          {selectedDoc.document.metadata && Object.keys(selectedDoc.document.metadata).length > 0 && (
+            <section>
+              <p className="eyebrow">Metadata</p>
+              <div className="metadata-grid">
+                {Object.entries(selectedDoc.document.metadata).map(([key, value]) => (
+                  <div key={key} className="metadata-row">
+                    <strong>{key}</strong>
+                    <span>{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      ) : (
+        <EmptyState
+          title="Select a result"
+          body="Click on a search result to view full document details."
+        />
+      )}
+    </section>
+  );
+}
+
 function ResultView({ result }: { result: AnalyzeResult | null }) {
   if (!result) {
     return <EmptyState title="Results" body="Summary, evidence, citations, and next actions appear after a run." />;
@@ -1499,6 +1915,7 @@ function ResultView({ result }: { result: AnalyzeResult | null }) {
     </div>
   );
 }
+
 
 function ModulePlaceholder({ page, latestResult }: { page: Page; latestResult: AnalyzeResult | null }) {
   const title = page === "wiki" ? "Wiki" : page === "reports" ? "Reports" : "Spec Lab";
@@ -1614,8 +2031,10 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 );
