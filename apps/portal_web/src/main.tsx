@@ -536,7 +536,7 @@ function AnalyzePage({
   const setupItems: SetupItem[] = [
     { label: "Jira Source", ok: jiraReady, detail: jiraReady ? "Configured" : "Add a Jira source", target: "sources" },
     { label: "Confluence Source", ok: confluenceReady, detail: confluenceReady ? "Configured" : "Add a Confluence source", target: "sources" },
-    { label: "NVMe Spec Asset", ok: mineruReady, detail: mineruReady ? "nvme-spec-mineru / MinerU" : "Parse or register nvme-spec-mineru", target: "spec" },
+    { label: "File Asset", ok: mineruReady, detail: mineruReady ? "File assets parsed with MinerU" : "Parse or register file assets (specs, policies, etc.)", target: "spec" },
     { label: "Analysis Profile", ok: profileReady, detail: profileReady ? "Profile references spec + LLM settings" : "Create a profile with spec and LLM settings", target: "profiles" },
   ];
   const setupComplete = Boolean(workspaceDir && setupItems.every((item) => item.ok));
@@ -546,8 +546,8 @@ function AnalyzePage({
       <div className="primary-surface transcript-surface">
         <div className="section-heading chat-heading">
           <p className="eyebrow">Analyze</p>
-          <h2>Grounded Jira analysis</h2>
-          <p>Run PageIndex-first analysis over Jira, Confluence, and spec evidence.</p>
+          <h2>Deep Jira Analysis</h2>
+          <p>Run deep analysis on Jira issues with cross-source evidence from Confluence and file assets.</p>
         </div>
 
         <SetupChecklist items={setupItems} onNavigate={(page) => navigate(`/${page}`)} />
@@ -1447,9 +1447,18 @@ function RunTabPanel({
   artifacts: z.infer<typeof runDetailSchema>["artifact_inventory"];
 }) {
   if (activeTab === "summary") {
+    const issueDataText = payload.issue_summary ? String(payload.issue_summary) : null;
     return (
       <section className="tab-panel">
-        <p className="eyebrow">Summary</p>
+        {issueDataText && (
+          <>
+            <p className="eyebrow">Jira Issue</p>
+            <div className="document-content" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9em', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+              {issueDataText}
+            </div>
+          </>
+        )}
+        <p className="eyebrow">Analysis Summary</p>
         <p>{payload.answer?.text || "No summary text available."}</p>
       </section>
     );
@@ -1531,7 +1540,7 @@ function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
     defaultValues: {
       specPdf: "",
       assetId: "nvme-spec-mineru",
-      displayName: "NVMe Spec",
+      displayName: "File Asset",
       mineruPythonExe: "",
     },
   });
@@ -1578,18 +1587,18 @@ function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
       <div className="primary-surface">
         <div className="section-heading">
           <p className="eyebrow">Spec Lab</p>
-          <h2>NVMe Spec Asset</h2>
-          <p>Use a reusable MinerU-parsed spec asset for citation-grade evidence.</p>
+          <h2>File Assets</h2>
+          <p>Parse and manage file assets (specs, policies, documents) for citation-grade evidence.</p>
         </div>
         {gate.isSuccess ? (
           <div className="notice">nvme-spec-mineru is ready and parsed with MinerU.</div>
         ) : (
-          <div className="notice">Parse the NVMe PDF once with MinerU, then reuse the asset in profiles.</div>
+          <div className="notice">Parse files once with MinerU, then reuse the asset in profiles.</div>
         )}
         <form className="stack-form" onSubmit={form.handleSubmit((values) => ingest.mutate(values))}>
           <label>
-            NVMe PDF path
-            <input {...form.register("specPdf", { required: true })} placeholder="D:\\specs\\nvme.pdf" />
+            File PDF path
+            <input {...form.register("specPdf", { required: true })} placeholder="D:\\specs\\nvme.pdf or D:\\policies\\firmware.pdf" />
           </label>
           <label>
             Asset ID
@@ -1887,16 +1896,27 @@ function ResultView({ result }: { result: AnalyzeResult | null }) {
     return <EmptyState title="Results" body="Summary, evidence, citations, and next actions appear after a run." />;
   }
   const coverage = coverageFromAnalyzeResult(result);
+  const issueData = result.sections?.issue_summary || result.summary?.issue_summary;
+  const issueDataText = issueData ? String(issueData) : null;
+
   return (
     <div className="result-surface">
       <EvidenceCoveragePanel coverage={coverage} />
+      {issueDataText && (
+        <section>
+          <p className="eyebrow">Jira Issue</p>
+          <div className="document-content" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9em', lineHeight: '1.6' }}>
+            {issueDataText}
+          </div>
+        </section>
+      )}
       <section>
-        <p className="eyebrow">Summary</p>
+        <p className="eyebrow">Analysis Summary</p>
         <h3>{String(result.summary.title || result.issue_key)}</h3>
         <p>{String(result.summary.answer || "Analysis completed. Review sections and citations below.")}</p>
       </section>
       <section>
-        <p className="eyebrow">Evidence</p>
+        <p className="eyebrow">Evidence Sources</p>
         {result.evidence_sources.length ? result.evidence_sources.map((source) => <span className="pill" key={source}>{source}</span>) : <p>No evidence sources returned.</p>}
       </section>
       <section>

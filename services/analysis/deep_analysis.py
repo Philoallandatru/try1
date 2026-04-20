@@ -8,9 +8,9 @@ from services.analysis.search_enhancer import build_enhanced_search_query
 from services.analysis.section_analysis import build_composite_report_markdown, build_section_outputs
 from services.connectors.jira.issue_type_profiles import route_jira_issue_type
 from services.retrieval.citations.assembler import assemble_citation
-from services.retrieval.engine import PAGE_INDEX_ENGINE, build_shared_retrieval_bundle
+from services.retrieval.engine import BM25_ENGINE, build_shared_retrieval_bundle
 from services.retrieval.indexing.page_index import build_page_index
-from services.retrieval.search.hybrid_search import search_page_index
+from services.retrieval.search.bm25_search import build_bm25_index, search_bm25
 
 
 ANALYSIS_PROFILES: dict[str, dict[str, str]] = {
@@ -156,7 +156,8 @@ def _search_cross_source(
     if not source_documents:
         return []
     page_index = build_page_index(source_documents)
-    results = search_page_index(page_index, query, allowed_policies, top_k=top_k)
+    bm25_index = build_bm25_index(page_index)
+    results = search_bm25(bm25_index, query, allowed_policies, top_k=top_k)
     return [assemble_citation(result) for result in results]
 
 
@@ -171,7 +172,7 @@ def _build_shared_secondary_retrieval_bundle(
     documents = [*confluence_documents, *spec_documents]
     entries = build_page_index(documents)
     bundle = build_shared_retrieval_bundle(
-        engine=PAGE_INDEX_ENGINE,
+        engine=BM25_ENGINE,
         entries=entries,
         query=query,
         allowed_policies=allowed_policies,
@@ -239,7 +240,7 @@ def _build_section_retrieval_hooks_with_context(
             scope_hint=scope_hint,
         )
         followup_results = (
-            PAGE_INDEX_ENGINE.search(
+            BM25_ENGINE.search(
                 entries,
                 enhanced["query"],
                 allowed_policies,

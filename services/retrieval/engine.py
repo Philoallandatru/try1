@@ -5,6 +5,7 @@ from typing import Iterable, Protocol
 
 from services.retrieval.citations.assembler import assemble_citation, build_source_inspection
 from services.retrieval.search.hybrid_search import search_page_index
+from services.retrieval.search.bm25_search import build_bm25_index, search_bm25
 
 
 class RetrievalEngine(Protocol):
@@ -91,6 +92,69 @@ class PageIndexEngine:
 
 
 PAGE_INDEX_ENGINE = PageIndexEngine()
+
+
+class BM25Engine:
+    """BM25-based retrieval engine with proper IDF and length normalization."""
+
+    name = "bm25"
+
+    def search(
+        self,
+        entries: Iterable[dict],
+        query: str,
+        allowed_policies: set[str],
+        top_k: int = 10,
+    ) -> list[dict]:
+        # Build BM25 index from entries
+        bm25_index = build_bm25_index(entries)
+        # Search using BM25
+        return search_bm25(bm25_index, query, allowed_policies, top_k=top_k)
+
+    def citation(
+        self,
+        entries: Iterable[dict],
+        query: str,
+        allowed_policies: set[str],
+        top_k: int = 10,
+    ) -> dict:
+        results = self.search(entries, query, allowed_policies, top_k=top_k)
+        return self.citation_from_results(results)
+
+    def comparison_payload(
+        self,
+        entries: Iterable[dict],
+        query: str,
+        allowed_policies: set[str],
+        top_k: int = 10,
+    ) -> dict:
+        results = self.search(entries, query, allowed_policies, top_k=top_k)
+        return self.comparison_from_results(results, query)
+
+    def citation_from_results(self, results: list[dict]) -> dict:
+        if not results:
+            return {"citation": None, "inspection": None}
+        return {
+            "citation": assemble_citation(results[0]),
+            "inspection": build_source_inspection(results[0]),
+        }
+
+    def comparison_from_results(self, results: list[dict], query: str) -> dict:
+        top_result = results[0] if results else None
+        return {
+            "engine": self.name,
+            "query": query,
+            "result_count": len(results),
+            "top_result_document": top_result["document_id"] if top_result else None,
+            "manual_review": {
+                "hit_quality": None,
+                "readability": None,
+                "citation_fidelity": None,
+            },
+        }
+
+
+BM25_ENGINE = BM25Engine()
 
 
 def _json_safe(value: object) -> object:
