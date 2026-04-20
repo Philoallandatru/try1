@@ -282,7 +282,7 @@ def _build_evidence_text(citations: list[dict]) -> str:
         return "No evidence retrieved."
     lines: list[str] = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     return "\n".join(lines)
 
@@ -368,7 +368,7 @@ def _extractive_deep_answer(
 
     evidence_lines: list[str] = []
     for citation in all_citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
 
     return {

@@ -52,7 +52,7 @@ def build_jira_spec_extractive_answer(question: str, citations: list[dict]) -> d
     spec_citations = [citation for citation in citations if not str(citation["document"]).startswith("SSD-")]
     evidence_lines = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
 
     if jira_citations and spec_citations:
@@ -90,7 +90,7 @@ def build_spec_section_extractive_answer(
     jira_evidence_lines = []
     all_evidence_lines = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         line = f"- {citation['document']} v{citation['version']}: {evidence}"
         all_evidence_lines.append(line)
         if str(citation["document"]).startswith("SSD-"):

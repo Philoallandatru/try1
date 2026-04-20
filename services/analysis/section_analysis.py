@@ -32,7 +32,7 @@ def _section_evidence_text(citations: list[dict]) -> str:
         return "No evidence retrieved."
     lines: list[str] = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     return "\n".join(lines)
 
@@ -46,7 +46,7 @@ def _combined_citations(shared_citations: list[dict], followup_citations: list[d
             citation.get("version"),
             citation.get("page"),
             citation.get("section"),
-            tuple(citation.get("evidence_span", [])),
+            citation.get("evidence_span", ""),
         )
         if key in seen:
             continue
@@ -140,7 +140,7 @@ def build_composite_report_markdown(
         section = section_outputs[section_name]
         citation_lines = []
         for citation in section.get("citations", []):
-            evidence = " ".join(citation.get("evidence_span", []))
+            evidence = citation.get("evidence_span", "")
             citation_lines.append(f"- `{citation['document']}` v{citation['version']}: {evidence}")
         lines.extend(
             [

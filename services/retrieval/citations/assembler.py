@@ -30,6 +30,8 @@ def assemble_citation(entry: dict) -> dict:
     table = _first_table_for_page(entry)
     figure = _first_figure_for_page(entry)
     evidence = [block.get("text", "") for block in entry.get("content_blocks", []) if block.get("text")]
+    # Join evidence blocks with double newline for better readability
+    evidence_text = "\n\n".join(evidence[:3]) if evidence else ""
     return {
         "document": entry["document_id"],
         "title": entry["title"],
@@ -40,7 +42,7 @@ def assemble_citation(entry: dict) -> dict:
         "table_id": table.get("id") if table else None,
         "figure_id": figure.get("id") if figure else None,
         "source_uri": entry.get("provenance", {}).get("source_uri"),
-        "evidence_span": evidence[:3],
+        "evidence_span": evidence_text,
     }
 
 

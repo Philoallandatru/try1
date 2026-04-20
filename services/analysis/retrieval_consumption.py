@@ -14,7 +14,7 @@ PROMPT_MODES = {"strict", "balanced", "exploratory"}
 def _build_evidence_text(citations: list[dict]) -> str:
     lines = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     return "\n".join(lines)
 
@@ -80,7 +80,7 @@ def _extractive_answer(question: str, citations: list[dict]) -> dict:
 
     evidence_lines = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
 
     return {

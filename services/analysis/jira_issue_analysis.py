@@ -668,7 +668,7 @@ def build_spec_section_explain_payload(
     for index, citation in enumerate(retrieval_payload["retrieval"]["citations"]):
         document_id = citation["document"]
         citation_rank.setdefault(document_id, index)
-        evidence_text = " ".join(citation.get("evidence_span", [])).strip()
+        evidence_text = citation.get("evidence_span", "").strip()
         if evidence_text:
             citation_evidence.setdefault(document_id, []).append(evidence_text)
 
@@ -703,7 +703,7 @@ def build_spec_section_explain_payload(
             for document in related_jira_documents
         )
         evidence_text = "\n".join(
-            f"- {citation['document']} v{citation['version']}: {' '.join(citation.get('evidence_span', []))}"
+            f"- {citation['document']} v{citation['version']}: {citation.get('evidence_span', '')}"
             for citation in retrieval_payload["retrieval"]["citations"]
         )
         retrieval_payload["ai_prompt"] = build_spec_section_explain_prompt(
