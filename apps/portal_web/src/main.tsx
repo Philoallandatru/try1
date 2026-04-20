@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { AnalysisResultsPage } from "./AnalysisResultsPage";
+import { DailyReportPage } from "./DailyReportPage";
+import { BatchAnalysisPage } from "./BatchAnalysisPage";
 import {
   CheckCircle2,
   XCircle,
@@ -30,6 +32,8 @@ import {
   X,
   Copy,
   FileCheck,
+  Calendar,
+  Layers,
 } from "lucide-react";
 import "./styles.css";
 
@@ -380,6 +384,8 @@ function App() {
             { id: "/search", label: "Search", icon: FileText },
             { id: "/runs", label: "Runs", icon: Clock },
             { id: "/analysis", label: "Analysis", icon: BarChart3 },
+            { id: "/daily-report", label: "Daily Report", icon: Calendar },
+            { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
             { id: "/sources", label: "Sources", icon: Database },
             { id: "/profiles", label: "Profiles", icon: Settings },
             { id: "/wiki", label: "Wiki", icon: FileText },
@@ -455,6 +461,8 @@ function App() {
             <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
             <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
             <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
             <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
             <Route path="/profiles" element={
               <ProfilesPage

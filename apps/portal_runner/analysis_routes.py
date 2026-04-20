@@ -24,6 +24,9 @@ def create_analysis_router(*, require_auth: Callable) -> "APIRouter":
         get_analysis_result_response,
         search_knowledge_base_response,
         generate_daily_report_response,
+        batch_analyze_issues_response,
+        get_batch_result_response,
+        list_batches_response,
     )
 
     router = APIRouter(prefix="/api/analysis", tags=["analysis"])
@@ -142,6 +145,102 @@ def create_analysis_router(*, require_auth: Callable) -> "APIRouter":
         try:
             payload = await request.json()
             return generate_daily_report_response(payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.post("/batch")
+    async def batch_analyze(request: Request, _: None = Depends(require_auth)) -> dict:
+        """Trigger batch deep analysis for multiple Jira issues.
+
+        Request body:
+        {
+            "workspace_dir": "/path/to/workspace",
+            "issue_ids": ["SSD-777", "SSD-778", "SSD-779"],
+            "llm_backend": "none",
+            "llm_base_url": "http://localhost:1234/v1",
+            "llm_model": "qwen2.5-coder-7b-instruct",
+            "prompt_mode": "strict",
+            "top_k": 5,
+            "max_concurrent": 3
+        }
+
+        Returns:
+        {
+            "batch_id": "uuid",
+            "started_at": "2026-04-20T10:00:00Z",
+            "completed_at": "2026-04-20T10:01:30Z",
+            "duration_seconds": 90.5,
+            "total_issues": 3,
+            "successful": 2,
+            "failed": 1,
+            "results": [...]
+        }
+        """
+        try:
+            payload = await request.json()
+            return await batch_analyze_issues_response(payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.get("/batch/{batch_id}")
+    def get_batch(
+        batch_id: str,
+        workspace_dir: str,
+        _: None = Depends(require_auth),
+    ) -> dict:
+        """Get saved batch analysis result.
+
+        Query params:
+        - workspace_dir: Path to workspace directory
+
+        Returns:
+        {
+            "batch_id": "uuid",
+            "started_at": "2026-04-20T10:00:00Z",
+            "completed_at": "2026-04-20T10:01:30Z",
+            "duration_seconds": 90.5,
+            "total_issues": 3,
+            "successful": 2,
+            "failed": 1,
+            "results": [...]
+        }
+        """
+        try:
+            return get_batch_result_response(workspace_dir, batch_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @router.get("/batches")
+    def list_batches(
+        workspace_dir: str,
+        limit: int = 20,
+        _: None = Depends(require_auth),
+    ) -> dict:
+        """List recent batch analyses.
+
+        Query params:
+        - workspace_dir: Path to workspace directory
+        - limit: Maximum number of batches (default: 20)
+
+        Returns:
+        {
+            "total": 10,
+            "batches": [
+                {
+                    "batch_id": "uuid",
+                    "started_at": "2026-04-20T10:00:00Z",
+                    "completed_at": "2026-04-20T10:01:30Z",
+                    "duration_seconds": 90.5,
+                    "total_issues": 3,
+                    "successful": 2,
+                    "failed": 1
+                },
+                ...
+            ]
+        }
+        """
+        try:
+            return list_batches_response(workspace_dir, limit)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

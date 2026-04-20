@@ -39,6 +39,9 @@ from apps.portal_runner.source_routes import create_source_router
 from apps.portal_runner.retrieval_routes import create_retrieval_router
 from apps.portal_runner.analysis_routes import create_analysis_router
 from apps.portal_runner.analysis_websocket import create_websocket_router
+from apps.portal_runner.export_routes import create_export_routes
+from apps.portal_runner.trends_routes import create_trends_routes
+from apps.portal_runner.cross_reference_routes import create_cross_reference_routes
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -405,6 +408,18 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include WebSocket routes
     websocket_router = create_websocket_router()
     app.include_router(websocket_router)
+
+    # Include Export API routes
+    export_router = create_export_routes(config.workspace.root)
+    app.include_router(export_router)
+
+    # Include Trends API routes
+    trends_router = create_trends_routes(config.workspace.root)
+    app.include_router(trends_router)
+
+    # Include Cross-Reference API routes
+    cross_ref_router = create_cross_reference_routes(config.workspace.root)
+    app.include_router(cross_ref_router)
 
     return app
 

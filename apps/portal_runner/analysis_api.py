@@ -4,7 +4,9 @@ Provides deep analysis and daily report generation functionality.
 """
 from __future__ import annotations
 
+import asyncio
 import json
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -451,4 +453,278 @@ def generate_daily_report_response(payload: dict[str, Any]) -> dict[str, Any]:
         date=payload.get("date"),
         mode=payload.get("mode", "fast"),
     )
+
+
+class BatchAnalysisAPI:
+    """Business logic for batch analysis operations."""
+
+    def __init__(self, workspace_root: Path):
+        self.workspace_root = Path(workspace_root)
+        self.batch_root = self.workspace_root / "knowledge" / "batches"
+        self.batch_root.mkdir(parents=True, exist_ok=True)
+        self.analysis_api = AnalysisAPI(workspace_root)
+
+    async def batch_analyze_issues(
+        self,
+        *,
+        workspace_dir: str,
+        issue_ids: list[str],
+        llm_backend: str = "none",
+        llm_base_url: str | None = None,
+        llm_model: str | None = None,
+        prompt_mode: str = "strict",
+        top_k: int = 5,
+        max_concurrent: int = 3,
+        progress_callback: callable | None = None,
+    ) -> dict[str, Any]:
+        """Perform batch deep analysis on multiple Jira issues.
+
+        Args:
+            workspace_dir: Path to workspace directory
+            issue_ids: List of Jira issue IDs
+            llm_backend: LLM backend type
+            llm_base_url: Base URL for LLM API
+            llm_model: Model name for LLM
+            prompt_mode: Prompt mode
+            top_k: Number of top results to retrieve
+            max_concurrent: Maximum concurrent analyses
+            progress_callback: Optional callback for progress updates
+
+        Returns:
+            Batch analysis result with individual results and summary
+        """
+        batch_id = str(uuid.uuid4())
+        started_at = datetime.now(timezone.utc)
+
+        results = []
+        errors = []
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def analyze_one(issue_id: str, index: int) -> dict[str, Any]:
+            async with semaphore:
+                try:
+                    if progress_callback:
+                        await progress_callback(
+                            batch_id=batch_id,
+                            stage="analyzing",
+                            progress=(index / len(issue_ids)) * 100,
+                            message=f"Analyzing {issue_id}",
+                        )
+
+                    # Run synchronous analysis in thread pool
+                    loop = asyncio.get_event_loop()
+                    result = await loop.run_in_executor(
+                        None,
+                        lambda: self.analysis_api.deep_analyze_issue(
+                            workspace_dir=workspace_dir,
+                            issue_id=issue_id,
+                            llm_backend=llm_backend,
+                            llm_base_url=llm_base_url,
+                            llm_model=llm_model,
+                            prompt_mode=prompt_mode,
+                            top_k=top_k,
+                        ),
+                    )
+
+                    return {
+                        "issue_id": issue_id,
+                        "status": "success",
+                        "result": result,
+                    }
+                except Exception as exc:
+                    return {
+                        "issue_id": issue_id,
+                        "status": "error",
+                        "error": str(exc),
+                    }
+
+        # Analyze all issues concurrently
+        tasks = [analyze_one(issue_id, i) for i, issue_id in enumerate(issue_ids)]
+        results = await asyncio.gather(*tasks)
+
+        # Separate successes and errors
+        successes = [r for r in results if r["status"] == "success"]
+        errors = [r for r in results if r["status"] == "error"]
+
+        completed_at = datetime.now(timezone.utc)
+        duration = (completed_at - started_at).total_seconds()
+
+        # Save batch result
+        batch_result = {
+            "batch_id": batch_id,
+            "started_at": started_at.isoformat(),
+            "completed_at": completed_at.isoformat(),
+            "duration_seconds": duration,
+            "total_issues": len(issue_ids),
+            "successful": len(successes),
+            "failed": len(errors),
+            "results": results,
+        }
+
+        self._save_batch_result(workspace_dir, batch_id, batch_result)
+
+        if progress_callback:
+            await progress_callback(
+                batch_id=batch_id,
+                stage="complete",
+                progress=100,
+                message=f"Completed {len(successes)}/{len(issue_ids)} analyses",
+            )
+
+        return batch_result
+
+    def _save_batch_result(
+        self,
+        workspace_dir: str,
+        batch_id: str,
+        batch_result: dict[str, Any],
+    ) -> None:
+        """Save batch analysis result."""
+        workspace_path = Path(workspace_dir)
+        batch_dir = workspace_path / "knowledge" / "batches" / batch_id
+        batch_dir.mkdir(parents=True, exist_ok=True)
+
+        result_file = batch_dir / "result.json"
+        with open(result_file, "w", encoding="utf-8") as f:
+            json.dump(batch_result, f, indent=2)
+
+    def get_batch_result(
+        self,
+        *,
+        workspace_dir: str,
+        batch_id: str,
+    ) -> dict[str, Any]:
+        """Get saved batch analysis result.
+
+        Args:
+            workspace_dir: Path to workspace directory
+            batch_id: Batch ID
+
+        Returns:
+            Batch analysis result
+        """
+        workspace_path = Path(workspace_dir)
+        batch_dir = workspace_path / "knowledge" / "batches" / batch_id
+
+        if not batch_dir.exists():
+            raise ValueError(f"Batch not found: {batch_id}")
+
+        result_file = batch_dir / "result.json"
+        if not result_file.exists():
+            raise ValueError(f"Batch result not found: {batch_id}")
+
+        with open(result_file, encoding="utf-8") as f:
+            return json.load(f)
+
+    def list_batches(
+        self,
+        *,
+        workspace_dir: str,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """List recent batch analyses.
+
+        Args:
+            workspace_dir: Path to workspace directory
+            limit: Maximum number of batches to return
+
+        Returns:
+            List of batch summaries
+        """
+        workspace_path = Path(workspace_dir)
+        batch_dir = workspace_path / "knowledge" / "batches"
+
+        if not batch_dir.exists():
+            return {"batches": []}
+
+        batches = []
+        for batch_path in batch_dir.iterdir():
+            if not batch_path.is_dir():
+                continue
+
+            result_file = batch_path / "result.json"
+            if not result_file.exists():
+                continue
+
+            with open(result_file, encoding="utf-8") as f:
+                result = json.load(f)
+
+            batches.append({
+                "batch_id": result.get("batch_id"),
+                "started_at": result.get("started_at"),
+                "completed_at": result.get("completed_at"),
+                "duration_seconds": result.get("duration_seconds"),
+                "total_issues": result.get("total_issues"),
+                "successful": result.get("successful"),
+                "failed": result.get("failed"),
+            })
+
+        # Sort by started_at (most recent first)
+        batches.sort(key=lambda x: x.get("started_at", ""), reverse=True)
+
+        return {
+            "total": len(batches),
+            "batches": batches[:limit],
+        }
+
+
+async def batch_analyze_issues_response(payload: dict[str, Any]) -> dict[str, Any]:
+    """Handle batch analysis request.
+
+    Args:
+        payload: Request payload with workspace_dir, issue_ids, etc.
+
+    Returns:
+        Batch analysis result
+    """
+    workspace_dir = payload.get("workspace_dir")
+    if not workspace_dir:
+        raise ValueError("workspace_dir is required")
+
+    issue_ids = payload.get("issue_ids")
+    if not issue_ids or not isinstance(issue_ids, list):
+        raise ValueError("issue_ids must be a non-empty list")
+
+    api = BatchAnalysisAPI(workspace_root=Path(workspace_dir).parent)
+
+    result = await api.batch_analyze_issues(
+        workspace_dir=workspace_dir,
+        issue_ids=issue_ids,
+        llm_backend=payload.get("llm_backend", "none"),
+        llm_base_url=payload.get("llm_base_url"),
+        llm_model=payload.get("llm_model"),
+        prompt_mode=payload.get("prompt_mode", "strict"),
+        top_k=payload.get("top_k", 5),
+        max_concurrent=payload.get("max_concurrent", 3),
+    )
+
+    return result
+
+
+def get_batch_result_response(workspace_dir: str, batch_id: str) -> dict[str, Any]:
+    """Get saved batch analysis result.
+
+    Args:
+        workspace_dir: Path to workspace directory
+        batch_id: Batch ID
+
+    Returns:
+        Batch analysis result
+    """
+    api = BatchAnalysisAPI(workspace_root=Path(workspace_dir).parent)
+    return api.get_batch_result(workspace_dir=workspace_dir, batch_id=batch_id)
+
+
+def list_batches_response(workspace_dir: str, limit: int = 20) -> dict[str, Any]:
+    """List recent batch analyses.
+
+    Args:
+        workspace_dir: Path to workspace directory
+        limit: Maximum number of batches to return
+
+    Returns:
+        List of batch summaries
+    """
+    api = BatchAnalysisAPI(workspace_root=Path(workspace_dir).parent)
+    return api.list_batches(workspace_dir=workspace_dir, limit=limit)
 
