@@ -1,0 +1,4466 @@
+{
+  "issue_id": "SSD-SAMPLE-1",
+  "title": "[SV][FwVersion880] xx platform black screen after S4",
+  "issue_summary": "# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.",
+  "routing": {
+    "issue_type_raw": "FW Bug",
+    "issue_family": "defect",
+    "issue_route": "fw_bug_rca"
+  },
+  "analysis_profile": "根因分析",
+  "search_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+  "shared_retrieval_bundle": {
+    "engine": "bm25",
+    "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+    "allowed_policies": [
+      "internal",
+      "team:ssd"
+    ],
+    "top_k": 5,
+    "results": [
+      {
+        "document_id": "NVMe-2.1-2024",
+        "page": null,
+        "source_type": "specification",
+        "authority_level": "canonical",
+        "version": "2024-08-05",
+        "language": "en",
+        "title": "NVM Express Base Specification Revision 2.1",
+        "provenance": {
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "ingested_at": "2026-04-18T08:00:00Z",
+          "parser": "demo-spec"
+        },
+        "acl": {
+          "policy": "team:ssd"
+        },
+        "structure": {
+          "pages": [],
+          "sections": [
+            {
+              "id": "s1",
+              "heading": "Controller Ready (CSTS.RDY)"
+            },
+            {
+              "id": "s2",
+              "heading": "Admin Queue Creation"
+            },
+            {
+              "id": "s3",
+              "heading": "Power State Transitions"
+            },
+            {
+              "id": "s4",
+              "heading": "Telemetry Log Pages"
+            }
+          ],
+          "tables": []
+        },
+        "terminology": {},
+        "content_blocks": [
+          {
+            "block_id": "b1",
+            "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+            "block_type": "paragraph",
+            "section": "Controller Ready (CSTS.RDY)"
+          },
+          {
+            "block_id": "b2",
+            "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+            "block_type": "paragraph",
+            "section": "Admin Queue Creation"
+          },
+          {
+            "block_id": "b3",
+            "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+            "block_type": "paragraph",
+            "section": "Power State Transitions"
+          },
+          {
+            "block_id": "b4",
+            "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+            "block_type": "paragraph",
+            "section": "Telemetry Log Pages"
+          }
+        ],
+        "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+        "token_counts": {
+          "nvm": 1,
+          "express": 1,
+          "base": 1,
+          "specification": 1,
+          "revision": 1,
+          "2": 2,
+          "1": 2,
+          "when": 2,
+          "set": 1,
+          "to": 2,
+          "the": 4,
+          "controller": 4,
+          "is": 3,
+          "ready": 2,
+          "process": 1,
+          "commands": 3,
+          "host": 2,
+          "shall": 3,
+          "not": 1,
+          "submit": 1,
+          "csts": 2,
+          "rdy": 2,
+          "0": 1,
+          "admin": 3,
+          "submission": 1,
+          "queue": 3,
+          "and": 1,
+          "completion": 1,
+          "be": 1,
+          "created": 1,
+          "before": 2,
+          "i": 1,
+          "o": 1,
+          "queues": 1,
+          "complete": 1,
+          "all": 1,
+          "outstanding": 1,
+          "entering": 1,
+          "a": 1,
+          "lower": 1,
+          "power": 2,
+          "state": 2,
+          "log": 4,
+          "page": 2,
+          "07h": 1,
+          "telemetry": 3,
+          "initiated": 2,
+          "08h": 1,
+          "data": 1,
+          "area": 1,
+          "size": 1,
+          "reported": 1,
+          "in": 1,
+          "header": 1,
+          "creation": 1,
+          "transitions": 1,
+          "pages": 1
+        },
+        "tokens": [
+          "0",
+          "07h",
+          "08h",
+          "1",
+          "2",
+          "a",
+          "admin",
+          "all",
+          "and",
+          "area",
+          "base",
+          "be",
+          "before",
+          "commands",
+          "complete",
+          "completion",
+          "controller",
+          "created",
+          "creation",
+          "csts",
+          "data",
+          "entering",
+          "express",
+          "header",
+          "host",
+          "i",
+          "in",
+          "initiated",
+          "is",
+          "log",
+          "lower",
+          "not",
+          "nvm",
+          "o",
+          "outstanding",
+          "page",
+          "pages",
+          "power",
+          "process",
+          "queue",
+          "queues",
+          "rdy",
+          "ready",
+          "reported",
+          "revision",
+          "set",
+          "shall",
+          "size",
+          "specification",
+          "state",
+          "submission",
+          "submit",
+          "telemetry",
+          "the",
+          "to",
+          "transitions",
+          "when"
+        ],
+        "scores": {
+          "bm25": 1.5169555617686754,
+          "authority": 3.0,
+          "total": 4.516955561768675
+        }
+      },
+      {
+        "document_id": "CONF-DEMO-1",
+        "page": null,
+        "source_type": "confluence",
+        "authority_level": "supporting",
+        "version": "2026-04-18T09:00:00Z",
+        "language": "en",
+        "title": "NVMe Resume Timeout Debug Guide",
+        "provenance": {
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "ingested_at": "2026-04-18T09:00:00Z",
+          "parser": "demo-confluence"
+        },
+        "acl": {
+          "policy": "team:ssd"
+        },
+        "structure": {
+          "pages": [],
+          "sections": [
+            {
+              "id": "s1",
+              "heading": "Symptom Definition"
+            },
+            {
+              "id": "s2",
+              "heading": "Key Debug Evidence"
+            },
+            {
+              "id": "s3",
+              "heading": "Common Root Cause Patterns"
+            }
+          ],
+          "tables": []
+        },
+        "terminology": {},
+        "content_blocks": [
+          {
+            "block_id": "b1",
+            "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+            "block_type": "paragraph",
+            "section": "Symptom Definition"
+          },
+          {
+            "block_id": "b2",
+            "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+            "block_type": "paragraph",
+            "section": "Key Debug Evidence"
+          },
+          {
+            "block_id": "b3",
+            "text": "Controller ready bit asserted before queue restore fully completes.",
+            "block_type": "paragraph",
+            "section": "Common Root Cause Patterns"
+          }
+        ],
+        "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+        "token_counts": {
+          "nvme": 1,
+          "resume": 2,
+          "timeout": 2,
+          "debug": 2,
+          "guide": 1,
+          "device": 1,
+          "enumerates": 1,
+          "successfully": 1,
+          "after": 1,
+          "first": 2,
+          "admin": 1,
+          "or": 1,
+          "i": 1,
+          "o": 1,
+          "command": 2,
+          "times": 1,
+          "out": 1,
+          "retry": 1,
+          "may": 1,
+          "succeed": 1,
+          "cap": 1,
+          "cc": 1,
+          "csts": 1,
+          "timeline": 1,
+          "queue": 2,
+          "recreate": 1,
+          "timestamp": 2,
+          "submit": 1,
+          "os": 1,
+          "event": 1,
+          "uart": 1,
+          "around": 1,
+          "ready": 2,
+          "transition": 1,
+          "controller": 1,
+          "bit": 1,
+          "asserted": 1,
+          "before": 1,
+          "restore": 1,
+          "fully": 1,
+          "completes": 1,
+          "symptom": 1,
+          "definition": 1,
+          "key": 1,
+          "evidence": 1,
+          "common": 1,
+          "root": 1,
+          "cause": 1,
+          "patterns": 1
+        },
+        "tokens": [
+          "admin",
+          "after",
+          "around",
+          "asserted",
+          "before",
+          "bit",
+          "cap",
+          "cause",
+          "cc",
+          "command",
+          "common",
+          "completes",
+          "controller",
+          "csts",
+          "debug",
+          "definition",
+          "device",
+          "enumerates",
+          "event",
+          "evidence",
+          "first",
+          "fully",
+          "guide",
+          "i",
+          "key",
+          "may",
+          "nvme",
+          "o",
+          "or",
+          "os",
+          "out",
+          "patterns",
+          "queue",
+          "ready",
+          "recreate",
+          "restore",
+          "resume",
+          "retry",
+          "root",
+          "submit",
+          "succeed",
+          "successfully",
+          "symptom",
+          "timeline",
+          "timeout",
+          "times",
+          "timestamp",
+          "transition",
+          "uart"
+        ],
+        "scores": {
+          "bm25": 1.268378810050279,
+          "authority": 2.0,
+          "total": 3.268378810050279
+        }
+      }
+    ],
+    "citation": {
+      "document": "NVMe-2.1-2024",
+      "title": "NVM Express Base Specification Revision 2.1",
+      "version": "2024-08-05",
+      "page": null,
+      "section": "Controller Ready (CSTS.RDY)",
+      "clause": null,
+      "table_id": null,
+      "figure_id": null,
+      "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+      "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+    },
+    "inspection": {
+      "document_id": "NVMe-2.1-2024",
+      "title": "NVM Express Base Specification Revision 2.1",
+      "version": "2024-08-05",
+      "authority_level": "canonical",
+      "page": null,
+      "language": "en",
+      "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+      "section": "Controller Ready (CSTS.RDY)",
+      "clause": null,
+      "table_id": null,
+      "table": null,
+      "figure_id": null,
+      "figure": null,
+      "content_blocks": [
+        {
+          "block_id": "b1",
+          "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+          "block_type": "paragraph",
+          "section": "Controller Ready (CSTS.RDY)"
+        },
+        {
+          "block_id": "b2",
+          "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+          "block_type": "paragraph",
+          "section": "Admin Queue Creation"
+        },
+        {
+          "block_id": "b3",
+          "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+          "block_type": "paragraph",
+          "section": "Power State Transitions"
+        },
+        {
+          "block_id": "b4",
+          "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+          "block_type": "paragraph",
+          "section": "Telemetry Log Pages"
+        }
+      ]
+    },
+    "comparison": {
+      "engine": "bm25",
+      "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+      "result_count": 2,
+      "top_result_document": "NVMe-2.1-2024",
+      "manual_review": {
+        "hit_quality": null,
+        "readability": null,
+        "citation_fidelity": null
+      }
+    },
+    "citations": [
+      {
+        "document": "NVMe-2.1-2024",
+        "title": "NVM Express Base Specification Revision 2.1",
+        "version": "2024-08-05",
+        "page": null,
+        "section": "Controller Ready (CSTS.RDY)",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+        "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+      },
+      {
+        "document": "CONF-DEMO-1",
+        "title": "NVMe Resume Timeout Debug Guide",
+        "version": "2026-04-18T09:00:00Z",
+        "page": null,
+        "section": "Symptom Definition",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "demo/confluence/CONF-DEMO-1",
+        "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+      }
+    ],
+    "source_breakdown": {
+      "confluence": {
+        "result_count": 1,
+        "document_ids": [
+          "CONF-DEMO-1"
+        ]
+      },
+      "specification": {
+        "result_count": 1,
+        "document_ids": [
+          "NVMe-2.1-2024"
+        ]
+      }
+    }
+  },
+  "section_retrieval_hooks": {
+    "rca": {
+      "mode": "append-only",
+      "status": "completed",
+      "base_bundle": "shared_retrieval_bundle",
+      "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+      "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 root cause failure mechanism error code workaround 失效机制、错误代码、根因证据",
+      "enhancement": {
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "section_name": "rca",
+        "scope_hint": "失效机制、错误代码、根因证据",
+        "additions": [
+          "defect",
+          "fw_bug_rca",
+          "BSOD",
+          "FwVersion880",
+          "root cause",
+          "failure mechanism",
+          "error code",
+          "workaround",
+          "失效机制、错误代码、根因证据"
+        ],
+        "bounds": {
+          "max_values_per_field": 3,
+          "max_additions": 18,
+          "max_query_chars": 500
+        },
+        "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 root cause failure mechanism error code workaround 失效机制、错误代码、根因证据"
+      },
+      "allowed_policies": [
+        "internal",
+        "team:ssd"
+      ],
+      "top_k": 3,
+      "scope_hint": "失效机制、错误代码、根因证据",
+      "followup_results": [
+        {
+          "document_id": "CONF-DEMO-1",
+          "page": null,
+          "source_type": "confluence",
+          "authority_level": "supporting",
+          "version": "2026-04-18T09:00:00Z",
+          "language": "en",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "provenance": {
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "ingested_at": "2026-04-18T09:00:00Z",
+            "parser": "demo-confluence"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Symptom Definition"
+              },
+              {
+                "id": "s2",
+                "heading": "Key Debug Evidence"
+              },
+              {
+                "id": "s3",
+                "heading": "Common Root Cause Patterns"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+              "block_type": "paragraph",
+              "section": "Symptom Definition"
+            },
+            {
+              "block_id": "b2",
+              "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+              "block_type": "paragraph",
+              "section": "Key Debug Evidence"
+            },
+            {
+              "block_id": "b3",
+              "text": "Controller ready bit asserted before queue restore fully completes.",
+              "block_type": "paragraph",
+              "section": "Common Root Cause Patterns"
+            }
+          ],
+          "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+          "token_counts": {
+            "nvme": 1,
+            "resume": 2,
+            "timeout": 2,
+            "debug": 2,
+            "guide": 1,
+            "device": 1,
+            "enumerates": 1,
+            "successfully": 1,
+            "after": 1,
+            "first": 2,
+            "admin": 1,
+            "or": 1,
+            "i": 1,
+            "o": 1,
+            "command": 2,
+            "times": 1,
+            "out": 1,
+            "retry": 1,
+            "may": 1,
+            "succeed": 1,
+            "cap": 1,
+            "cc": 1,
+            "csts": 1,
+            "timeline": 1,
+            "queue": 2,
+            "recreate": 1,
+            "timestamp": 2,
+            "submit": 1,
+            "os": 1,
+            "event": 1,
+            "uart": 1,
+            "around": 1,
+            "ready": 2,
+            "transition": 1,
+            "controller": 1,
+            "bit": 1,
+            "asserted": 1,
+            "before": 1,
+            "restore": 1,
+            "fully": 1,
+            "completes": 1,
+            "symptom": 1,
+            "definition": 1,
+            "key": 1,
+            "evidence": 1,
+            "common": 1,
+            "root": 1,
+            "cause": 1,
+            "patterns": 1
+          },
+          "tokens": [
+            "admin",
+            "after",
+            "around",
+            "asserted",
+            "before",
+            "bit",
+            "cap",
+            "cause",
+            "cc",
+            "command",
+            "common",
+            "completes",
+            "controller",
+            "csts",
+            "debug",
+            "definition",
+            "device",
+            "enumerates",
+            "event",
+            "evidence",
+            "first",
+            "fully",
+            "guide",
+            "i",
+            "key",
+            "may",
+            "nvme",
+            "o",
+            "or",
+            "os",
+            "out",
+            "patterns",
+            "queue",
+            "ready",
+            "recreate",
+            "restore",
+            "resume",
+            "retry",
+            "root",
+            "submit",
+            "succeed",
+            "successfully",
+            "symptom",
+            "timeline",
+            "timeout",
+            "times",
+            "timestamp",
+            "transition",
+            "uart"
+          ],
+          "scores": {
+            "bm25": 3.8051364301508372,
+            "authority": 2.0,
+            "total": 5.805136430150837
+          }
+        },
+        {
+          "document_id": "NVMe-2.1-2024",
+          "page": null,
+          "source_type": "specification",
+          "authority_level": "canonical",
+          "version": "2024-08-05",
+          "language": "en",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "provenance": {
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "ingested_at": "2026-04-18T08:00:00Z",
+            "parser": "demo-spec"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "id": "s2",
+                "heading": "Admin Queue Creation"
+              },
+              {
+                "id": "s3",
+                "heading": "Power State Transitions"
+              },
+              {
+                "id": "s4",
+                "heading": "Telemetry Log Pages"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+              "block_type": "paragraph",
+              "section": "Controller Ready (CSTS.RDY)"
+            },
+            {
+              "block_id": "b2",
+              "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+              "block_type": "paragraph",
+              "section": "Admin Queue Creation"
+            },
+            {
+              "block_id": "b3",
+              "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+              "block_type": "paragraph",
+              "section": "Power State Transitions"
+            },
+            {
+              "block_id": "b4",
+              "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+              "block_type": "paragraph",
+              "section": "Telemetry Log Pages"
+            }
+          ],
+          "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+          "token_counts": {
+            "nvm": 1,
+            "express": 1,
+            "base": 1,
+            "specification": 1,
+            "revision": 1,
+            "2": 2,
+            "1": 2,
+            "when": 2,
+            "set": 1,
+            "to": 2,
+            "the": 4,
+            "controller": 4,
+            "is": 3,
+            "ready": 2,
+            "process": 1,
+            "commands": 3,
+            "host": 2,
+            "shall": 3,
+            "not": 1,
+            "submit": 1,
+            "csts": 2,
+            "rdy": 2,
+            "0": 1,
+            "admin": 3,
+            "submission": 1,
+            "queue": 3,
+            "and": 1,
+            "completion": 1,
+            "be": 1,
+            "created": 1,
+            "before": 2,
+            "i": 1,
+            "o": 1,
+            "queues": 1,
+            "complete": 1,
+            "all": 1,
+            "outstanding": 1,
+            "entering": 1,
+            "a": 1,
+            "lower": 1,
+            "power": 2,
+            "state": 2,
+            "log": 4,
+            "page": 2,
+            "07h": 1,
+            "telemetry": 3,
+            "initiated": 2,
+            "08h": 1,
+            "data": 1,
+            "area": 1,
+            "size": 1,
+            "reported": 1,
+            "in": 1,
+            "header": 1,
+            "creation": 1,
+            "transitions": 1,
+            "pages": 1
+          },
+          "tokens": [
+            "0",
+            "07h",
+            "08h",
+            "1",
+            "2",
+            "a",
+            "admin",
+            "all",
+            "and",
+            "area",
+            "base",
+            "be",
+            "before",
+            "commands",
+            "complete",
+            "completion",
+            "controller",
+            "created",
+            "creation",
+            "csts",
+            "data",
+            "entering",
+            "express",
+            "header",
+            "host",
+            "i",
+            "in",
+            "initiated",
+            "is",
+            "log",
+            "lower",
+            "not",
+            "nvm",
+            "o",
+            "outstanding",
+            "page",
+            "pages",
+            "power",
+            "process",
+            "queue",
+            "queues",
+            "rdy",
+            "ready",
+            "reported",
+            "revision",
+            "set",
+            "shall",
+            "size",
+            "specification",
+            "state",
+            "submission",
+            "submit",
+            "telemetry",
+            "the",
+            "to",
+            "transitions",
+            "when"
+          ],
+          "scores": {
+            "bm25": 1.5169555617686754,
+            "authority": 3.0,
+            "total": 4.516955561768675
+          }
+        },
+        {
+          "document_id": "CONF-DEMO-3",
+          "page": null,
+          "source_type": "confluence",
+          "authority_level": "supporting",
+          "version": "2026-04-18T09:20:00Z",
+          "language": "en",
+          "title": "SPOR Rebuild Flow Ordering Notes",
+          "provenance": {
+            "source_uri": "demo/confluence/CONF-DEMO-3",
+            "ingested_at": "2026-04-18T09:20:00Z",
+            "parser": "demo-confluence"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Required Ordering"
+              },
+              {
+                "id": "s2",
+                "heading": "Failure Mode"
+              },
+              {
+                "id": "s3",
+                "heading": "Observable Symptoms"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.",
+              "block_type": "paragraph",
+              "section": "Required Ordering"
+            },
+            {
+              "block_id": "b2",
+              "text": "If free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.",
+              "block_type": "paragraph",
+              "section": "Failure Mode"
+            },
+            {
+              "block_id": "b3",
+              "text": "Power cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.",
+              "block_type": "paragraph",
+              "section": "Observable Symptoms"
+            }
+          ],
+          "text": "SPOR Rebuild Flow Ordering Notes Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check. If free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable. Power cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch. Required Ordering Failure Mode Observable Symptoms",
+          "token_counts": {
+            "spor": 1,
+            "rebuild": 3,
+            "flow": 1,
+            "ordering": 2,
+            "notes": 1,
+            "load": 1,
+            "metadata": 4,
+            "header": 1,
+            "recover": 2,
+            "gc": 2,
+            "state": 1,
+            "valid": 1,
+            "page": 1,
+            "count": 2,
+            "snapshot": 1,
+            "free": 3,
+            "block": 2,
+            "bitmap": 1,
+            "run": 1,
+            "consistency": 1,
+            "check": 1,
+            "if": 1,
+            "runs": 1,
+            "before": 1,
+            "restore": 1,
+            "blocks": 1,
+            "may": 1,
+            "be": 1,
+            "misclassified": 1,
+            "as": 1,
+            "reusable": 1,
+            "power": 1,
+            "cycle": 1,
+            "drop": 1,
+            "rom": 1,
+            "mode": 2,
+            "crc": 1,
+            "mismatch": 2,
+            "slc": 1,
+            "required": 1,
+            "failure": 1,
+            "observable": 1,
+            "symptoms": 1
+          },
+          "tokens": [
+            "as",
+            "be",
+            "before",
+            "bitmap",
+            "block",
+            "blocks",
+            "check",
+            "consistency",
+            "count",
+            "crc",
+            "cycle",
+            "drop",
+            "failure",
+            "flow",
+            "free",
+            "gc",
+            "header",
+            "if",
+            "load",
+            "may",
+            "metadata",
+            "misclassified",
+            "mismatch",
+            "mode",
+            "notes",
+            "observable",
+            "ordering",
+            "page",
+            "power",
+            "rebuild",
+            "recover",
+            "required",
+            "restore",
+            "reusable",
+            "rom",
+            "run",
+            "runs",
+            "slc",
+            "snapshot",
+            "spor",
+            "state",
+            "symptoms",
+            "valid"
+          ],
+          "scores": {
+            "bm25": 1.268378810050279,
+            "authority": 2.0,
+            "total": 3.268378810050279
+          }
+        }
+      ],
+      "followup_citations": [
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        },
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-3",
+          "title": "SPOR Rebuild Flow Ordering Notes",
+          "version": "2026-04-18T09:20:00Z",
+          "page": null,
+          "section": "Required Ordering",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-3",
+          "evidence_span": "Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch."
+        }
+      ]
+    },
+    "spec_impact": {
+      "mode": "append-only",
+      "status": "completed",
+      "base_bundle": "shared_retrieval_bundle",
+      "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+      "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 spec clause requirement component impact validation 规格条款、需求、组件影响证据",
+      "enhancement": {
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "section_name": "spec_impact",
+        "scope_hint": "规格条款、需求、组件影响证据",
+        "additions": [
+          "defect",
+          "fw_bug_rca",
+          "BSOD",
+          "FwVersion880",
+          "spec clause",
+          "requirement",
+          "component impact",
+          "validation",
+          "规格条款、需求、组件影响证据"
+        ],
+        "bounds": {
+          "max_values_per_field": 3,
+          "max_additions": 18,
+          "max_query_chars": 500
+        },
+        "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 spec clause requirement component impact validation 规格条款、需求、组件影响证据"
+      },
+      "allowed_policies": [
+        "internal",
+        "team:ssd"
+      ],
+      "top_k": 3,
+      "scope_hint": "规格条款、需求、组件影响证据",
+      "followup_results": [
+        {
+          "document_id": "NVMe-2.1-2024",
+          "page": null,
+          "source_type": "specification",
+          "authority_level": "canonical",
+          "version": "2024-08-05",
+          "language": "en",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "provenance": {
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "ingested_at": "2026-04-18T08:00:00Z",
+            "parser": "demo-spec"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "id": "s2",
+                "heading": "Admin Queue Creation"
+              },
+              {
+                "id": "s3",
+                "heading": "Power State Transitions"
+              },
+              {
+                "id": "s4",
+                "heading": "Telemetry Log Pages"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+              "block_type": "paragraph",
+              "section": "Controller Ready (CSTS.RDY)"
+            },
+            {
+              "block_id": "b2",
+              "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+              "block_type": "paragraph",
+              "section": "Admin Queue Creation"
+            },
+            {
+              "block_id": "b3",
+              "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+              "block_type": "paragraph",
+              "section": "Power State Transitions"
+            },
+            {
+              "block_id": "b4",
+              "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+              "block_type": "paragraph",
+              "section": "Telemetry Log Pages"
+            }
+          ],
+          "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+          "token_counts": {
+            "nvm": 1,
+            "express": 1,
+            "base": 1,
+            "specification": 1,
+            "revision": 1,
+            "2": 2,
+            "1": 2,
+            "when": 2,
+            "set": 1,
+            "to": 2,
+            "the": 4,
+            "controller": 4,
+            "is": 3,
+            "ready": 2,
+            "process": 1,
+            "commands": 3,
+            "host": 2,
+            "shall": 3,
+            "not": 1,
+            "submit": 1,
+            "csts": 2,
+            "rdy": 2,
+            "0": 1,
+            "admin": 3,
+            "submission": 1,
+            "queue": 3,
+            "and": 1,
+            "completion": 1,
+            "be": 1,
+            "created": 1,
+            "before": 2,
+            "i": 1,
+            "o": 1,
+            "queues": 1,
+            "complete": 1,
+            "all": 1,
+            "outstanding": 1,
+            "entering": 1,
+            "a": 1,
+            "lower": 1,
+            "power": 2,
+            "state": 2,
+            "log": 4,
+            "page": 2,
+            "07h": 1,
+            "telemetry": 3,
+            "initiated": 2,
+            "08h": 1,
+            "data": 1,
+            "area": 1,
+            "size": 1,
+            "reported": 1,
+            "in": 1,
+            "header": 1,
+            "creation": 1,
+            "transitions": 1,
+            "pages": 1
+          },
+          "tokens": [
+            "0",
+            "07h",
+            "08h",
+            "1",
+            "2",
+            "a",
+            "admin",
+            "all",
+            "and",
+            "area",
+            "base",
+            "be",
+            "before",
+            "commands",
+            "complete",
+            "completion",
+            "controller",
+            "created",
+            "creation",
+            "csts",
+            "data",
+            "entering",
+            "express",
+            "header",
+            "host",
+            "i",
+            "in",
+            "initiated",
+            "is",
+            "log",
+            "lower",
+            "not",
+            "nvm",
+            "o",
+            "outstanding",
+            "page",
+            "pages",
+            "power",
+            "process",
+            "queue",
+            "queues",
+            "rdy",
+            "ready",
+            "reported",
+            "revision",
+            "set",
+            "shall",
+            "size",
+            "specification",
+            "state",
+            "submission",
+            "submit",
+            "telemetry",
+            "the",
+            "to",
+            "transitions",
+            "when"
+          ],
+          "scores": {
+            "bm25": 1.5169555617686754,
+            "authority": 3.0,
+            "total": 4.516955561768675
+          }
+        },
+        {
+          "document_id": "CONF-DEMO-1",
+          "page": null,
+          "source_type": "confluence",
+          "authority_level": "supporting",
+          "version": "2026-04-18T09:00:00Z",
+          "language": "en",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "provenance": {
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "ingested_at": "2026-04-18T09:00:00Z",
+            "parser": "demo-confluence"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Symptom Definition"
+              },
+              {
+                "id": "s2",
+                "heading": "Key Debug Evidence"
+              },
+              {
+                "id": "s3",
+                "heading": "Common Root Cause Patterns"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+              "block_type": "paragraph",
+              "section": "Symptom Definition"
+            },
+            {
+              "block_id": "b2",
+              "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+              "block_type": "paragraph",
+              "section": "Key Debug Evidence"
+            },
+            {
+              "block_id": "b3",
+              "text": "Controller ready bit asserted before queue restore fully completes.",
+              "block_type": "paragraph",
+              "section": "Common Root Cause Patterns"
+            }
+          ],
+          "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+          "token_counts": {
+            "nvme": 1,
+            "resume": 2,
+            "timeout": 2,
+            "debug": 2,
+            "guide": 1,
+            "device": 1,
+            "enumerates": 1,
+            "successfully": 1,
+            "after": 1,
+            "first": 2,
+            "admin": 1,
+            "or": 1,
+            "i": 1,
+            "o": 1,
+            "command": 2,
+            "times": 1,
+            "out": 1,
+            "retry": 1,
+            "may": 1,
+            "succeed": 1,
+            "cap": 1,
+            "cc": 1,
+            "csts": 1,
+            "timeline": 1,
+            "queue": 2,
+            "recreate": 1,
+            "timestamp": 2,
+            "submit": 1,
+            "os": 1,
+            "event": 1,
+            "uart": 1,
+            "around": 1,
+            "ready": 2,
+            "transition": 1,
+            "controller": 1,
+            "bit": 1,
+            "asserted": 1,
+            "before": 1,
+            "restore": 1,
+            "fully": 1,
+            "completes": 1,
+            "symptom": 1,
+            "definition": 1,
+            "key": 1,
+            "evidence": 1,
+            "common": 1,
+            "root": 1,
+            "cause": 1,
+            "patterns": 1
+          },
+          "tokens": [
+            "admin",
+            "after",
+            "around",
+            "asserted",
+            "before",
+            "bit",
+            "cap",
+            "cause",
+            "cc",
+            "command",
+            "common",
+            "completes",
+            "controller",
+            "csts",
+            "debug",
+            "definition",
+            "device",
+            "enumerates",
+            "event",
+            "evidence",
+            "first",
+            "fully",
+            "guide",
+            "i",
+            "key",
+            "may",
+            "nvme",
+            "o",
+            "or",
+            "os",
+            "out",
+            "patterns",
+            "queue",
+            "ready",
+            "recreate",
+            "restore",
+            "resume",
+            "retry",
+            "root",
+            "submit",
+            "succeed",
+            "successfully",
+            "symptom",
+            "timeline",
+            "timeout",
+            "times",
+            "timestamp",
+            "transition",
+            "uart"
+          ],
+          "scores": {
+            "bm25": 1.268378810050279,
+            "authority": 2.0,
+            "total": 3.268378810050279
+          }
+        }
+      ],
+      "followup_citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ]
+    },
+    "decision_brief": {
+      "mode": "append-only",
+      "status": "completed",
+      "base_bundle": "shared_retrieval_bundle",
+      "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+      "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 decision risk tradeoff next step 决策、风险、权衡证据",
+      "enhancement": {
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "section_name": "decision_brief",
+        "scope_hint": "决策、风险、权衡证据",
+        "additions": [
+          "defect",
+          "fw_bug_rca",
+          "BSOD",
+          "FwVersion880",
+          "decision",
+          "risk",
+          "tradeoff",
+          "next step",
+          "决策、风险、权衡证据"
+        ],
+        "bounds": {
+          "max_values_per_field": 3,
+          "max_additions": 18,
+          "max_query_chars": 500
+        },
+        "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 decision risk tradeoff next step 决策、风险、权衡证据"
+      },
+      "allowed_policies": [
+        "internal",
+        "team:ssd"
+      ],
+      "top_k": 3,
+      "scope_hint": "决策、风险、权衡证据",
+      "followup_results": [
+        {
+          "document_id": "NVMe-2.1-2024",
+          "page": null,
+          "source_type": "specification",
+          "authority_level": "canonical",
+          "version": "2024-08-05",
+          "language": "en",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "provenance": {
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "ingested_at": "2026-04-18T08:00:00Z",
+            "parser": "demo-spec"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "id": "s2",
+                "heading": "Admin Queue Creation"
+              },
+              {
+                "id": "s3",
+                "heading": "Power State Transitions"
+              },
+              {
+                "id": "s4",
+                "heading": "Telemetry Log Pages"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+              "block_type": "paragraph",
+              "section": "Controller Ready (CSTS.RDY)"
+            },
+            {
+              "block_id": "b2",
+              "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+              "block_type": "paragraph",
+              "section": "Admin Queue Creation"
+            },
+            {
+              "block_id": "b3",
+              "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+              "block_type": "paragraph",
+              "section": "Power State Transitions"
+            },
+            {
+              "block_id": "b4",
+              "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+              "block_type": "paragraph",
+              "section": "Telemetry Log Pages"
+            }
+          ],
+          "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+          "token_counts": {
+            "nvm": 1,
+            "express": 1,
+            "base": 1,
+            "specification": 1,
+            "revision": 1,
+            "2": 2,
+            "1": 2,
+            "when": 2,
+            "set": 1,
+            "to": 2,
+            "the": 4,
+            "controller": 4,
+            "is": 3,
+            "ready": 2,
+            "process": 1,
+            "commands": 3,
+            "host": 2,
+            "shall": 3,
+            "not": 1,
+            "submit": 1,
+            "csts": 2,
+            "rdy": 2,
+            "0": 1,
+            "admin": 3,
+            "submission": 1,
+            "queue": 3,
+            "and": 1,
+            "completion": 1,
+            "be": 1,
+            "created": 1,
+            "before": 2,
+            "i": 1,
+            "o": 1,
+            "queues": 1,
+            "complete": 1,
+            "all": 1,
+            "outstanding": 1,
+            "entering": 1,
+            "a": 1,
+            "lower": 1,
+            "power": 2,
+            "state": 2,
+            "log": 4,
+            "page": 2,
+            "07h": 1,
+            "telemetry": 3,
+            "initiated": 2,
+            "08h": 1,
+            "data": 1,
+            "area": 1,
+            "size": 1,
+            "reported": 1,
+            "in": 1,
+            "header": 1,
+            "creation": 1,
+            "transitions": 1,
+            "pages": 1
+          },
+          "tokens": [
+            "0",
+            "07h",
+            "08h",
+            "1",
+            "2",
+            "a",
+            "admin",
+            "all",
+            "and",
+            "area",
+            "base",
+            "be",
+            "before",
+            "commands",
+            "complete",
+            "completion",
+            "controller",
+            "created",
+            "creation",
+            "csts",
+            "data",
+            "entering",
+            "express",
+            "header",
+            "host",
+            "i",
+            "in",
+            "initiated",
+            "is",
+            "log",
+            "lower",
+            "not",
+            "nvm",
+            "o",
+            "outstanding",
+            "page",
+            "pages",
+            "power",
+            "process",
+            "queue",
+            "queues",
+            "rdy",
+            "ready",
+            "reported",
+            "revision",
+            "set",
+            "shall",
+            "size",
+            "specification",
+            "state",
+            "submission",
+            "submit",
+            "telemetry",
+            "the",
+            "to",
+            "transitions",
+            "when"
+          ],
+          "scores": {
+            "bm25": 1.5169555617686754,
+            "authority": 3.0,
+            "total": 4.516955561768675
+          }
+        },
+        {
+          "document_id": "CONF-DEMO-1",
+          "page": null,
+          "source_type": "confluence",
+          "authority_level": "supporting",
+          "version": "2026-04-18T09:00:00Z",
+          "language": "en",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "provenance": {
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "ingested_at": "2026-04-18T09:00:00Z",
+            "parser": "demo-confluence"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Symptom Definition"
+              },
+              {
+                "id": "s2",
+                "heading": "Key Debug Evidence"
+              },
+              {
+                "id": "s3",
+                "heading": "Common Root Cause Patterns"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+              "block_type": "paragraph",
+              "section": "Symptom Definition"
+            },
+            {
+              "block_id": "b2",
+              "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+              "block_type": "paragraph",
+              "section": "Key Debug Evidence"
+            },
+            {
+              "block_id": "b3",
+              "text": "Controller ready bit asserted before queue restore fully completes.",
+              "block_type": "paragraph",
+              "section": "Common Root Cause Patterns"
+            }
+          ],
+          "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+          "token_counts": {
+            "nvme": 1,
+            "resume": 2,
+            "timeout": 2,
+            "debug": 2,
+            "guide": 1,
+            "device": 1,
+            "enumerates": 1,
+            "successfully": 1,
+            "after": 1,
+            "first": 2,
+            "admin": 1,
+            "or": 1,
+            "i": 1,
+            "o": 1,
+            "command": 2,
+            "times": 1,
+            "out": 1,
+            "retry": 1,
+            "may": 1,
+            "succeed": 1,
+            "cap": 1,
+            "cc": 1,
+            "csts": 1,
+            "timeline": 1,
+            "queue": 2,
+            "recreate": 1,
+            "timestamp": 2,
+            "submit": 1,
+            "os": 1,
+            "event": 1,
+            "uart": 1,
+            "around": 1,
+            "ready": 2,
+            "transition": 1,
+            "controller": 1,
+            "bit": 1,
+            "asserted": 1,
+            "before": 1,
+            "restore": 1,
+            "fully": 1,
+            "completes": 1,
+            "symptom": 1,
+            "definition": 1,
+            "key": 1,
+            "evidence": 1,
+            "common": 1,
+            "root": 1,
+            "cause": 1,
+            "patterns": 1
+          },
+          "tokens": [
+            "admin",
+            "after",
+            "around",
+            "asserted",
+            "before",
+            "bit",
+            "cap",
+            "cause",
+            "cc",
+            "command",
+            "common",
+            "completes",
+            "controller",
+            "csts",
+            "debug",
+            "definition",
+            "device",
+            "enumerates",
+            "event",
+            "evidence",
+            "first",
+            "fully",
+            "guide",
+            "i",
+            "key",
+            "may",
+            "nvme",
+            "o",
+            "or",
+            "os",
+            "out",
+            "patterns",
+            "queue",
+            "ready",
+            "recreate",
+            "restore",
+            "resume",
+            "retry",
+            "root",
+            "submit",
+            "succeed",
+            "successfully",
+            "symptom",
+            "timeline",
+            "timeout",
+            "times",
+            "timestamp",
+            "transition",
+            "uart"
+          ],
+          "scores": {
+            "bm25": 1.268378810050279,
+            "authority": 2.0,
+            "total": 3.268378810050279
+          }
+        }
+      ],
+      "followup_citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ]
+    },
+    "general_summary": {
+      "mode": "append-only",
+      "status": "completed",
+      "base_bundle": "shared_retrieval_bundle",
+      "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+      "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 summary context status evidence 跨源综合概览证据",
+      "enhancement": {
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "section_name": "general_summary",
+        "scope_hint": "跨源综合概览证据",
+        "additions": [
+          "defect",
+          "fw_bug_rca",
+          "BSOD",
+          "FwVersion880",
+          "summary",
+          "context",
+          "status",
+          "evidence",
+          "跨源综合概览证据"
+        ],
+        "bounds": {
+          "max_values_per_field": 3,
+          "max_additions": 18,
+          "max_query_chars": 500
+        },
+        "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 summary context status evidence 跨源综合概览证据"
+      },
+      "allowed_policies": [
+        "internal",
+        "team:ssd"
+      ],
+      "top_k": 3,
+      "scope_hint": "跨源综合概览证据",
+      "followup_results": [
+        {
+          "document_id": "CONF-DEMO-1",
+          "page": null,
+          "source_type": "confluence",
+          "authority_level": "supporting",
+          "version": "2026-04-18T09:00:00Z",
+          "language": "en",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "provenance": {
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "ingested_at": "2026-04-18T09:00:00Z",
+            "parser": "demo-confluence"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Symptom Definition"
+              },
+              {
+                "id": "s2",
+                "heading": "Key Debug Evidence"
+              },
+              {
+                "id": "s3",
+                "heading": "Common Root Cause Patterns"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+              "block_type": "paragraph",
+              "section": "Symptom Definition"
+            },
+            {
+              "block_id": "b2",
+              "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+              "block_type": "paragraph",
+              "section": "Key Debug Evidence"
+            },
+            {
+              "block_id": "b3",
+              "text": "Controller ready bit asserted before queue restore fully completes.",
+              "block_type": "paragraph",
+              "section": "Common Root Cause Patterns"
+            }
+          ],
+          "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+          "token_counts": {
+            "nvme": 1,
+            "resume": 2,
+            "timeout": 2,
+            "debug": 2,
+            "guide": 1,
+            "device": 1,
+            "enumerates": 1,
+            "successfully": 1,
+            "after": 1,
+            "first": 2,
+            "admin": 1,
+            "or": 1,
+            "i": 1,
+            "o": 1,
+            "command": 2,
+            "times": 1,
+            "out": 1,
+            "retry": 1,
+            "may": 1,
+            "succeed": 1,
+            "cap": 1,
+            "cc": 1,
+            "csts": 1,
+            "timeline": 1,
+            "queue": 2,
+            "recreate": 1,
+            "timestamp": 2,
+            "submit": 1,
+            "os": 1,
+            "event": 1,
+            "uart": 1,
+            "around": 1,
+            "ready": 2,
+            "transition": 1,
+            "controller": 1,
+            "bit": 1,
+            "asserted": 1,
+            "before": 1,
+            "restore": 1,
+            "fully": 1,
+            "completes": 1,
+            "symptom": 1,
+            "definition": 1,
+            "key": 1,
+            "evidence": 1,
+            "common": 1,
+            "root": 1,
+            "cause": 1,
+            "patterns": 1
+          },
+          "tokens": [
+            "admin",
+            "after",
+            "around",
+            "asserted",
+            "before",
+            "bit",
+            "cap",
+            "cause",
+            "cc",
+            "command",
+            "common",
+            "completes",
+            "controller",
+            "csts",
+            "debug",
+            "definition",
+            "device",
+            "enumerates",
+            "event",
+            "evidence",
+            "first",
+            "fully",
+            "guide",
+            "i",
+            "key",
+            "may",
+            "nvme",
+            "o",
+            "or",
+            "os",
+            "out",
+            "patterns",
+            "queue",
+            "ready",
+            "recreate",
+            "restore",
+            "resume",
+            "retry",
+            "root",
+            "submit",
+            "succeed",
+            "successfully",
+            "symptom",
+            "timeline",
+            "timeout",
+            "times",
+            "timestamp",
+            "transition",
+            "uart"
+          ],
+          "scores": {
+            "bm25": 2.536757620100558,
+            "authority": 2.0,
+            "total": 4.536757620100558
+          }
+        },
+        {
+          "document_id": "NVMe-2.1-2024",
+          "page": null,
+          "source_type": "specification",
+          "authority_level": "canonical",
+          "version": "2024-08-05",
+          "language": "en",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "provenance": {
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "ingested_at": "2026-04-18T08:00:00Z",
+            "parser": "demo-spec"
+          },
+          "acl": {
+            "policy": "team:ssd"
+          },
+          "structure": {
+            "pages": [],
+            "sections": [
+              {
+                "id": "s1",
+                "heading": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "id": "s2",
+                "heading": "Admin Queue Creation"
+              },
+              {
+                "id": "s3",
+                "heading": "Power State Transitions"
+              },
+              {
+                "id": "s4",
+                "heading": "Telemetry Log Pages"
+              }
+            ],
+            "tables": []
+          },
+          "terminology": {},
+          "content_blocks": [
+            {
+              "block_id": "b1",
+              "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+              "block_type": "paragraph",
+              "section": "Controller Ready (CSTS.RDY)"
+            },
+            {
+              "block_id": "b2",
+              "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+              "block_type": "paragraph",
+              "section": "Admin Queue Creation"
+            },
+            {
+              "block_id": "b3",
+              "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+              "block_type": "paragraph",
+              "section": "Power State Transitions"
+            },
+            {
+              "block_id": "b4",
+              "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+              "block_type": "paragraph",
+              "section": "Telemetry Log Pages"
+            }
+          ],
+          "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+          "token_counts": {
+            "nvm": 1,
+            "express": 1,
+            "base": 1,
+            "specification": 1,
+            "revision": 1,
+            "2": 2,
+            "1": 2,
+            "when": 2,
+            "set": 1,
+            "to": 2,
+            "the": 4,
+            "controller": 4,
+            "is": 3,
+            "ready": 2,
+            "process": 1,
+            "commands": 3,
+            "host": 2,
+            "shall": 3,
+            "not": 1,
+            "submit": 1,
+            "csts": 2,
+            "rdy": 2,
+            "0": 1,
+            "admin": 3,
+            "submission": 1,
+            "queue": 3,
+            "and": 1,
+            "completion": 1,
+            "be": 1,
+            "created": 1,
+            "before": 2,
+            "i": 1,
+            "o": 1,
+            "queues": 1,
+            "complete": 1,
+            "all": 1,
+            "outstanding": 1,
+            "entering": 1,
+            "a": 1,
+            "lower": 1,
+            "power": 2,
+            "state": 2,
+            "log": 4,
+            "page": 2,
+            "07h": 1,
+            "telemetry": 3,
+            "initiated": 2,
+            "08h": 1,
+            "data": 1,
+            "area": 1,
+            "size": 1,
+            "reported": 1,
+            "in": 1,
+            "header": 1,
+            "creation": 1,
+            "transitions": 1,
+            "pages": 1
+          },
+          "tokens": [
+            "0",
+            "07h",
+            "08h",
+            "1",
+            "2",
+            "a",
+            "admin",
+            "all",
+            "and",
+            "area",
+            "base",
+            "be",
+            "before",
+            "commands",
+            "complete",
+            "completion",
+            "controller",
+            "created",
+            "creation",
+            "csts",
+            "data",
+            "entering",
+            "express",
+            "header",
+            "host",
+            "i",
+            "in",
+            "initiated",
+            "is",
+            "log",
+            "lower",
+            "not",
+            "nvm",
+            "o",
+            "outstanding",
+            "page",
+            "pages",
+            "power",
+            "process",
+            "queue",
+            "queues",
+            "rdy",
+            "ready",
+            "reported",
+            "revision",
+            "set",
+            "shall",
+            "size",
+            "specification",
+            "state",
+            "submission",
+            "submit",
+            "telemetry",
+            "the",
+            "to",
+            "transitions",
+            "when"
+          ],
+          "scores": {
+            "bm25": 1.5169555617686754,
+            "authority": 3.0,
+            "total": 4.516955561768675
+          }
+        }
+      ],
+      "followup_citations": [
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        },
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        }
+      ]
+    }
+  },
+  "section_outputs": {
+    "rca": {
+      "section_name": "rca",
+      "label": "根因分析",
+      "runner_version": "v1",
+      "followup_retrieval": {
+        "mode": "append-only",
+        "status": "completed",
+        "base_bundle": "shared_retrieval_bundle",
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 root cause failure mechanism error code workaround 失效机制、错误代码、根因证据",
+        "enhancement": {
+          "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+          "section_name": "rca",
+          "scope_hint": "失效机制、错误代码、根因证据",
+          "additions": [
+            "defect",
+            "fw_bug_rca",
+            "BSOD",
+            "FwVersion880",
+            "root cause",
+            "failure mechanism",
+            "error code",
+            "workaround",
+            "失效机制、错误代码、根因证据"
+          ],
+          "bounds": {
+            "max_values_per_field": 3,
+            "max_additions": 18,
+            "max_query_chars": 500
+          },
+          "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 root cause failure mechanism error code workaround 失效机制、错误代码、根因证据"
+        },
+        "allowed_policies": [
+          "internal",
+          "team:ssd"
+        ],
+        "top_k": 3,
+        "scope_hint": "失效机制、错误代码、根因证据",
+        "followup_results": [
+          {
+            "document_id": "CONF-DEMO-1",
+            "page": null,
+            "source_type": "confluence",
+            "authority_level": "supporting",
+            "version": "2026-04-18T09:00:00Z",
+            "language": "en",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "provenance": {
+              "source_uri": "demo/confluence/CONF-DEMO-1",
+              "ingested_at": "2026-04-18T09:00:00Z",
+              "parser": "demo-confluence"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Symptom Definition"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Key Debug Evidence"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Common Root Cause Patterns"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+                "block_type": "paragraph",
+                "section": "Symptom Definition"
+              },
+              {
+                "block_id": "b2",
+                "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+                "block_type": "paragraph",
+                "section": "Key Debug Evidence"
+              },
+              {
+                "block_id": "b3",
+                "text": "Controller ready bit asserted before queue restore fully completes.",
+                "block_type": "paragraph",
+                "section": "Common Root Cause Patterns"
+              }
+            ],
+            "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+            "token_counts": {
+              "nvme": 1,
+              "resume": 2,
+              "timeout": 2,
+              "debug": 2,
+              "guide": 1,
+              "device": 1,
+              "enumerates": 1,
+              "successfully": 1,
+              "after": 1,
+              "first": 2,
+              "admin": 1,
+              "or": 1,
+              "i": 1,
+              "o": 1,
+              "command": 2,
+              "times": 1,
+              "out": 1,
+              "retry": 1,
+              "may": 1,
+              "succeed": 1,
+              "cap": 1,
+              "cc": 1,
+              "csts": 1,
+              "timeline": 1,
+              "queue": 2,
+              "recreate": 1,
+              "timestamp": 2,
+              "submit": 1,
+              "os": 1,
+              "event": 1,
+              "uart": 1,
+              "around": 1,
+              "ready": 2,
+              "transition": 1,
+              "controller": 1,
+              "bit": 1,
+              "asserted": 1,
+              "before": 1,
+              "restore": 1,
+              "fully": 1,
+              "completes": 1,
+              "symptom": 1,
+              "definition": 1,
+              "key": 1,
+              "evidence": 1,
+              "common": 1,
+              "root": 1,
+              "cause": 1,
+              "patterns": 1
+            },
+            "tokens": [
+              "admin",
+              "after",
+              "around",
+              "asserted",
+              "before",
+              "bit",
+              "cap",
+              "cause",
+              "cc",
+              "command",
+              "common",
+              "completes",
+              "controller",
+              "csts",
+              "debug",
+              "definition",
+              "device",
+              "enumerates",
+              "event",
+              "evidence",
+              "first",
+              "fully",
+              "guide",
+              "i",
+              "key",
+              "may",
+              "nvme",
+              "o",
+              "or",
+              "os",
+              "out",
+              "patterns",
+              "queue",
+              "ready",
+              "recreate",
+              "restore",
+              "resume",
+              "retry",
+              "root",
+              "submit",
+              "succeed",
+              "successfully",
+              "symptom",
+              "timeline",
+              "timeout",
+              "times",
+              "timestamp",
+              "transition",
+              "uart"
+            ],
+            "scores": {
+              "bm25": 3.8051364301508372,
+              "authority": 2.0,
+              "total": 5.805136430150837
+            }
+          },
+          {
+            "document_id": "NVMe-2.1-2024",
+            "page": null,
+            "source_type": "specification",
+            "authority_level": "canonical",
+            "version": "2024-08-05",
+            "language": "en",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "provenance": {
+              "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+              "ingested_at": "2026-04-18T08:00:00Z",
+              "parser": "demo-spec"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Controller Ready (CSTS.RDY)"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Admin Queue Creation"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Power State Transitions"
+                },
+                {
+                  "id": "s4",
+                  "heading": "Telemetry Log Pages"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+                "block_type": "paragraph",
+                "section": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "block_id": "b2",
+                "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+                "block_type": "paragraph",
+                "section": "Admin Queue Creation"
+              },
+              {
+                "block_id": "b3",
+                "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+                "block_type": "paragraph",
+                "section": "Power State Transitions"
+              },
+              {
+                "block_id": "b4",
+                "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+                "block_type": "paragraph",
+                "section": "Telemetry Log Pages"
+              }
+            ],
+            "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+            "token_counts": {
+              "nvm": 1,
+              "express": 1,
+              "base": 1,
+              "specification": 1,
+              "revision": 1,
+              "2": 2,
+              "1": 2,
+              "when": 2,
+              "set": 1,
+              "to": 2,
+              "the": 4,
+              "controller": 4,
+              "is": 3,
+              "ready": 2,
+              "process": 1,
+              "commands": 3,
+              "host": 2,
+              "shall": 3,
+              "not": 1,
+              "submit": 1,
+              "csts": 2,
+              "rdy": 2,
+              "0": 1,
+              "admin": 3,
+              "submission": 1,
+              "queue": 3,
+              "and": 1,
+              "completion": 1,
+              "be": 1,
+              "created": 1,
+              "before": 2,
+              "i": 1,
+              "o": 1,
+              "queues": 1,
+              "complete": 1,
+              "all": 1,
+              "outstanding": 1,
+              "entering": 1,
+              "a": 1,
+              "lower": 1,
+              "power": 2,
+              "state": 2,
+              "log": 4,
+              "page": 2,
+              "07h": 1,
+              "telemetry": 3,
+              "initiated": 2,
+              "08h": 1,
+              "data": 1,
+              "area": 1,
+              "size": 1,
+              "reported": 1,
+              "in": 1,
+              "header": 1,
+              "creation": 1,
+              "transitions": 1,
+              "pages": 1
+            },
+            "tokens": [
+              "0",
+              "07h",
+              "08h",
+              "1",
+              "2",
+              "a",
+              "admin",
+              "all",
+              "and",
+              "area",
+              "base",
+              "be",
+              "before",
+              "commands",
+              "complete",
+              "completion",
+              "controller",
+              "created",
+              "creation",
+              "csts",
+              "data",
+              "entering",
+              "express",
+              "header",
+              "host",
+              "i",
+              "in",
+              "initiated",
+              "is",
+              "log",
+              "lower",
+              "not",
+              "nvm",
+              "o",
+              "outstanding",
+              "page",
+              "pages",
+              "power",
+              "process",
+              "queue",
+              "queues",
+              "rdy",
+              "ready",
+              "reported",
+              "revision",
+              "set",
+              "shall",
+              "size",
+              "specification",
+              "state",
+              "submission",
+              "submit",
+              "telemetry",
+              "the",
+              "to",
+              "transitions",
+              "when"
+            ],
+            "scores": {
+              "bm25": 1.5169555617686754,
+              "authority": 3.0,
+              "total": 4.516955561768675
+            }
+          },
+          {
+            "document_id": "CONF-DEMO-3",
+            "page": null,
+            "source_type": "confluence",
+            "authority_level": "supporting",
+            "version": "2026-04-18T09:20:00Z",
+            "language": "en",
+            "title": "SPOR Rebuild Flow Ordering Notes",
+            "provenance": {
+              "source_uri": "demo/confluence/CONF-DEMO-3",
+              "ingested_at": "2026-04-18T09:20:00Z",
+              "parser": "demo-confluence"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Required Ordering"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Failure Mode"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Observable Symptoms"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.",
+                "block_type": "paragraph",
+                "section": "Required Ordering"
+              },
+              {
+                "block_id": "b2",
+                "text": "If free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.",
+                "block_type": "paragraph",
+                "section": "Failure Mode"
+              },
+              {
+                "block_id": "b3",
+                "text": "Power cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.",
+                "block_type": "paragraph",
+                "section": "Observable Symptoms"
+              }
+            ],
+            "text": "SPOR Rebuild Flow Ordering Notes Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check. If free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable. Power cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch. Required Ordering Failure Mode Observable Symptoms",
+            "token_counts": {
+              "spor": 1,
+              "rebuild": 3,
+              "flow": 1,
+              "ordering": 2,
+              "notes": 1,
+              "load": 1,
+              "metadata": 4,
+              "header": 1,
+              "recover": 2,
+              "gc": 2,
+              "state": 1,
+              "valid": 1,
+              "page": 1,
+              "count": 2,
+              "snapshot": 1,
+              "free": 3,
+              "block": 2,
+              "bitmap": 1,
+              "run": 1,
+              "consistency": 1,
+              "check": 1,
+              "if": 1,
+              "runs": 1,
+              "before": 1,
+              "restore": 1,
+              "blocks": 1,
+              "may": 1,
+              "be": 1,
+              "misclassified": 1,
+              "as": 1,
+              "reusable": 1,
+              "power": 1,
+              "cycle": 1,
+              "drop": 1,
+              "rom": 1,
+              "mode": 2,
+              "crc": 1,
+              "mismatch": 2,
+              "slc": 1,
+              "required": 1,
+              "failure": 1,
+              "observable": 1,
+              "symptoms": 1
+            },
+            "tokens": [
+              "as",
+              "be",
+              "before",
+              "bitmap",
+              "block",
+              "blocks",
+              "check",
+              "consistency",
+              "count",
+              "crc",
+              "cycle",
+              "drop",
+              "failure",
+              "flow",
+              "free",
+              "gc",
+              "header",
+              "if",
+              "load",
+              "may",
+              "metadata",
+              "misclassified",
+              "mismatch",
+              "mode",
+              "notes",
+              "observable",
+              "ordering",
+              "page",
+              "power",
+              "rebuild",
+              "recover",
+              "required",
+              "restore",
+              "reusable",
+              "rom",
+              "run",
+              "runs",
+              "slc",
+              "snapshot",
+              "spor",
+              "state",
+              "symptoms",
+              "valid"
+            ],
+            "scores": {
+              "bm25": 1.268378810050279,
+              "authority": 2.0,
+              "total": 3.268378810050279
+            }
+          }
+        ],
+        "followup_citations": [
+          {
+            "document": "CONF-DEMO-1",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "version": "2026-04-18T09:00:00Z",
+            "page": null,
+            "section": "Symptom Definition",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+          },
+          {
+            "document": "NVMe-2.1-2024",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "version": "2024-08-05",
+            "page": null,
+            "section": "Controller Ready (CSTS.RDY)",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+          },
+          {
+            "document": "CONF-DEMO-3",
+            "title": "SPOR Rebuild Flow Ordering Notes",
+            "version": "2026-04-18T09:20:00Z",
+            "page": null,
+            "section": "Required Ordering",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/confluence/CONF-DEMO-3",
+            "evidence_span": "Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch."
+          }
+        ]
+      },
+      "citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        },
+        {
+          "document": "CONF-DEMO-3",
+          "title": "SPOR Rebuild Flow Ordering Notes",
+          "version": "2026-04-18T09:20:00Z",
+          "page": null,
+          "section": "Required Ordering",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-3",
+          "evidence_span": "Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch."
+        }
+      ],
+      "prompt": "章节：根因分析\n章节版本：v1\n解释可能的根本原因、失效机制，以及哪些证据支持或削弱根因假设。\n要求：\n- 识别直接原因和根本原因\n- 分析失效的触发条件和传播路径\n- 引用具体的日志、错误代码、规格条款\n- 评估证据的可信度和完整性\n\n## Jira问题上下文\n# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## 共享检索证据\n- NVMe-2.1-2024 v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- CONF-DEMO-1 v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n- CONF-DEMO-3 v2026-04-18T09:20:00Z: Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.\n\n请使用中文输出分析结果。",
+      "answer": {
+        "mode": "local-llm",
+        "backend": "mock",
+        "text": "Mock local model answer",
+        "citation_count": 3
+      }
+    },
+    "spec_impact": {
+      "section_name": "spec_impact",
+      "label": "规格影响",
+      "runner_version": "v1",
+      "followup_retrieval": {
+        "mode": "append-only",
+        "status": "completed",
+        "base_bundle": "shared_retrieval_bundle",
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 spec clause requirement component impact validation 规格条款、需求、组件影响证据",
+        "enhancement": {
+          "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+          "section_name": "spec_impact",
+          "scope_hint": "规格条款、需求、组件影响证据",
+          "additions": [
+            "defect",
+            "fw_bug_rca",
+            "BSOD",
+            "FwVersion880",
+            "spec clause",
+            "requirement",
+            "component impact",
+            "validation",
+            "规格条款、需求、组件影响证据"
+          ],
+          "bounds": {
+            "max_values_per_field": 3,
+            "max_additions": 18,
+            "max_query_chars": 500
+          },
+          "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 spec clause requirement component impact validation 规格条款、需求、组件影响证据"
+        },
+        "allowed_policies": [
+          "internal",
+          "team:ssd"
+        ],
+        "top_k": 3,
+        "scope_hint": "规格条款、需求、组件影响证据",
+        "followup_results": [
+          {
+            "document_id": "NVMe-2.1-2024",
+            "page": null,
+            "source_type": "specification",
+            "authority_level": "canonical",
+            "version": "2024-08-05",
+            "language": "en",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "provenance": {
+              "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+              "ingested_at": "2026-04-18T08:00:00Z",
+              "parser": "demo-spec"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Controller Ready (CSTS.RDY)"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Admin Queue Creation"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Power State Transitions"
+                },
+                {
+                  "id": "s4",
+                  "heading": "Telemetry Log Pages"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+                "block_type": "paragraph",
+                "section": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "block_id": "b2",
+                "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+                "block_type": "paragraph",
+                "section": "Admin Queue Creation"
+              },
+              {
+                "block_id": "b3",
+                "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+                "block_type": "paragraph",
+                "section": "Power State Transitions"
+              },
+              {
+                "block_id": "b4",
+                "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+                "block_type": "paragraph",
+                "section": "Telemetry Log Pages"
+              }
+            ],
+            "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+            "token_counts": {
+              "nvm": 1,
+              "express": 1,
+              "base": 1,
+              "specification": 1,
+              "revision": 1,
+              "2": 2,
+              "1": 2,
+              "when": 2,
+              "set": 1,
+              "to": 2,
+              "the": 4,
+              "controller": 4,
+              "is": 3,
+              "ready": 2,
+              "process": 1,
+              "commands": 3,
+              "host": 2,
+              "shall": 3,
+              "not": 1,
+              "submit": 1,
+              "csts": 2,
+              "rdy": 2,
+              "0": 1,
+              "admin": 3,
+              "submission": 1,
+              "queue": 3,
+              "and": 1,
+              "completion": 1,
+              "be": 1,
+              "created": 1,
+              "before": 2,
+              "i": 1,
+              "o": 1,
+              "queues": 1,
+              "complete": 1,
+              "all": 1,
+              "outstanding": 1,
+              "entering": 1,
+              "a": 1,
+              "lower": 1,
+              "power": 2,
+              "state": 2,
+              "log": 4,
+              "page": 2,
+              "07h": 1,
+              "telemetry": 3,
+              "initiated": 2,
+              "08h": 1,
+              "data": 1,
+              "area": 1,
+              "size": 1,
+              "reported": 1,
+              "in": 1,
+              "header": 1,
+              "creation": 1,
+              "transitions": 1,
+              "pages": 1
+            },
+            "tokens": [
+              "0",
+              "07h",
+              "08h",
+              "1",
+              "2",
+              "a",
+              "admin",
+              "all",
+              "and",
+              "area",
+              "base",
+              "be",
+              "before",
+              "commands",
+              "complete",
+              "completion",
+              "controller",
+              "created",
+              "creation",
+              "csts",
+              "data",
+              "entering",
+              "express",
+              "header",
+              "host",
+              "i",
+              "in",
+              "initiated",
+              "is",
+              "log",
+              "lower",
+              "not",
+              "nvm",
+              "o",
+              "outstanding",
+              "page",
+              "pages",
+              "power",
+              "process",
+              "queue",
+              "queues",
+              "rdy",
+              "ready",
+              "reported",
+              "revision",
+              "set",
+              "shall",
+              "size",
+              "specification",
+              "state",
+              "submission",
+              "submit",
+              "telemetry",
+              "the",
+              "to",
+              "transitions",
+              "when"
+            ],
+            "scores": {
+              "bm25": 1.5169555617686754,
+              "authority": 3.0,
+              "total": 4.516955561768675
+            }
+          },
+          {
+            "document_id": "CONF-DEMO-1",
+            "page": null,
+            "source_type": "confluence",
+            "authority_level": "supporting",
+            "version": "2026-04-18T09:00:00Z",
+            "language": "en",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "provenance": {
+              "source_uri": "demo/confluence/CONF-DEMO-1",
+              "ingested_at": "2026-04-18T09:00:00Z",
+              "parser": "demo-confluence"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Symptom Definition"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Key Debug Evidence"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Common Root Cause Patterns"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+                "block_type": "paragraph",
+                "section": "Symptom Definition"
+              },
+              {
+                "block_id": "b2",
+                "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+                "block_type": "paragraph",
+                "section": "Key Debug Evidence"
+              },
+              {
+                "block_id": "b3",
+                "text": "Controller ready bit asserted before queue restore fully completes.",
+                "block_type": "paragraph",
+                "section": "Common Root Cause Patterns"
+              }
+            ],
+            "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+            "token_counts": {
+              "nvme": 1,
+              "resume": 2,
+              "timeout": 2,
+              "debug": 2,
+              "guide": 1,
+              "device": 1,
+              "enumerates": 1,
+              "successfully": 1,
+              "after": 1,
+              "first": 2,
+              "admin": 1,
+              "or": 1,
+              "i": 1,
+              "o": 1,
+              "command": 2,
+              "times": 1,
+              "out": 1,
+              "retry": 1,
+              "may": 1,
+              "succeed": 1,
+              "cap": 1,
+              "cc": 1,
+              "csts": 1,
+              "timeline": 1,
+              "queue": 2,
+              "recreate": 1,
+              "timestamp": 2,
+              "submit": 1,
+              "os": 1,
+              "event": 1,
+              "uart": 1,
+              "around": 1,
+              "ready": 2,
+              "transition": 1,
+              "controller": 1,
+              "bit": 1,
+              "asserted": 1,
+              "before": 1,
+              "restore": 1,
+              "fully": 1,
+              "completes": 1,
+              "symptom": 1,
+              "definition": 1,
+              "key": 1,
+              "evidence": 1,
+              "common": 1,
+              "root": 1,
+              "cause": 1,
+              "patterns": 1
+            },
+            "tokens": [
+              "admin",
+              "after",
+              "around",
+              "asserted",
+              "before",
+              "bit",
+              "cap",
+              "cause",
+              "cc",
+              "command",
+              "common",
+              "completes",
+              "controller",
+              "csts",
+              "debug",
+              "definition",
+              "device",
+              "enumerates",
+              "event",
+              "evidence",
+              "first",
+              "fully",
+              "guide",
+              "i",
+              "key",
+              "may",
+              "nvme",
+              "o",
+              "or",
+              "os",
+              "out",
+              "patterns",
+              "queue",
+              "ready",
+              "recreate",
+              "restore",
+              "resume",
+              "retry",
+              "root",
+              "submit",
+              "succeed",
+              "successfully",
+              "symptom",
+              "timeline",
+              "timeout",
+              "times",
+              "timestamp",
+              "transition",
+              "uart"
+            ],
+            "scores": {
+              "bm25": 1.268378810050279,
+              "authority": 2.0,
+              "total": 3.268378810050279
+            }
+          }
+        ],
+        "followup_citations": [
+          {
+            "document": "NVMe-2.1-2024",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "version": "2024-08-05",
+            "page": null,
+            "section": "Controller Ready (CSTS.RDY)",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+          },
+          {
+            "document": "CONF-DEMO-1",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "version": "2026-04-18T09:00:00Z",
+            "page": null,
+            "section": "Symptom Definition",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+          }
+        ]
+      },
+      "citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ],
+      "prompt": "章节：规格影响\n章节版本：v1\n解释哪些规格、条款或需求受到影响，以及哪些证据支撑这种影响。\n要求：\n- 列出受影响的规格条款（章节号、版本）\n- 分析对合规性的影响\n- 评估对功能、性能、兼容性的影响\n- 引用具体的规格文本和设计文档\n\n## Jira问题上下文\n# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## 共享检索证据\n- NVMe-2.1-2024 v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- CONF-DEMO-1 v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n请使用中文输出分析结果。",
+      "answer": {
+        "mode": "local-llm",
+        "backend": "mock",
+        "text": "Mock local model answer",
+        "citation_count": 2
+      }
+    },
+    "decision_brief": {
+      "section_name": "decision_brief",
+      "label": "决策简报",
+      "runner_version": "v1",
+      "followup_retrieval": {
+        "mode": "append-only",
+        "status": "completed",
+        "base_bundle": "shared_retrieval_bundle",
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 decision risk tradeoff next step 决策、风险、权衡证据",
+        "enhancement": {
+          "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+          "section_name": "decision_brief",
+          "scope_hint": "决策、风险、权衡证据",
+          "additions": [
+            "defect",
+            "fw_bug_rca",
+            "BSOD",
+            "FwVersion880",
+            "decision",
+            "risk",
+            "tradeoff",
+            "next step",
+            "决策、风险、权衡证据"
+          ],
+          "bounds": {
+            "max_values_per_field": 3,
+            "max_additions": 18,
+            "max_query_chars": 500
+          },
+          "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 decision risk tradeoff next step 决策、风险、权衡证据"
+        },
+        "allowed_policies": [
+          "internal",
+          "team:ssd"
+        ],
+        "top_k": 3,
+        "scope_hint": "决策、风险、权衡证据",
+        "followup_results": [
+          {
+            "document_id": "NVMe-2.1-2024",
+            "page": null,
+            "source_type": "specification",
+            "authority_level": "canonical",
+            "version": "2024-08-05",
+            "language": "en",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "provenance": {
+              "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+              "ingested_at": "2026-04-18T08:00:00Z",
+              "parser": "demo-spec"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Controller Ready (CSTS.RDY)"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Admin Queue Creation"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Power State Transitions"
+                },
+                {
+                  "id": "s4",
+                  "heading": "Telemetry Log Pages"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+                "block_type": "paragraph",
+                "section": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "block_id": "b2",
+                "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+                "block_type": "paragraph",
+                "section": "Admin Queue Creation"
+              },
+              {
+                "block_id": "b3",
+                "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+                "block_type": "paragraph",
+                "section": "Power State Transitions"
+              },
+              {
+                "block_id": "b4",
+                "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+                "block_type": "paragraph",
+                "section": "Telemetry Log Pages"
+              }
+            ],
+            "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+            "token_counts": {
+              "nvm": 1,
+              "express": 1,
+              "base": 1,
+              "specification": 1,
+              "revision": 1,
+              "2": 2,
+              "1": 2,
+              "when": 2,
+              "set": 1,
+              "to": 2,
+              "the": 4,
+              "controller": 4,
+              "is": 3,
+              "ready": 2,
+              "process": 1,
+              "commands": 3,
+              "host": 2,
+              "shall": 3,
+              "not": 1,
+              "submit": 1,
+              "csts": 2,
+              "rdy": 2,
+              "0": 1,
+              "admin": 3,
+              "submission": 1,
+              "queue": 3,
+              "and": 1,
+              "completion": 1,
+              "be": 1,
+              "created": 1,
+              "before": 2,
+              "i": 1,
+              "o": 1,
+              "queues": 1,
+              "complete": 1,
+              "all": 1,
+              "outstanding": 1,
+              "entering": 1,
+              "a": 1,
+              "lower": 1,
+              "power": 2,
+              "state": 2,
+              "log": 4,
+              "page": 2,
+              "07h": 1,
+              "telemetry": 3,
+              "initiated": 2,
+              "08h": 1,
+              "data": 1,
+              "area": 1,
+              "size": 1,
+              "reported": 1,
+              "in": 1,
+              "header": 1,
+              "creation": 1,
+              "transitions": 1,
+              "pages": 1
+            },
+            "tokens": [
+              "0",
+              "07h",
+              "08h",
+              "1",
+              "2",
+              "a",
+              "admin",
+              "all",
+              "and",
+              "area",
+              "base",
+              "be",
+              "before",
+              "commands",
+              "complete",
+              "completion",
+              "controller",
+              "created",
+              "creation",
+              "csts",
+              "data",
+              "entering",
+              "express",
+              "header",
+              "host",
+              "i",
+              "in",
+              "initiated",
+              "is",
+              "log",
+              "lower",
+              "not",
+              "nvm",
+              "o",
+              "outstanding",
+              "page",
+              "pages",
+              "power",
+              "process",
+              "queue",
+              "queues",
+              "rdy",
+              "ready",
+              "reported",
+              "revision",
+              "set",
+              "shall",
+              "size",
+              "specification",
+              "state",
+              "submission",
+              "submit",
+              "telemetry",
+              "the",
+              "to",
+              "transitions",
+              "when"
+            ],
+            "scores": {
+              "bm25": 1.5169555617686754,
+              "authority": 3.0,
+              "total": 4.516955561768675
+            }
+          },
+          {
+            "document_id": "CONF-DEMO-1",
+            "page": null,
+            "source_type": "confluence",
+            "authority_level": "supporting",
+            "version": "2026-04-18T09:00:00Z",
+            "language": "en",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "provenance": {
+              "source_uri": "demo/confluence/CONF-DEMO-1",
+              "ingested_at": "2026-04-18T09:00:00Z",
+              "parser": "demo-confluence"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Symptom Definition"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Key Debug Evidence"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Common Root Cause Patterns"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+                "block_type": "paragraph",
+                "section": "Symptom Definition"
+              },
+              {
+                "block_id": "b2",
+                "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+                "block_type": "paragraph",
+                "section": "Key Debug Evidence"
+              },
+              {
+                "block_id": "b3",
+                "text": "Controller ready bit asserted before queue restore fully completes.",
+                "block_type": "paragraph",
+                "section": "Common Root Cause Patterns"
+              }
+            ],
+            "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+            "token_counts": {
+              "nvme": 1,
+              "resume": 2,
+              "timeout": 2,
+              "debug": 2,
+              "guide": 1,
+              "device": 1,
+              "enumerates": 1,
+              "successfully": 1,
+              "after": 1,
+              "first": 2,
+              "admin": 1,
+              "or": 1,
+              "i": 1,
+              "o": 1,
+              "command": 2,
+              "times": 1,
+              "out": 1,
+              "retry": 1,
+              "may": 1,
+              "succeed": 1,
+              "cap": 1,
+              "cc": 1,
+              "csts": 1,
+              "timeline": 1,
+              "queue": 2,
+              "recreate": 1,
+              "timestamp": 2,
+              "submit": 1,
+              "os": 1,
+              "event": 1,
+              "uart": 1,
+              "around": 1,
+              "ready": 2,
+              "transition": 1,
+              "controller": 1,
+              "bit": 1,
+              "asserted": 1,
+              "before": 1,
+              "restore": 1,
+              "fully": 1,
+              "completes": 1,
+              "symptom": 1,
+              "definition": 1,
+              "key": 1,
+              "evidence": 1,
+              "common": 1,
+              "root": 1,
+              "cause": 1,
+              "patterns": 1
+            },
+            "tokens": [
+              "admin",
+              "after",
+              "around",
+              "asserted",
+              "before",
+              "bit",
+              "cap",
+              "cause",
+              "cc",
+              "command",
+              "common",
+              "completes",
+              "controller",
+              "csts",
+              "debug",
+              "definition",
+              "device",
+              "enumerates",
+              "event",
+              "evidence",
+              "first",
+              "fully",
+              "guide",
+              "i",
+              "key",
+              "may",
+              "nvme",
+              "o",
+              "or",
+              "os",
+              "out",
+              "patterns",
+              "queue",
+              "ready",
+              "recreate",
+              "restore",
+              "resume",
+              "retry",
+              "root",
+              "submit",
+              "succeed",
+              "successfully",
+              "symptom",
+              "timeline",
+              "timeout",
+              "times",
+              "timestamp",
+              "transition",
+              "uart"
+            ],
+            "scores": {
+              "bm25": 1.268378810050279,
+              "authority": 2.0,
+              "total": 3.268378810050279
+            }
+          }
+        ],
+        "followup_citations": [
+          {
+            "document": "NVMe-2.1-2024",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "version": "2024-08-05",
+            "page": null,
+            "section": "Controller Ready (CSTS.RDY)",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+          },
+          {
+            "document": "CONF-DEMO-1",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "version": "2026-04-18T09:00:00Z",
+            "page": null,
+            "section": "Symptom Definition",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+          }
+        ]
+      },
+      "citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ],
+      "prompt": "章节：决策简报\n章节版本：v1\n总结决策就绪的要点、关键风险，以及在采取行动前需要确认的内容。\n要求：\n- 提供清晰的行动建议\n- 识别高风险区域和不确定性\n- 列出需要进一步确认的事项\n- 评估不同方案的利弊\n\n## Jira问题上下文\n# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## 共享检索证据\n- NVMe-2.1-2024 v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- CONF-DEMO-1 v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n请使用中文输出分析结果。",
+      "answer": {
+        "mode": "local-llm",
+        "backend": "mock",
+        "text": "Mock local model answer",
+        "citation_count": 2
+      }
+    },
+    "general_summary": {
+      "section_name": "general_summary",
+      "label": "综合总结",
+      "runner_version": "v1",
+      "followup_retrieval": {
+        "mode": "append-only",
+        "status": "completed",
+        "base_bundle": "shared_retrieval_bundle",
+        "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+        "enhanced_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 summary context status evidence 跨源综合概览证据",
+        "enhancement": {
+          "base_query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type",
+          "section_name": "general_summary",
+          "scope_hint": "跨源综合概览证据",
+          "additions": [
+            "defect",
+            "fw_bug_rca",
+            "BSOD",
+            "FwVersion880",
+            "summary",
+            "context",
+            "status",
+            "evidence",
+            "跨源综合概览证据"
+          ],
+          "bounds": {
+            "max_values_per_field": 3,
+            "max_additions": 18,
+            "max_query_chars": 500
+          },
+          "query": "[SV][FwVersion880] xx platform black screen after S4 BSOD # SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4  ## Issue Type defect fw_bug_rca BSOD FwVersion880 summary context status evidence 跨源综合概览证据"
+        },
+        "allowed_policies": [
+          "internal",
+          "team:ssd"
+        ],
+        "top_k": 3,
+        "scope_hint": "跨源综合概览证据",
+        "followup_results": [
+          {
+            "document_id": "CONF-DEMO-1",
+            "page": null,
+            "source_type": "confluence",
+            "authority_level": "supporting",
+            "version": "2026-04-18T09:00:00Z",
+            "language": "en",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "provenance": {
+              "source_uri": "demo/confluence/CONF-DEMO-1",
+              "ingested_at": "2026-04-18T09:00:00Z",
+              "parser": "demo-confluence"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Symptom Definition"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Key Debug Evidence"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Common Root Cause Patterns"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.",
+                "block_type": "paragraph",
+                "section": "Symptom Definition"
+              },
+              {
+                "block_id": "b2",
+                "text": "CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.",
+                "block_type": "paragraph",
+                "section": "Key Debug Evidence"
+              },
+              {
+                "block_id": "b3",
+                "text": "Controller ready bit asserted before queue restore fully completes.",
+                "block_type": "paragraph",
+                "section": "Common Root Cause Patterns"
+              }
+            ],
+            "text": "NVMe Resume Timeout Debug Guide Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed. CAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition. Controller ready bit asserted before queue restore fully completes. Symptom Definition Key Debug Evidence Common Root Cause Patterns",
+            "token_counts": {
+              "nvme": 1,
+              "resume": 2,
+              "timeout": 2,
+              "debug": 2,
+              "guide": 1,
+              "device": 1,
+              "enumerates": 1,
+              "successfully": 1,
+              "after": 1,
+              "first": 2,
+              "admin": 1,
+              "or": 1,
+              "i": 1,
+              "o": 1,
+              "command": 2,
+              "times": 1,
+              "out": 1,
+              "retry": 1,
+              "may": 1,
+              "succeed": 1,
+              "cap": 1,
+              "cc": 1,
+              "csts": 1,
+              "timeline": 1,
+              "queue": 2,
+              "recreate": 1,
+              "timestamp": 2,
+              "submit": 1,
+              "os": 1,
+              "event": 1,
+              "uart": 1,
+              "around": 1,
+              "ready": 2,
+              "transition": 1,
+              "controller": 1,
+              "bit": 1,
+              "asserted": 1,
+              "before": 1,
+              "restore": 1,
+              "fully": 1,
+              "completes": 1,
+              "symptom": 1,
+              "definition": 1,
+              "key": 1,
+              "evidence": 1,
+              "common": 1,
+              "root": 1,
+              "cause": 1,
+              "patterns": 1
+            },
+            "tokens": [
+              "admin",
+              "after",
+              "around",
+              "asserted",
+              "before",
+              "bit",
+              "cap",
+              "cause",
+              "cc",
+              "command",
+              "common",
+              "completes",
+              "controller",
+              "csts",
+              "debug",
+              "definition",
+              "device",
+              "enumerates",
+              "event",
+              "evidence",
+              "first",
+              "fully",
+              "guide",
+              "i",
+              "key",
+              "may",
+              "nvme",
+              "o",
+              "or",
+              "os",
+              "out",
+              "patterns",
+              "queue",
+              "ready",
+              "recreate",
+              "restore",
+              "resume",
+              "retry",
+              "root",
+              "submit",
+              "succeed",
+              "successfully",
+              "symptom",
+              "timeline",
+              "timeout",
+              "times",
+              "timestamp",
+              "transition",
+              "uart"
+            ],
+            "scores": {
+              "bm25": 2.536757620100558,
+              "authority": 2.0,
+              "total": 4.536757620100558
+            }
+          },
+          {
+            "document_id": "NVMe-2.1-2024",
+            "page": null,
+            "source_type": "specification",
+            "authority_level": "canonical",
+            "version": "2024-08-05",
+            "language": "en",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "provenance": {
+              "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+              "ingested_at": "2026-04-18T08:00:00Z",
+              "parser": "demo-spec"
+            },
+            "acl": {
+              "policy": "team:ssd"
+            },
+            "structure": {
+              "pages": [],
+              "sections": [
+                {
+                  "id": "s1",
+                  "heading": "Controller Ready (CSTS.RDY)"
+                },
+                {
+                  "id": "s2",
+                  "heading": "Admin Queue Creation"
+                },
+                {
+                  "id": "s3",
+                  "heading": "Power State Transitions"
+                },
+                {
+                  "id": "s4",
+                  "heading": "Telemetry Log Pages"
+                }
+              ],
+              "tables": []
+            },
+            "terminology": {},
+            "content_blocks": [
+              {
+                "block_id": "b1",
+                "text": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.",
+                "block_type": "paragraph",
+                "section": "Controller Ready (CSTS.RDY)"
+              },
+              {
+                "block_id": "b2",
+                "text": "Admin Submission Queue and Admin Completion Queue shall be created before I/O queues.",
+                "block_type": "paragraph",
+                "section": "Admin Queue Creation"
+              },
+              {
+                "block_id": "b3",
+                "text": "The controller shall complete all outstanding commands before entering a lower power state.",
+                "block_type": "paragraph",
+                "section": "Power State Transitions"
+              },
+              {
+                "block_id": "b4",
+                "text": "Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header.",
+                "block_type": "paragraph",
+                "section": "Telemetry Log Pages"
+              }
+            ],
+            "text": "NVM Express Base Specification Revision 2.1 When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'. Admin Submission Queue and Admin Completion Queue shall be created before I/O queues. The controller shall complete all outstanding commands before entering a lower power state. Log Page 07h: Telemetry Host-Initiated. Log Page 08h: Telemetry Controller-Initiated. Data Area 2 size is reported in the log header. Controller Ready (CSTS.RDY) Admin Queue Creation Power State Transitions Telemetry Log Pages",
+            "token_counts": {
+              "nvm": 1,
+              "express": 1,
+              "base": 1,
+              "specification": 1,
+              "revision": 1,
+              "2": 2,
+              "1": 2,
+              "when": 2,
+              "set": 1,
+              "to": 2,
+              "the": 4,
+              "controller": 4,
+              "is": 3,
+              "ready": 2,
+              "process": 1,
+              "commands": 3,
+              "host": 2,
+              "shall": 3,
+              "not": 1,
+              "submit": 1,
+              "csts": 2,
+              "rdy": 2,
+              "0": 1,
+              "admin": 3,
+              "submission": 1,
+              "queue": 3,
+              "and": 1,
+              "completion": 1,
+              "be": 1,
+              "created": 1,
+              "before": 2,
+              "i": 1,
+              "o": 1,
+              "queues": 1,
+              "complete": 1,
+              "all": 1,
+              "outstanding": 1,
+              "entering": 1,
+              "a": 1,
+              "lower": 1,
+              "power": 2,
+              "state": 2,
+              "log": 4,
+              "page": 2,
+              "07h": 1,
+              "telemetry": 3,
+              "initiated": 2,
+              "08h": 1,
+              "data": 1,
+              "area": 1,
+              "size": 1,
+              "reported": 1,
+              "in": 1,
+              "header": 1,
+              "creation": 1,
+              "transitions": 1,
+              "pages": 1
+            },
+            "tokens": [
+              "0",
+              "07h",
+              "08h",
+              "1",
+              "2",
+              "a",
+              "admin",
+              "all",
+              "and",
+              "area",
+              "base",
+              "be",
+              "before",
+              "commands",
+              "complete",
+              "completion",
+              "controller",
+              "created",
+              "creation",
+              "csts",
+              "data",
+              "entering",
+              "express",
+              "header",
+              "host",
+              "i",
+              "in",
+              "initiated",
+              "is",
+              "log",
+              "lower",
+              "not",
+              "nvm",
+              "o",
+              "outstanding",
+              "page",
+              "pages",
+              "power",
+              "process",
+              "queue",
+              "queues",
+              "rdy",
+              "ready",
+              "reported",
+              "revision",
+              "set",
+              "shall",
+              "size",
+              "specification",
+              "state",
+              "submission",
+              "submit",
+              "telemetry",
+              "the",
+              "to",
+              "transitions",
+              "when"
+            ],
+            "scores": {
+              "bm25": 1.5169555617686754,
+              "authority": 3.0,
+              "total": 4.516955561768675
+            }
+          }
+        ],
+        "followup_citations": [
+          {
+            "document": "CONF-DEMO-1",
+            "title": "NVMe Resume Timeout Debug Guide",
+            "version": "2026-04-18T09:00:00Z",
+            "page": null,
+            "section": "Symptom Definition",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/confluence/CONF-DEMO-1",
+            "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+          },
+          {
+            "document": "NVMe-2.1-2024",
+            "title": "NVM Express Base Specification Revision 2.1",
+            "version": "2024-08-05",
+            "page": null,
+            "section": "Controller Ready (CSTS.RDY)",
+            "clause": null,
+            "table_id": null,
+            "figure_id": null,
+            "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+            "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+          }
+        ]
+      },
+      "citations": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ],
+      "prompt": "章节：综合总结\n章节版本：v1\n为广泛的工程受众总结问题和最重要的跨源证据。\n要求：\n- 用简洁的语言概括问题核心\n- 整合来自不同来源的关键信息\n- 突出最重要的技术发现\n- 提供清晰的结论和建议\n\n## Jira问题上下文\n# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## 共享检索证据\n- NVMe-2.1-2024 v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- CONF-DEMO-1 v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n请使用中文输出分析结果。",
+      "answer": {
+        "mode": "local-llm",
+        "backend": "mock",
+        "text": "Mock local model answer",
+        "citation_count": 2
+      }
+    }
+  },
+  "composite_report": {
+    "format": "markdown",
+    "content": "# 深度分析报告：[SV][FwVersion880] xx platform black screen after S4\n\n问题ID：SSD-SAMPLE-1\n\n## 根因分析\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n- `CONF-DEMO-3` v2026-04-18T09:20:00Z: Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.\n\n章节产物：`section_outputs/rca.json`\n\n## 规格影响\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/spec_impact.json`\n\n## 决策简报\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/decision_brief.json`\n\n## 综合总结\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/general_summary.json`"
+  },
+  "knowledge_artifacts": {
+    "confluence_update_proposal": {
+      "proposal_id": "proposal-ssd-sample-1-v1",
+      "source_issue_key": "SSD-SAMPLE-1",
+      "candidate_pages": [
+        {
+          "page_id": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "space_key": null,
+          "selection_reason": "Existing Confluence evidence was retrieved for this Jira issue."
+        }
+      ],
+      "knowledge_action": "revise",
+      "proposed_delta": "Revise Confluence knowledge with findings from Jira issue SSD-SAMPLE-1: [SV][FwVersion880] xx platform black screen after S4.",
+      "supporting_evidence": [
+        {
+          "document": "NVMe-2.1-2024",
+          "title": "NVM Express Base Specification Revision 2.1",
+          "version": "2024-08-05",
+          "page": null,
+          "section": "Controller Ready (CSTS.RDY)",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+          "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+        },
+        {
+          "document": "CONF-DEMO-1",
+          "title": "NVMe Resume Timeout Debug Guide",
+          "version": "2026-04-18T09:00:00Z",
+          "page": null,
+          "section": "Symptom Definition",
+          "clause": null,
+          "table_id": null,
+          "figure_id": null,
+          "source_uri": "demo/confluence/CONF-DEMO-1",
+          "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+        }
+      ],
+      "confidence": 0.75,
+      "open_questions": [],
+      "status": "draft",
+      "version": "v1"
+    },
+    "concept_cards": {
+      "cards": [
+        {
+          "card_id": "card-ssd-sample-1-risk",
+          "label": "SSD-SAMPLE-1 knowledge risk",
+          "category": "risk",
+          "summary": "Evidence-backed concept card derived from Jira issue: [SV][FwVersion880] xx platform black screen after S4",
+          "evidence": [
+            {
+              "document": "NVMe-2.1-2024",
+              "title": "NVM Express Base Specification Revision 2.1",
+              "version": "2024-08-05",
+              "page": null,
+              "section": "Controller Ready (CSTS.RDY)",
+              "clause": null,
+              "table_id": null,
+              "figure_id": null,
+              "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+              "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+            }
+          ]
+        }
+      ]
+    },
+    "wiki_draft": {
+      "format": "markdown",
+      "content": "# Wiki Draft: SSD-SAMPLE-1\n\n## Confluence Update Proposal\n\n- Action: `revise`\n- Confidence: `0.75`\n- Proposed delta: Revise Confluence knowledge with findings from Jira issue SSD-SAMPLE-1: [SV][FwVersion880] xx platform black screen after S4.\n\n## Concept Cards\n\n- `card-ssd-sample-1-risk` — Evidence-backed concept card derived from Jira issue: [SV][FwVersion880] xx platform black screen after S4\n\n## Composite Report\n\n# 深度分析报告：[SV][FwVersion880] xx platform black screen after S4\n\n问题ID：SSD-SAMPLE-1\n\n## 根因分析\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n- `CONF-DEMO-3` v2026-04-18T09:20:00Z: Load metadata header, recover GC state, recover valid-page count snapshot, rebuild free-block bitmap, run metadata consistency check.\n\nIf free-block rebuild runs before GC metadata restore, blocks may be misclassified as reusable.\n\nPower cycle drop, ROM mode, metadata CRC mismatch, free SLC count mismatch.\n\n章节产物：`section_outputs/rca.json`\n\n## 规格影响\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/spec_impact.json`\n\n## 决策简报\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/decision_brief.json`\n\n## 综合总结\n\nMock local model answer\n\n### 证据\n\n- `NVMe-2.1-2024` v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n- `CONF-DEMO-1` v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n章节产物：`section_outputs/general_summary.json`"
+    }
+  },
+  "image_evidence": {
+    "asset_count": 0,
+    "indexed_asset_count": 0,
+    "degraded_asset_count": 0,
+    "source_breakdown": {},
+    "assets": []
+  },
+  "confluence_evidence": {
+    "citation_count": 1,
+    "citations": [
+      {
+        "document": "CONF-DEMO-1",
+        "title": "NVMe Resume Timeout Debug Guide",
+        "version": "2026-04-18T09:00:00Z",
+        "page": null,
+        "section": "Symptom Definition",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "demo/confluence/CONF-DEMO-1",
+        "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+      }
+    ]
+  },
+  "spec_evidence": {
+    "citation_count": 1,
+    "citations": [
+      {
+        "document": "NVMe-2.1-2024",
+        "title": "NVM Express Base Specification Revision 2.1",
+        "version": "2024-08-05",
+        "page": null,
+        "section": "Controller Ready (CSTS.RDY)",
+        "clause": null,
+        "table_id": null,
+        "figure_id": null,
+        "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+        "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+      }
+    ]
+  },
+  "cross_source_citations": [
+    {
+      "document": "CONF-DEMO-1",
+      "title": "NVMe Resume Timeout Debug Guide",
+      "version": "2026-04-18T09:00:00Z",
+      "page": null,
+      "section": "Symptom Definition",
+      "clause": null,
+      "table_id": null,
+      "figure_id": null,
+      "source_uri": "demo/confluence/CONF-DEMO-1",
+      "evidence_span": "Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes."
+    },
+    {
+      "document": "NVMe-2.1-2024",
+      "title": "NVM Express Base Specification Revision 2.1",
+      "version": "2024-08-05",
+      "page": null,
+      "section": "Controller Ready (CSTS.RDY)",
+      "clause": null,
+      "table_id": null,
+      "figure_id": null,
+      "source_uri": "demo/spec/NVMe-2.1-2024.pdf",
+      "evidence_span": "When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state."
+    }
+  ],
+  "analysis_prompt": "你是一位SSD固件缺陷根因分析专家。\n基于检索到的Confluence文档和规格说明证据，对此Jira缺陷问题进行深度根因分析。\n分析要求：\n1. 根因识别：分析可能的根本原因，包括代码逻辑、配置错误、时序问题、资源竞争等\n2. 失效机制：解释问题是如何发生的，触发条件和传播路径\n3. 影响评估：评估问题的严重程度、影响范围（功能模块、性能、数据完整性）\n4. 证据链：引用具体的规格条款、设计文档、测试结果来支撑分析结论\n5. 修复建议：提供具体的修复方案，包括代码修改点、配置调整、测试验证方法\n6. 预防措施：建议如何避免类似问题再次发生\n模式：平衡证据审查\n区分直接证据和合理推断。\n指出不确定性以及需要哪些额外证据来加强结论。\n\n输出格式：\n1. 概述：简明的问题概览\n2. 跨源证据：引用Confluence和规格证据，标注文档ID\n3. 分析：根据问题类型进行根因/追溯/影响分析\n4. 差距：缺失的证据或未解答的问题\n5. 建议：建议的后续步骤\n\n## Jira问题上下文\n# [SV][FwVersion880] xx platform black screen after S4\n\n- Issue: SSD-SAMPLE-1\n- Version: 2026-04-18T09:00:00Z\n- Source: jira\n\n## Issue Fields\n- Action: 0301: BSOD observed\n0302: Retest in progress\n- Affects Version/s: FwVersion880\n- Component: FW\n- Labels: BSOD\n- Priority: Highest\n- Report department: SV\n- Resolution: Unresolved\n- Root Cause: Undefined\n- Severity: Major\n- Status: In Progress\n- Type: FW Bug\n\n## Jira Markdown\n# SSD-SAMPLE-1 [SV][FwVersion880] xx platform black screen after S4\n\n## Issue Type\n- **Type**: FW Bug\n- **Family**: defect\n- **Route**: fw\\_bug\\_rca\n\n## Issue Fields\n- **Type**: FW Bug\n- **Labels**: BSOD\n- **Priority**: Highest\n- **Component**: FW\n- **Affects Version/s**: FwVersion880\n- **Resolution**: Unresolved\n- **Status**: In Progress\n- **Severity**: Major\n- **Report department**: SV\n- **Root Cause**: Undefined\n- **Action**: 0301: BSOD observed\n0302: Retest in progress\n\n## Description\nEnter S4, resume, then run CrystalDiskMark. Actual result: black screen.\n\n## Root Cause\nUndefined\n\n## Action\n0301: BSOD observed\n0302: Retest in progress\n\n## Comments\n- **SV (2026-04-18T09:05:00Z)**: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- **FW (2026-04-18T09:20:00Z)**: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Comments\n- SV: Multiple platforms show BSOD. UART log shows admin create queue failed.\n- FW: Minidump and logs show Max Queue Exceeded. Suspect BIOS compatibility; enlarge MQES and provide debug FW.\n\n## Confluence证据\n- CONF-DEMO-1 v2026-04-18T09:00:00Z: Device enumerates successfully after resume. First admin or I/O command times out; retry may succeed.\n\nCAP / CC / CSTS timeline, queue recreate timestamp, first command submit timestamp, OS timeout event, UART around ready transition.\n\nController ready bit asserted before queue restore fully completes.\n\n## 规格说明证据\n- NVMe-2.1-2024 v2024-08-05: When set to '1', the controller is ready to process commands. The host shall not submit commands when CSTS.RDY is '0'.\n\nAdmin Submission Queue and Admin Completion Queue shall be created before I/O queues.\n\nThe controller shall complete all outstanding commands before entering a lower power state.\n\n## 图像证据状态\nNo image evidence found.",
+  "answer": {
+    "mode": "local-llm",
+    "backend": "mock",
+    "profile": "根因分析",
+    "text": "Mock local model answer",
+    "citation_count": 2
+  }
+}
