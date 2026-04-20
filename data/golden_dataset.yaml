@@ -1,0 +1,259 @@
+# Golden Dataset for Retrieval Evaluation
+#
+# This dataset contains real-world queries and their expected relevant documents.
+# Used to evaluate and improve retrieval quality.
+#
+# Format:
+#   queries:
+#     - id: unique query identifier
+#       query: the search query text
+#       description: what the user is looking for
+#       expected_docs:
+#         - doc_id: document identifier
+#           relevance: relevance score (0.0 - 1.0)
+#           reason: why this document is relevant
+
+queries:
+  # Authentication & Login Issues
+  - id: q1
+    query: "login failed special characters password"
+    description: "User cannot login with special characters in password"
+    expected_docs:
+      - doc_id: "BUG-123"
+        relevance: 1.0
+        reason: "Directly describes the login issue with special characters"
+      - doc_id: "AUTH-456"
+        relevance: 0.8
+        reason: "Related authentication bug fix"
+
+  - id: q2
+    query: "authentication token expired"
+    description: "User session expires too quickly"
+    expected_docs:
+      - doc_id: "BUG-234"
+        relevance: 1.0
+        reason: "Describes token expiration issue"
+      - doc_id: "DOC-789"
+        relevance: 0.6
+        reason: "Documentation about token lifecycle"
+
+  # API & Integration
+  - id: q3
+    query: "REST API authentication endpoints"
+    description: "Developer needs API documentation for auth"
+    expected_docs:
+      - doc_id: "DOC-101"
+        relevance: 1.0
+        reason: "Complete API documentation for authentication"
+      - doc_id: "DOC-102"
+        relevance: 0.7
+        reason: "API examples and best practices"
+
+  - id: q4
+    query: "API rate limiting 429 error"
+    description: "Application hitting rate limits"
+    expected_docs:
+      - doc_id: "BUG-345"
+        relevance: 1.0
+        reason: "Issue about rate limiting errors"
+      - doc_id: "DOC-201"
+        relevance: 0.8
+        reason: "Rate limiting documentation"
+
+  # Performance Issues
+  - id: q5
+    query: "slow database query performance"
+    description: "Database queries are taking too long"
+    expected_docs:
+      - doc_id: "PERF-567"
+        relevance: 1.0
+        reason: "Performance investigation of slow queries"
+      - doc_id: "PERF-568"
+        relevance: 0.9
+        reason: "Query optimization recommendations"
+
+  - id: q6
+    query: "memory leak high CPU usage"
+    description: "Application consuming too much memory"
+    expected_docs:
+      - doc_id: "BUG-678"
+        relevance: 1.0
+        reason: "Memory leak investigation"
+      - doc_id: "PERF-789"
+        relevance: 0.7
+        reason: "Performance profiling results"
+
+  # Security Issues
+  - id: q7
+    query: "XSS vulnerability security fix"
+    description: "Cross-site scripting vulnerability found"
+    expected_docs:
+      - doc_id: "SEC-890"
+        relevance: 1.0
+        reason: "XSS vulnerability report and fix"
+      - doc_id: "DOC-301"
+        relevance: 0.8
+        reason: "Security best practices documentation"
+
+  - id: q8
+    query: "SQL injection prevention"
+    description: "How to prevent SQL injection attacks"
+    expected_docs:
+      - doc_id: "DOC-302"
+        relevance: 1.0
+        reason: "SQL injection prevention guide"
+      - doc_id: "SEC-901"
+        relevance: 0.9
+        reason: "Security audit findings"
+
+  # Configuration & Deployment
+  - id: q9
+    query: "production deployment configuration"
+    description: "How to configure for production deployment"
+    expected_docs:
+      - doc_id: "DOC-401"
+        relevance: 1.0
+        reason: "Production deployment guide"
+      - doc_id: "DOC-402"
+        relevance: 0.8
+        reason: "Configuration examples"
+
+  - id: q10
+    query: "Docker container setup environment variables"
+    description: "Setting up Docker with correct env vars"
+    expected_docs:
+      - doc_id: "DOC-501"
+        relevance: 1.0
+        reason: "Docker setup documentation"
+      - doc_id: "BUG-1012"
+        relevance: 0.6
+        reason: "Issue related to Docker env vars"
+
+  # Chinese Queries (中文查询)
+  - id: q11
+    query: "登录失败 密码错误"
+    description: "用户登录失败，密码错误"
+    expected_docs:
+      - doc_id: "BUG-123"
+        relevance: 1.0
+        reason: "登录问题相关"
+      - doc_id: "AUTH-456"
+        relevance: 0.7
+        reason: "认证相关问题"
+
+  - id: q12
+    query: "API 接口文档 认证"
+    description: "查找 API 认证接口文档"
+    expected_docs:
+      - doc_id: "DOC-101"
+        relevance: 1.0
+        reason: "API 认证文档"
+      - doc_id: "DOC-102"
+        relevance: 0.8
+        reason: "API 使用示例"
+
+  - id: q13
+    query: "数据库查询慢 性能优化"
+    description: "数据库查询性能问题"
+    expected_docs:
+      - doc_id: "PERF-567"
+        relevance: 1.0
+        reason: "数据库性能问题"
+      - doc_id: "PERF-568"
+        relevance: 0.9
+        reason: "性能优化建议"
+
+  - id: q14
+    query: "内存泄漏 CPU 占用高"
+    description: "应用内存泄漏问题"
+    expected_docs:
+      - doc_id: "BUG-678"
+        relevance: 1.0
+        reason: "内存泄漏调查"
+      - doc_id: "PERF-789"
+        relevance: 0.7
+        reason: "性能分析"
+
+  - id: q15
+    query: "XSS 漏洞 安全修复"
+    description: "跨站脚本漏洞"
+    expected_docs:
+      - doc_id: "SEC-890"
+        relevance: 1.0
+        reason: "XSS 漏洞报告"
+      - doc_id: "DOC-301"
+        relevance: 0.8
+        reason: "安全最佳实践"
+
+  # Mixed Language Queries (混合查询)
+  - id: q16
+    query: "Docker 容器 environment variables 配置"
+    description: "Docker 环境变量配置"
+    expected_docs:
+      - doc_id: "DOC-501"
+        relevance: 1.0
+        reason: "Docker 配置文档"
+      - doc_id: "BUG-1012"
+        relevance: 0.6
+        reason: "Docker 环境变量问题"
+
+  - id: q17
+    query: "REST API rate limiting 限流"
+    description: "API 限流问题"
+    expected_docs:
+      - doc_id: "BUG-345"
+        relevance: 1.0
+        reason: "限流错误"
+      - doc_id: "DOC-201"
+        relevance: 0.8
+        reason: "限流文档"
+
+  # Edge Cases
+  - id: q18
+    query: "bug"
+    description: "Very generic query - should return multiple results"
+    expected_docs:
+      - doc_id: "BUG-123"
+        relevance: 0.5
+        reason: "Any bug report"
+      - doc_id: "BUG-234"
+        relevance: 0.5
+        reason: "Any bug report"
+
+  - id: q19
+    query: "how to fix error 500 internal server error"
+    description: "Long query with common words"
+    expected_docs:
+      - doc_id: "BUG-1234"
+        relevance: 1.0
+        reason: "500 error investigation"
+      - doc_id: "DOC-601"
+        relevance: 0.7
+        reason: "Error handling documentation"
+
+  - id: q20
+    query: "NVMe SSD firmware update"
+    description: "Hardware-specific query"
+    expected_docs:
+      - doc_id: "HW-777"
+        relevance: 1.0
+        reason: "NVMe firmware update guide"
+      - doc_id: "BUG-888"
+        relevance: 0.8
+        reason: "Firmware update issue"
+
+# Metadata
+metadata:
+  version: "1.0"
+  created_at: "2026-04-15"
+  total_queries: 20
+  languages:
+    - en
+    - zh
+  categories:
+    - authentication
+    - api
+    - performance
+    - security
+    - configuration
+    - hardware
