@@ -929,30 +929,53 @@ function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
         </form>
       </div>
 
-      <ListPanel title="Configured Sources">
+      <ListPanel title="Sync Status Dashboard">
         {(sources.data?.sources || []).map((source) => {
           const selector = source.selector || sources.data?.selectors.find((row) => row.source === source.name);
+          const statusIcon = source.status === "ready" ? <CheckCircle2 size={16} className="status-icon-success" /> :
+                            source.status === "error" ? <XCircle size={16} className="status-icon-error" /> :
+                            source.status === "syncing" ? <Loader2 size={16} className="spin status-icon-pending" /> :
+                            <AlertCircle size={16} className="status-icon-warning" />;
           return (
-          <div className="list-row" key={source.name}>
-            <strong>{source.name}</strong>
-            <span>{source.kind} / {source.connector_type}</span>
-            <span>{source.status || "not refreshed"} / {source.document_count ?? 0} docs</span>
-            <span>last refresh: {source.last_refresh || "-"}</span>
-            <span>selector: {selector?.name || "not set"}</span>
-            <span>{source.enabled === false ? "disabled" : "enabled"}</span>
+          <div className="list-row sync-status-row" key={source.name}>
+            <div className="sync-status-header">
+              <strong>{source.name}</strong>
+              <span className="sync-status-badge">{statusIcon} {source.status || "not synced"}</span>
+            </div>
+            <div className="sync-status-details">
+              <span><Database size={14} /> {source.kind} / {source.connector_type}</span>
+              <span><FileText size={14} /> {source.document_count ?? 0} documents</span>
+              <span><Clock size={14} /> Last sync: {source.last_refresh || "Never"}</span>
+              <span><Settings size={14} /> Selector: {selector?.name || "not set"}</span>
+              <span className={source.enabled === false ? "status-disabled" : "status-enabled"}>
+                {source.enabled === false ? "Disabled" : "Enabled"}
+              </span>
+            </div>
+            {source.status_reason && (
+              <div className="sync-status-reason">
+                <AlertTriangle size={14} /> {source.status_reason}
+              </div>
+            )}
             <div className="row-actions">
               <button disabled={!selector || testSource.isPending} type="button" onClick={() => selector && testSource.mutate({ name: source.name, selector: selector.name })}>
                 {testSource.isPending ? <Loader2 size={14} className="spin" /> : <Play size={14} />} Test
               </button>
               <button disabled={!selector || refresh.isPending} type="button" onClick={() => selector && refresh.mutate({ name: source.name, selector: selector.name })}>
-                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Refresh
+                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Sync
               </button>
             </div>
           </div>
           );
         })}
-        {testSource.error && <div className="error">{String(testSource.error.message)}</div>}
-        {refresh.error && <div className="error">{String(refresh.error.message)}</div>}
+        {(sources.data?.sources || []).length === 0 && (
+          <div className="empty-state">
+            <Database size={48} />
+            <p>No data sources configured yet</p>
+            <p className="empty-state-hint">Use the wizard above to add your first source</p>
+          </div>
+        )}
+        {testSource.error && <div className="error"><XCircle size={16} /> Test failed: {String(testSource.error.message)}</div>}
+        {refresh.error && <div className="error"><XCircle size={16} /> Sync failed: {String(refresh.error.message)}</div>}
       </ListPanel>
     </section>
   );

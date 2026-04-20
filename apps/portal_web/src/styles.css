@@ -1238,3 +1238,119 @@ hr {
   margin: 1.5rem 0;
 }
 
+/* Sync Status Dashboard */
+.sync-status-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  transition: all var(--transition-base);
+}
+
+.sync-status-row:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--line-strong);
+}
+
+.sync-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sync-status-header strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.sync-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--panel-soft);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.sync-status-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.sync-status-details span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sync-status-reason {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(154, 52, 18, 0.08);
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.status-icon-success {
+  color: var(--accent);
+}
+
+.status-icon-error {
+  color: var(--danger);
+}
+
+.status-icon-warning {
+  color: var(--warm);
+}
+
+.status-icon-pending {
+  color: var(--accent);
+}
+
+.status-enabled {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.status-disabled {
+  color: var(--faint);
+  font-weight: 500;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-state svg {
+  color: var(--faint);
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  margin: 0.25rem 0;
+}
+
+.empty-state-hint {
+  font-size: 0.875rem;
+  color: var(--faint);
+}
+
