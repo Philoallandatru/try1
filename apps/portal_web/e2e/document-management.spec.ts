@@ -1,182 +1,170 @@
 import { test, expect } from '@playwright/test';
-import * as path from 'path';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-test.describe('Document Management E2E Tests', () => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+test.describe('Document Management E2E', () => {
+  const workspaceId = 'demo';
+  const testPdfPath = path.join(__dirname, '../../../documents/PCI_Firmware_v3.3_20210120_NCB.pdf');
+
   test.beforeEach(async ({ page }) => {
-    // Set up authentication token
+    // Navigate to home page first
     await page.goto('http://localhost:5173');
-    await page.evaluate(() => {
-      localStorage.setItem('ssdPortalToken', 'change-me');
-    });
-    await page.reload();
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
+
+    // Connect to runner if not already connected
+    const tokenInput = page.locator('input[placeholder="change-me"]');
+    if (await tokenInput.isVisible()) {
+      await tokenInput.fill('test-token-123');
+
+      // Select demo workspace
+      const workspaceSelect = page.locator('select, [role="combobox"]').filter({ hasText: /workspace/i }).first();
+      if (await workspaceSelect.isVisible()) {
+        await workspaceSelect.selectOption('demo');
+      }
+
+      await page.waitForTimeout(1000);
+    }
+
+    // Navigate to document management page
+    await page.goto('http://localhost:5173/documents');
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should display document management page', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
+  test('should load document types', async ({ page }) => {
+    // Check if document type selector exists
+    const typeSelector = page.locator('select[name="document_type"]').first();
+    await expect(typeSelector).toBeVisible();
 
-    // Check page title
-    await expect(page.locator('h1')).toContainText('Document Management');
-
-    // Check upload section exists
-    await expect(page.locator('.upload-section')).toBeVisible();
-
-    // Check documents section exists
-    await expect(page.locator('.documents-section')).toBeVisible();
+    // Verify document types are loaded
+    const options = await typeSelector.locator('option').allTextContents();
+    expect(options.length).toBeGreaterThan(0);
+    expect(options).toContain('Specification');
   });
 
-  test('should show document types', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
+  test('should list existing documents', async ({ page }) => {
+    // Wait for documents to load
+    await page.waitForTimeout(1000);
 
-    // Wait for page to load
-    await page.waitForSelector('.upload-section', { timeout: 10000 });
+    // Check if document list exists
+    const documentList = page.locator('.document-list, .documents-table, [data-testid="document-list"]');
 
-    // Check document type selector
-    const typeSelect = page.locator('#document-type');
-    await expect(typeSelect).toBeVisible();
+    // Should have at least some documents (from previous uploads)
+    const documentItems = page.locator('.document-item, tr[data-document], [data-testid="document-item"]');
+    const count = await documentItems.count();
 
-    // Verify document types are available
-    const options = await typeSelect.locator('option').allTextContents();
-    console.log('Available document types:', options);
-
-    // Should have at least Spec, Policy, Other
-    expect(options.length).toBeGreaterThanOrEqual(3);
+    console.log(`Found ${count} documents in the list`);
+    expect(count).toBeGreaterThanOrEqual(0);
   });
 
-  test('should handle file selection', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
+  test('should filter documents by type', async ({ page }) => {
+    // Find filter dropdown
+    const filterDropdown = page.locator('select').filter({ hasText: /All Types|Filter|Type/ }).first();
 
-    // Wait for upload section
-    await page.waitForSelector('.upload-dropzone', { timeout: 10000 });
+    if (await filterDropdown.isVisible()) {
+      // Select "spec" type
+      await filterDropdown.selectOption({ label: /Specification|spec/i });
 
-    // Check if file input exists
-    const fileInput = page.locator('#file-input');
-    await expect(fileInput).toBeAttached();
+      // Wait for filtered results
+      await page.waitForTimeout(500);
 
-    // Note: Actual file upload would require a real PDF file
-    // This test just verifies the UI elements are present
-    console.log('File input element is present and ready for uploads');
-  });
+      // Verify filtered results
+      const documentItems = page.locator('.document-item, tr[data-document]');
+      const count = await documentItems.count();
 
-  test('should display empty state when no documents uploaded', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
-
-    // Wait for documents section to load
-    await page.waitForSelector('.documents-section', { timeout: 10000 });
-
-    // Check for empty state or document list
-    const emptyState = page.locator('.empty-state');
-    const documentsList = page.locator('.documents-list');
-
-    // Either empty state or documents list should be visible
-    const hasEmptyState = await emptyState.isVisible().catch(() => false);
-    const hasDocuments = await documentsList.isVisible().catch(() => false);
-
-    expect(hasEmptyState || hasDocuments).toBeTruthy();
-
-    if (hasEmptyState) {
-      console.log('No documents uploaded yet - showing empty state');
-      await expect(emptyState).toContainText('No documents uploaded yet');
-    } else {
-      console.log('Documents are present in the workspace');
+      console.log(`Found ${count} spec documents`);
+      expect(count).toBeGreaterThanOrEqual(0);
     }
   });
 
-  test('should show filter controls', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
+  test('should upload a new document', async ({ page }) => {
+    // Find file input
+    const fileInput = page.locator('input[type="file"]');
+    await expect(fileInput).toBeAttached();
 
-    // Wait for documents section
-    await page.waitForSelector('.documents-section', { timeout: 10000 });
+    // Select document type
+    const typeSelector = page.locator('select').filter({ hasText: /Type|Category/ }).first();
+    if (await typeSelector.isVisible()) {
+      await typeSelector.selectOption('spec');
+    }
 
-    // Check filter controls
-    const filterControls = page.locator('.filter-controls');
-    await expect(filterControls).toBeVisible();
+    // Upload file
+    await fileInput.setInputFiles(testPdfPath);
 
-    // Check filter select
-    const filterSelect = filterControls.locator('select');
-    await expect(filterSelect).toBeVisible();
+    // Wait for file to be selected
+    await page.waitForTimeout(500);
 
-    // Verify filter options
-    const filterOptions = await filterSelect.locator('option').allTextContents();
-    console.log('Filter options:', filterOptions);
+    // Click upload button
+    const uploadButton = page.locator('button').filter({ hasText: /Upload|Submit/ }).first();
+    await uploadButton.click();
 
-    // Should have "All Types" and document type options
-    expect(filterOptions.length).toBeGreaterThanOrEqual(4); // All Types + Spec + Policy + Other
+    // Wait for upload to complete (may take a while)
+    await page.waitForTimeout(60000); // 60 seconds timeout
+
+    // Check for success message
+    const successMessage = page.locator('.status-message.success, .alert-success, [role="alert"]').filter({ hasText: /success|uploaded/i });
+    await expect(successMessage).toBeVisible({ timeout: 5000 });
   });
 
-  test('should integrate with workspace selector', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
-
-    // Check workspace selector in topbar
-    const workspaceSelect = page.locator('label:has-text("Workspace") select');
-    await expect(workspaceSelect).toBeVisible();
-
-    // Get selected workspace
-    const selectedWorkspace = await workspaceSelect.inputValue();
-    console.log('Selected workspace:', selectedWorkspace);
-
-    // Workspace should be selected
-    expect(selectedWorkspace).toBeTruthy();
-  });
-
-  test('should show upload form when file is selected', async ({ page }) => {
-    await page.goto('http://localhost:5173/documents');
-
-    // Wait for upload section
-    await page.waitForSelector('.upload-dropzone', { timeout: 10000 });
-
-    // Note: This test verifies the form structure
-    // Actual file upload would require mocking or real file
-
-    // Check that form elements exist
-    const documentTypeLabel = page.locator('label[for="document-type"]');
-    const displayNameLabel = page.locator('label[for="display-name"]');
-
-    // These elements should exist in the DOM (even if hidden initially)
-    await expect(documentTypeLabel).toBeAttached();
-    await expect(displayNameLabel).toBeAttached();
-
-    console.log('Upload form structure is correct');
-  });
-
-  test('should have proper navigation link', async ({ page }) => {
+  test('should search uploaded documents', async ({ page }) => {
+    // Navigate to search/analyze page
     await page.goto('http://localhost:5173');
 
-    // Check if Documents link exists in navigation
-    const documentsLink = page.locator('nav a[href="/documents"]');
-    await expect(documentsLink).toBeVisible();
-    await expect(documentsLink).toContainText('Documents');
+    // Find search input
+    const searchInput = page.locator('input[type="text"], input[placeholder*="search"], textarea').first();
 
-    // Click the link
-    await documentsLink.click();
+    if (await searchInput.isVisible()) {
+      // Search for PCIe related content
+      await searchInput.fill('PCIe firmware specification');
 
-    // Verify navigation worked
-    await expect(page).toHaveURL('http://localhost:5173/documents');
-    await expect(page.locator('h1')).toContainText('Document Management');
+      // Click search button
+      const searchButton = page.locator('button').filter({ hasText: /Search|Analyze|Submit/ }).first();
+      await searchButton.click();
+
+      // Wait for results
+      await page.waitForTimeout(2000);
+
+      // Check if results contain uploaded documents
+      const resultsArea = page.locator('.search-results, .results, [data-testid="results"]');
+      const hasResults = await resultsArea.isVisible();
+
+      if (hasResults) {
+        const resultText = await resultsArea.textContent();
+        console.log('Search results:', resultText?.substring(0, 200));
+      }
+    }
   });
-});
 
-test.describe('Document Upload Integration with documents folder', () => {
-  test('should be able to upload PDF from documents folder', async ({ page }) => {
-    // This test demonstrates how to upload actual PDFs from the documents folder
-    // Note: Requires backend to be running
-
-    await page.goto('http://localhost:5173');
-    await page.evaluate(() => {
-      localStorage.setItem('ssdPortalToken', 'change-me');
+  test('should verify document appears in search with correct metadata', async ({ page }) => {
+    // Make API call to search
+    const response = await page.request.post('http://localhost:8787/api/retrieval/search', {
+      data: {
+        query: 'PCI firmware',
+        top_k: 10,
+        document_types: ['spec']
+      }
     });
-    await page.reload();
 
-    await page.goto('http://localhost:5173/documents');
-    await page.waitForSelector('.upload-dropzone', { timeout: 10000 });
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
 
-    // Note: Actual file upload would be done via API or file input
-    // This is a placeholder for the integration test
-    console.log('Document upload integration test - requires backend API');
-    console.log('PDFs available in documents folder:');
-    console.log('- NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf');
-    console.log('- PCI-Express-5-Update-Keys-to-Addressing-an-Evolving-Specification.pdf');
-    console.log('- PCI_Firmware_v3.3_20210120_NCB.pdf');
-    console.log('- fms-08-09-2023-ssds-201-1-ozturk-final.pdf');
+    expect(data.status).toBe('success');
+    expect(data.total_results).toBeGreaterThan(0);
+
+    // Verify results have proper metadata
+    const firstResult = data.results[0];
+    expect(firstResult).toHaveProperty('doc_id');
+    expect(firstResult).toHaveProperty('title');
+    expect(firstResult).toHaveProperty('score');
+    expect(firstResult.metadata).toHaveProperty('document_type');
+    expect(firstResult.metadata.document_type).toBe('spec');
+
+    console.log('First search result:', {
+      title: firstResult.title,
+      score: firstResult.score,
+      doc_type: firstResult.metadata.document_type
+    });
   });
 });

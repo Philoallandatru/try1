@@ -376,7 +376,7 @@ function App() {
           <span className="brand-mark" aria-hidden="true">S</span>
           <div>
             <p className="eyebrow">SSD Platform</p>
-            <h1>Codex Ops</h1>
+            <h1>SSD Quality Wiki</h1>
           </div>
         </div>
         <div className="nav-group-label">Workspace</div>

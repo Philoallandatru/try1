@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Upload, FileText, Trash2, Filter, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, Trash2, Filter, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 interface DocumentAsset {
   doc_id: string;
@@ -26,7 +26,8 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
   const [documentTypes, setDocumentTypes] = useState<Record<string, DocumentType>>({});
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<{ type: "success" | "error" | "processing"; message: string } | null>(null);
+  const [processingTaskId, setProcessingTaskId] = useState<string | null>(null);
 
   // Upload form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -38,6 +39,33 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
     loadDocumentTypes();
     loadDocuments();
   }, [workspaceDir, filterType]);
+
+  // Poll task status if we have a processing task
+  useEffect(() => {
+    if (!processingTaskId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/documents/task/${processingTaskId}`);
+        const taskStatus = await response.json();
+
+        if (taskStatus.status === "completed") {
+          setUploadStatus({ type: "success", message: "Document processed and indexed successfully!" });
+          setProcessingTaskId(null);
+          loadDocuments();
+        } else if (taskStatus.status === "failed") {
+          setUploadStatus({ type: "error", message: `Processing failed: ${taskStatus.error || "Unknown error"}` });
+          setProcessingTaskId(null);
+        } else if (taskStatus.status === "processing") {
+          setUploadStatus({ type: "processing", message: "Processing document and updating search index..." });
+        }
+      } catch (error) {
+        console.error("Failed to poll task status:", error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [processingTaskId]);
 
   const loadDocumentTypes = async () => {
     try {
@@ -106,7 +134,7 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
     }
 
     setLoading(true);
-    setUploadStatus(null);
+    setUploadStatus({ type: "processing", message: "Uploading file..." });
 
     try {
       const formData = new FormData();
@@ -125,10 +153,17 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
       const data = await response.json();
 
       if (data.success) {
-        setUploadStatus({ type: "success", message: "Document uploaded successfully!" });
+        if (data.task_id) {
+          // Async processing - start polling
+          setProcessingTaskId(data.task_id);
+          setUploadStatus({ type: "processing", message: "File uploaded, processing document..." });
+        } else {
+          // Sync processing completed
+          setUploadStatus({ type: "success", message: "Document uploaded successfully!" });
+          loadDocuments();
+        }
         setSelectedFile(null);
         setDisplayName("");
-        loadDocuments();
       } else {
         setUploadStatus({ type: "error", message: data.detail || "Upload failed" });
       }
@@ -180,7 +215,9 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
 
       {uploadStatus && (
         <div className={`status-message ${uploadStatus.type}`}>
-          {uploadStatus.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          {uploadStatus.type === "success" && <CheckCircle size={20} />}
+          {uploadStatus.type === "error" && <AlertCircle size={20} />}
+          {uploadStatus.type === "processing" && <Loader2 size={20} className="spinner" />}
           <span>{uploadStatus.message}</span>
         </div>
       )}
@@ -369,6 +406,21 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
           background: #f8d7da;
           color: #721c24;
           border: 1px solid #f5c6cb;
+        }
+
+        .status-message.processing {
+          background: #d1ecf1;
+          color: #0c5460;
+          border: 1px solid #bee5eb;
+        }
+
+        .spinner {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .upload-section, .documents-section {
