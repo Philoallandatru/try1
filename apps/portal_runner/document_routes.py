@@ -16,6 +16,7 @@ from services.workspace.document_assets import (
     delete_document_asset,
     DOCUMENT_TYPES,
 )
+from packages.source_models.document_database import DocumentDatabase
 
 
 def create_document_router(workspace_root: str, *, require_auth: Callable) -> APIRouter:
@@ -80,9 +81,65 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
                 display_name=display_name or file.filename,
             )
 
+            # Load the uploaded document into the database
+            # Use workspace_root database (not workspace-specific)
+            db_path = Path(workspace_root) / "documents.db"
+            doc_db = DocumentDatabase(str(db_path))
+
+            # Load document assets (returns tuple of documents, sources)
+            documents, sources = load_document_asset_documents(workspace_dir)
+
+            # Add new documents to database
+            for doc in documents:
+                doc_id = doc.get("document_id")
+                if not doc_id:
+                    continue
+
+                # Check if document already exists
+                existing_doc = doc_db.get_document(doc_id)
+                if not existing_doc:
+                    # Extract text content from content_blocks
+                    content_parts = []
+                    for block in doc.get("content_blocks", []):
+                        if block.get("block_type") in ["text", "paragraph", "title", "heading"]:
+                            text = block.get("text", "")
+                            if text:
+                                content_parts.append(text)
+
+                    content = "\n".join(content_parts)
+
+                    doc_db.create_document(
+                        id=doc_id,
+                        source_id=f"document-asset:{metadata['doc_id']}",
+                        source_type="document-asset",
+                        title=doc.get("title", metadata.get("display_name", "")),
+                        content=content,
+                        url=metadata.get("paths", {}).get("original_file", ""),
+                        metadata={
+                            "document_type": document_type,
+                            "document_type_priority": DOCUMENT_TYPES[document_type]["priority"],
+                            "doc_id": metadata["doc_id"],
+                            "version": metadata["version"],
+                        },
+                    )
+
+            # Trigger incremental index update
+            try:
+                from packages.retrieval.index_manager import IndexManager
+                index_dir = Path(workspace_root) / ".index"
+                index_manager = IndexManager(
+                    db_path=str(db_path),
+                    index_dir=str(index_dir),
+                )
+                index_manager.load_index()
+                index_manager.update_index_incremental()
+            except Exception as e:
+                # Don't fail the upload if index update fails
+                pass
+
             return {
                 "success": True,
-                "message": "Document uploaded successfully",
+                "message": "Document uploaded successfully and added to database",
                 "metadata": metadata,
             }
         except Exception as e:
@@ -107,6 +164,7 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
         Returns:
             List of document metadata
         """
+        print(f"[DEBUG] list_documents called with workspace={workspace}, document_type={document_type}")
         workspace_dir = Path(workspace_root) / workspace
         if not workspace_dir.exists():
             raise HTTPException(status_code=404, detail=f"Workspace not found: {workspace}")

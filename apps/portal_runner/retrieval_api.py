@@ -87,6 +87,8 @@ class RetrievalAPI:
         for result in results:
             doc = self.index_manager.db.get_document(result.doc_id)
             if doc:
+                import json
+                metadata = json.loads(doc.metadata_json) if doc.metadata_json else {}
                 result_list.append({
                     "doc_id": result.doc_id,
                     "score": result.score,
@@ -96,7 +98,7 @@ class RetrievalAPI:
                     "source_id": doc.source_id,
                     "source_type": doc.source_type,
                     "url": doc.url,
-                    "metadata": doc.metadata,
+                    "metadata": metadata,
                 })
 
         return {

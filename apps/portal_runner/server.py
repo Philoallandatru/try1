@@ -384,16 +384,6 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         except FileNotFoundError as exc:
             raise HTTPException(status_code=404, detail="Unknown run") from exc
 
-    apps_root = Path(__file__).resolve().parents[1]
-    legacy_portal_root = apps_root / "portal"
-    portal_web_dist = apps_root / "portal_web" / "dist"
-    app.mount("/admin", StaticFiles(directory=legacy_portal_root, html=True), name="portal-admin")
-    app.mount(
-        "/",
-        StaticFiles(directory=portal_web_dist if portal_web_dist.exists() else legacy_portal_root, html=True),
-        name="portal",
-    )
-
     # Include unified Source API v2 routes
     source_router = create_source_router(str(config.workspace.root))
     app.include_router(source_router)
@@ -425,6 +415,17 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include Document Management API routes
     document_router = create_document_router(str(config.workspace.root), require_auth=require_auth)
     app.include_router(document_router)
+
+    # Mount static files AFTER all API routes to prevent catch-all interference
+    apps_root = Path(__file__).resolve().parents[1]
+    legacy_portal_root = apps_root / "portal"
+    portal_web_dist = apps_root / "portal_web" / "dist"
+    app.mount("/admin", StaticFiles(directory=legacy_portal_root, html=True), name="portal-admin")
+    app.mount(
+        "/",
+        StaticFiles(directory=portal_web_dist if portal_web_dist.exists() else legacy_portal_root, html=True),
+        name="portal",
+    )
 
     return app
 
