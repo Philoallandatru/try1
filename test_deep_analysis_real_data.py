@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from services.analysis.deep_analysis import build_deep_analysis_from_documents
-from services.analysis.llm_backends import MockLLMBackend
+from services.analysis.llm_backends import MockLLMBackend, OpenAICompatibleBackend
 
 
 def load_demo_documents():
@@ -361,7 +361,13 @@ def main():
         print("="*80)
 
         try:
-            llm_backend = MockLLMBackend()
+            # 使用 LM Studio 作为真实 LLM 后端
+            llm_backend = OpenAICompatibleBackend(
+                model="qwen2.5-32b-instruct",
+                base_url="http://127.0.0.1:1234/v1",
+                api_key="lm-studio",
+                timeout_seconds=600  # 增加到 10 分钟
+            )
 
             result = build_deep_analysis_from_documents(
                 documents=all_documents,
