@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "re
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import ReactMarkdown from "react-markdown";
 import { AnalysisResultsPage } from "./AnalysisResultsPage";
 import { DailyReportPage } from "./DailyReportPage";
 import { BatchAnalysisPage } from "./BatchAnalysisPage";
@@ -1453,13 +1454,15 @@ function RunTabPanel({
         {issueDataText && (
           <>
             <p className="eyebrow">Jira Issue</p>
-            <div className="document-content" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9em', lineHeight: '1.6', marginBottom: '1.5rem' }}>
-              {issueDataText}
+            <div className="document-content markdown-content">
+              <ReactMarkdown>{issueDataText}</ReactMarkdown>
             </div>
           </>
         )}
         <p className="eyebrow">Analysis Summary</p>
-        <p>{payload.answer?.text || "No summary text available."}</p>
+        <div className="markdown-content">
+          <ReactMarkdown>{payload.answer?.text || "No summary text available."}</ReactMarkdown>
+        </div>
       </section>
     );
   }
@@ -1522,7 +1525,9 @@ function RunTabPanel({
   return (
     <section className="tab-panel">
       <p className="eyebrow">{activeTab.replace("_", " ")}</p>
-      <p>{sectionText(sectionOutputs[activeTab])}</p>
+      <div className="markdown-content">
+        <ReactMarkdown>{sectionText(sectionOutputs[activeTab])}</ReactMarkdown>
+      </div>
     </section>
   );
 }
@@ -1905,15 +1910,17 @@ function ResultView({ result }: { result: AnalyzeResult | null }) {
       {issueDataText && (
         <section>
           <p className="eyebrow">Jira Issue</p>
-          <div className="document-content" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9em', lineHeight: '1.6' }}>
-            {issueDataText}
+          <div className="document-content markdown-content">
+            <ReactMarkdown>{issueDataText}</ReactMarkdown>
           </div>
         </section>
       )}
       <section>
         <p className="eyebrow">Analysis Summary</p>
         <h3>{String(result.summary.title || result.issue_key)}</h3>
-        <p>{String(result.summary.answer || "Analysis completed. Review sections and citations below.")}</p>
+        <div className="markdown-content">
+          <ReactMarkdown>{String(result.summary.answer || "Analysis completed. Review sections and citations below.")}</ReactMarkdown>
+        </div>
       </section>
       <section>
         <p className="eyebrow">Evidence Sources</p>
