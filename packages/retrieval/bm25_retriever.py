@@ -43,7 +43,13 @@ class BM25Retriever:
         self.index = index
         self.tokenizer = index.tokenizer
 
-    def search(self, query: str, top_k: int = 5, min_score: float = 0.0) -> List[SearchResult]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        min_score: float = 0.0,
+        document_types: Optional[List[str]] = None
+    ) -> List[SearchResult]:
         """
         Search for documents matching the query.
 
@@ -51,6 +57,7 @@ class BM25Retriever:
             query: Search query
             top_k: Number of top results to return
             min_score: Minimum score threshold
+            document_types: Optional list of document types to filter by (e.g., ["spec", "policy"])
 
         Returns:
             List of SearchResult objects, sorted by score (descending)
@@ -67,23 +74,34 @@ class BM25Retriever:
         scores = self.index.bm25.get_scores(query_tokens)
 
         # Get top-k indices
-        top_indices = np.argsort(scores)[::-1][:top_k]
+        top_indices = np.argsort(scores)[::-1]
 
-        # Build results
+        # Build results with filtering
         results = []
-        for rank, idx in enumerate(top_indices, start=1):
+        for idx in top_indices:
             score = scores[idx]
             if score < min_score:
                 continue
 
             doc = self.index.documents[idx]
+
+            # Filter by document type if specified
+            if document_types:
+                doc_type = doc.get("metadata", {}).get("document_type")
+                if doc_type not in document_types:
+                    continue
+
             result = SearchResult(
                 doc_id=doc.get("id", str(idx)),
                 score=score,
                 document=doc,
-                rank=rank
+                rank=len(results) + 1
             )
             results.append(result)
+
+            # Stop when we have enough results
+            if len(results) >= top_k:
+                break
 
         return results
 
@@ -92,7 +110,8 @@ class BM25Retriever:
         query: str,
         top_k: int = 5,
         min_score: float = 0.0,
-        text_field: str = "content"
+        text_field: str = "content",
+        document_types: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """
         Search and return results with highlighted matching terms.
@@ -102,11 +121,12 @@ class BM25Retriever:
             top_k: Number of top results to return
             min_score: Minimum score threshold
             text_field: Field name containing text content
+            document_types: Optional list of document types to filter by
 
         Returns:
             List of result dicts with highlights
         """
-        results = self.search(query, top_k, min_score)
+        results = self.search(query, top_k, min_score, document_types)
         query_tokens = set(self.tokenizer.tokenize(query))
 
         highlighted_results = []

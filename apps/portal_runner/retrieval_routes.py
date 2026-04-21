@@ -19,6 +19,7 @@ class SearchRequest(BaseModel):
     query: str = Field(..., description="Search query text")
     top_k: int = Field(10, ge=1, le=100, description="Number of results to return")
     min_score: float = Field(0.0, ge=0.0, description="Minimum relevance score")
+    document_types: list[str] | None = Field(None, description="Filter by document types (e.g., ['spec', 'policy'])")
 
 
 class BuildIndexRequest(BaseModel):
@@ -68,6 +69,7 @@ def create_retrieval_router(workspace_root: str) -> APIRouter:
                 query=request.query,
                 top_k=request.top_k,
                 min_score=request.min_score,
+                document_types=request.document_types,
             )
             return result
         except Exception as e:

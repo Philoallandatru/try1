@@ -49,6 +49,7 @@ class RetrievalAPI:
         query: str,
         top_k: int = 10,
         min_score: float = 0.0,
+        document_types: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Execute search query.
@@ -57,6 +58,7 @@ class RetrievalAPI:
             query: Search query text
             top_k: Number of results to return
             min_score: Minimum relevance score
+            document_types: Optional list of document types to filter by
 
         Returns:
             Search results with metadata
@@ -72,15 +74,17 @@ class RetrievalAPI:
         # Create retriever
         retriever = BM25Retriever(self.index_manager.index)
 
-        # Execute search
-        results = retriever.search(query, top_k=top_k)
-
-        # Filter by min_score
-        filtered_results = [r for r in results if r.score >= min_score]
+        # Execute search with document type filtering
+        results = retriever.search(
+            query,
+            top_k=top_k,
+            min_score=min_score,
+            document_types=document_types
+        )
 
         # Get document details from database
         result_list = []
-        for result in filtered_results:
+        for result in results:
             doc = self.index_manager.db.get_document(result.doc_id)
             if doc:
                 result_list.append({

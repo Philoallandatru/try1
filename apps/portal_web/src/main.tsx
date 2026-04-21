@@ -1677,6 +1677,7 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<z.infer<typeof searchResultSchema> | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   const indexStats = useQuery({
     queryKey: ["index-stats", workspaceDir],
@@ -1701,6 +1702,12 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
     },
   });
 
+  const toggleDocumentType = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
   const handleSearch = async () => {
     if (!query.trim()) return;
 
@@ -1716,6 +1723,7 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
             workspace_dir: workspaceDir,
             query: query.trim(),
             top_k: 10,
+            document_types: selectedTypes.length > 0 ? selectedTypes : undefined,
           }),
         },
       );
@@ -1802,6 +1810,42 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
           </button>
         </div>
 
+        <div className="document-type-filters">
+          <p className="eyebrow">Filter by Document Type</p>
+          <div className="filter-buttons">
+            <button
+              type="button"
+              className={selectedTypes.includes("spec") ? "filter-button active" : "filter-button"}
+              onClick={() => toggleDocumentType("spec")}
+            >
+              <FileText size={14} /> Specification {selectedTypes.includes("spec") && <Check size={14} />}
+            </button>
+            <button
+              type="button"
+              className={selectedTypes.includes("policy") ? "filter-button active" : "filter-button"}
+              onClick={() => toggleDocumentType("policy")}
+            >
+              <FileCheck size={14} /> Policy {selectedTypes.includes("policy") && <Check size={14} />}
+            </button>
+            <button
+              type="button"
+              className={selectedTypes.includes("other") ? "filter-button active" : "filter-button"}
+              onClick={() => toggleDocumentType("other")}
+            >
+              <FileText size={14} /> Other {selectedTypes.includes("other") && <Check size={14} />}
+            </button>
+            {selectedTypes.length > 0 && (
+              <button
+                type="button"
+                className="filter-button clear"
+                onClick={() => setSelectedTypes([])}
+              >
+                <X size={14} /> Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
         {!indexReady && (
           <div className="notice" id="search-help" role="status">
             No documents indexed yet. Build the index first by clicking "Rebuild Index" above.
@@ -1823,29 +1867,49 @@ function SearchPage({ workspaceDir }: { workspaceDir: string }) {
         {searchResults.length > 0 && (
           <div className="search-results" data-testid="search-results">
             <p className="eyebrow">{searchResults.length} results</p>
-            {searchResults.map((result, index) => (
-              <button
-                key={result.doc_id}
-                data-testid={`search-result-${index}`}
-                className={selectedDoc?.doc_id === result.doc_id ? "search-result-card active" : "search-result-card"}
-                onClick={() => setSelectedDoc(result)}
-                type="button"
-                aria-label={`Result ${index + 1}: ${result.document.title || result.doc_id}`}
-              >
-                <div className="search-result-header">
-                  <strong>#{index + 1} {highlightText(result.document.title || result.doc_id, query)}</strong>
-                  <span className="search-score">Score: {result.score.toFixed(3)}</span>
-                </div>
-                <p className="search-result-snippet">
-                  {highlightText(result.document.content?.substring(0, 200) || "No content preview", query)}
-                  {(result.document.content?.length ?? 0) > 200 && "..."}
-                </p>
-                <div className="search-result-meta">
-                  <span><Database size={14} /> {result.document.source || "unknown"}</span>
-                  <span><FileText size={14} /> {result.doc_id}</span>
-                </div>
-              </button>
-            ))}
+            {searchResults.map((result, index) => {
+              const docType = result.document.metadata?.document_type as string | undefined;
+              const priority = result.document.metadata?.priority as number | undefined;
+
+              return (
+                <button
+                  key={result.doc_id}
+                  data-testid={`search-result-${index}`}
+                  className={selectedDoc?.doc_id === result.doc_id ? "search-result-card active" : "search-result-card"}
+                  onClick={() => setSelectedDoc(result)}
+                  type="button"
+                  aria-label={`Result ${index + 1}: ${result.document.title || result.doc_id}`}
+                >
+                  <div className="search-result-header">
+                    <div className="search-result-title">
+                      <strong>#{index + 1} {highlightText(result.document.title || result.doc_id, query)}</strong>
+                      {docType && (
+                        <span className={`doc-type-badge ${docType}`}>
+                          {docType === "spec" && <FileText size={12} />}
+                          {docType === "policy" && <FileCheck size={12} />}
+                          {docType === "other" && <FileText size={12} />}
+                          {docType.toUpperCase()}
+                        </span>
+                      )}
+                      {priority !== undefined && (
+                        <span className="priority-badge" title={`Priority: ${priority}`}>
+                          P{priority}
+                        </span>
+                      )}
+                    </div>
+                    <span className="search-score">Score: {result.score.toFixed(3)}</span>
+                  </div>
+                  <p className="search-result-snippet">
+                    {highlightText(result.document.content?.substring(0, 200) || "No content preview", query)}
+                    {(result.document.content?.length ?? 0) > 200 && "..."}
+                  </p>
+                  <div className="search-result-meta">
+                    <span><Database size={14} /> {result.document.source || "unknown"}</span>
+                    <span><FileText size={14} /> {result.doc_id}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
