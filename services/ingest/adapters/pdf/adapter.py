@@ -33,6 +33,42 @@ PAGE_PATTERN = re.compile(r"^Page\s+(?P<page>\d+)$", re.IGNORECASE)
 MARKDOWN_HEADING_PATTERN = re.compile(r"^(?P<hashes>#{1,6})\s+(?P<title>.+)$")
 MARKDOWN_TABLE_ROW_PATTERN = re.compile(r"^\|.+\|$")
 
+# Patterns to detect table of contents pages
+TOC_TITLE_PATTERNS = [
+    re.compile(r"^Table\s+of\s+(Contents|Figures|Tables)", re.IGNORECASE),
+    re.compile(r"^List\s+of\s+(Figures|Tables)", re.IGNORECASE),
+    re.compile(r"^Contents$", re.IGNORECASE),
+]
+
+
+def _is_toc_page(page_blocks: list[str]) -> bool:
+    """
+    Detect if a page is a table of contents page based on heuristics.
+
+    Returns True if:
+    - Page contains TOC title patterns
+    - Page has high density of page number references (e.g., "....... 42")
+    """
+    if not page_blocks:
+        return False
+
+    # Check first few blocks for TOC title
+    for block in page_blocks[:5]:
+        text = block.strip()
+        for pattern in TOC_TITLE_PATTERNS:
+            if pattern.match(text):
+                return True
+
+    # Check for high density of page number patterns (dots followed by numbers)
+    page_ref_pattern = re.compile(r"\.{2,}\s*\d+")
+    page_ref_count = sum(1 for block in page_blocks if page_ref_pattern.search(block))
+
+    # If more than 30% of blocks contain page references, likely a TOC
+    if len(page_blocks) > 0 and page_ref_count / len(page_blocks) > 0.3:
+        return True
+
+    return False
+
 
 def _index_structural_text(payload: dict, text: str, page_number: int) -> None:
     section_match = SECTION_PATTERN.match(text)
@@ -157,14 +193,32 @@ def _parse_mineru_markdown(source: Path, markdown_text: str, parser_name: str) -
     last_heading_clause = 0
     lines = [line.rstrip() for line in markdown_text.splitlines()]
 
+    # Collect lines per page for TOC detection
+    page_lines_buffer = []
+    skip_current_page = False
+
     for idx, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line:
             continue
 
+        # Check if this line indicates a new page (heuristic: page break patterns)
+        # For now, we'll check TOC patterns on first few lines of each page
         if not page_registered:
-            register_page(payload, current_page)
+            page_lines_buffer.append(line)
+
+            # Check first 10 lines for TOC patterns
+            if len(page_lines_buffer) <= 10:
+                if _is_toc_page(page_lines_buffer):
+                    skip_current_page = True
+
+            if not skip_current_page:
+                register_page(payload, current_page)
             page_registered = True
+
+        if skip_current_page:
+            # Skip content until we detect a new page (simplified: skip for now)
+            continue
 
         heading_match = MARKDOWN_HEADING_PATTERN.match(line)
         if heading_match:
@@ -251,8 +305,24 @@ def _parse_mineru_middle_json(source: Path, middle_json: dict, parser_name: str)
 
     for fallback_page_number, page in enumerate(pdf_info, start=1):
         page_number = int(page.get("page_idx", fallback_page_number - 1)) + 1
-        register_page(payload, page_number)
         page_blocks = page.get("para_blocks", []) or page.get("preproc_blocks", [])
+
+        # Collect all text blocks for TOC detection
+        page_text_blocks = []
+        for page_block in page_blocks:
+            text = _collect_mineru_span_text(page_block)
+            if text:
+                normalized_lines = [line.strip() for line in text.splitlines() if line.strip()]
+                normalized_text = " ".join(normalized_lines)
+                if normalized_text:
+                    page_text_blocks.append(normalized_text)
+
+        # Skip table of contents pages
+        if _is_toc_page(page_text_blocks):
+            continue
+
+        register_page(payload, page_number)
+
         for page_block in page_blocks:
             block_type = page_block.get("type", "")
             if block_type in {"image", "figure"}:

@@ -8,55 +8,83 @@ from services.analysis.search_enhancer import build_enhanced_search_query
 from services.analysis.section_analysis import build_composite_report_markdown, build_section_outputs
 from services.connectors.jira.issue_type_profiles import route_jira_issue_type
 from services.retrieval.citations.assembler import assemble_citation
-from services.retrieval.engine import PAGE_INDEX_ENGINE, build_shared_retrieval_bundle
+from services.retrieval.engine import BM25_ENGINE, build_shared_retrieval_bundle
 from services.retrieval.indexing.page_index import build_page_index
-from services.retrieval.search.hybrid_search import search_page_index
+from services.retrieval.search.bm25_search import build_bm25_index, search_bm25
 
 
 ANALYSIS_PROFILES: dict[str, dict[str, str]] = {
     "defect": {
-        "label": "Root Cause Analysis",
-        "assistant_intro": "You are an SSD firmware defect root cause analysis assistant.",
+        "label": "根因分析",
+        "assistant_intro": "你是一位SSD固件缺陷根因分析专家。",
         "task_instruction": (
-            "Perform a deep root cause analysis of this Jira defect issue using "
-            "the retrieved Confluence and spec evidence. Focus on: root cause identification, "
-            "impact assessment, and fix suggestions."
+            "基于检索到的Confluence文档和规格说明证据，对此Jira缺陷问题进行深度根因分析。\n"
+            "分析要求：\n"
+            "1. 根因识别：分析可能的根本原因，包括代码逻辑、配置错误、时序问题、资源竞争等\n"
+            "2. 失效机制：解释问题是如何发生的，触发条件和传播路径\n"
+            "3. 影响评估：评估问题的严重程度、影响范围（功能模块、性能、数据完整性）\n"
+            "4. 证据链：引用具体的规格条款、设计文档、测试结果来支撑分析结论\n"
+            "5. 修复建议：提供具体的修复方案，包括代码修改点、配置调整、测试验证方法\n"
+            "6. 预防措施：建议如何避免类似问题再次发生"
         ),
     },
     "requirement": {
-        "label": "Requirement Traceability Analysis",
-        "assistant_intro": "You are an SSD requirement traceability and gap analysis assistant.",
+        "label": "需求追溯分析",
+        "assistant_intro": "你是一位SSD需求追溯和差距分析专家。",
         "task_instruction": (
-            "Perform a requirement traceability analysis of this Jira requirement issue using "
-            "the retrieved Confluence and spec evidence. Focus on: spec coverage, "
-            "gap analysis, and requirement completeness."
+            "基于检索到的Confluence文档和规格说明证据，对此Jira需求问题进行需求追溯分析。\n"
+            "分析要求：\n"
+            "1. 规格覆盖：识别需求对应的规格条款（NVMe、SATA、PCIe等标准）\n"
+            "2. 实现状态：评估需求的实现完整性，是否完全满足规格要求\n"
+            "3. 差距分析：指出当前实现与规格要求之间的差距\n"
+            "4. 依赖关系：分析需求的上下游依赖，包括硬件依赖、固件模块依赖\n"
+            "5. 测试覆盖：评估测试用例是否充分覆盖需求的各个方面\n"
+            "6. 风险评估：识别需求实现中的潜在风险和不确定性"
         ),
     },
     "requirement_change": {
-        "label": "Requirement Change Impact Analysis",
-        "assistant_intro": "You are an SSD requirement change impact analysis assistant.",
+        "label": "需求变更影响分析",
+        "assistant_intro": "你是一位SSD需求变更影响分析专家。",
         "task_instruction": (
-            "Analyze the impact of this requirement change using the retrieved Confluence "
-            "and spec evidence. Focus on: affected specifications, change scope, and risk assessment."
+            "基于检索到的Confluence文档和规格说明证据，分析此需求变更的影响。\n"
+            "分析要求：\n"
+            "1. 变更范围：明确变更涉及的功能模块、接口、数据结构\n"
+            "2. 规格影响：分析变更对相关规格条款的影响，是否引入新的合规性要求\n"
+            "3. 架构影响：评估对系统架构、模块交互、性能的影响\n"
+            "4. 兼容性：分析向后兼容性、与其他功能的兼容性\n"
+            "5. 测试影响：识别需要新增或修改的测试用例\n"
+            "6. 风险评估：评估变更引入的风险，包括回归风险、性能风险、稳定性风险\n"
+            "7. 实施建议：提供分阶段实施方案和验证策略"
         ),
     },
     "change_control": {
-        "label": "Change Impact Analysis",
-        "assistant_intro": "You are an SSD component change impact analysis assistant.",
+        "label": "变更影响分析",
+        "assistant_intro": "你是一位SSD组件变更影响分析专家。",
         "task_instruction": (
-            "Analyze the impact of this component change using the retrieved Confluence "
-            "and spec evidence. Focus on: affected components, risk assessment, "
-            "and downstream dependencies."
+            "基于检索到的Confluence文档和规格说明证据，分析此组件变更的影响。\n"
+            "分析要求：\n"
+            "1. 受影响组件：识别所有直接和间接受影响的固件模块、硬件组件\n"
+            "2. 接口影响：分析对内部接口、外部接口（Host、NAND）的影响\n"
+            "3. 性能影响：评估对IOPS、延迟、带宽、功耗的影响\n"
+            "4. 下游依赖：分析对依赖此组件的其他模块的影响\n"
+            "5. 验证策略：提供完整的验证方案，包括单元测试、集成测试、系统测试\n"
+            "6. 风险评估：识别高风险区域，提供风险缓解措施\n"
+            "7. 回滚方案：提供变更失败时的回滚策略"
         ),
     },
 }
 
 DEFAULT_PROFILE: dict[str, str] = {
-    "label": "General Deep Analysis",
-    "assistant_intro": "You are an SSD engineering deep analysis assistant.",
+    "label": "综合深度分析",
+    "assistant_intro": "你是一位SSD工程深度分析专家。",
     "task_instruction": (
-        "Perform a deep analysis of this Jira issue using the retrieved Confluence "
-        "and spec evidence. Summarize the issue context, cross-source evidence, and key insights."
+        "基于检索到的Confluence文档和规格说明证据，对此Jira问题进行综合深度分析。\n"
+        "分析要求：\n"
+        "1. 问题概述：总结问题的核心内容和背景\n"
+        "2. 跨源证据：整合Confluence文档和规格说明中的相关证据\n"
+        "3. 技术分析：从技术角度深入分析问题的本质\n"
+        "4. 关键洞察：提供有价值的技术洞察和发现\n"
+        "5. 行动建议：提供具体的后续行动建议"
     ),
 }
 
@@ -68,10 +96,10 @@ SECTION_RETRIEVAL_NAMES = (
 )
 
 SECTION_SCOPE_HINTS = {
-    "rca": "failure mechanism, error-code, and root-cause evidence",
-    "spec_impact": "spec clause, requirement, and component impact evidence",
-    "decision_brief": "decision, risk, and tradeoff evidence",
-    "general_summary": "broad cross-source overview evidence",
+    "rca": "失效机制、错误代码、根因证据",
+    "spec_impact": "规格条款、需求、组件影响证据",
+    "decision_brief": "决策、风险、权衡证据",
+    "general_summary": "跨源综合概览证据",
 }
 
 
@@ -156,7 +184,8 @@ def _search_cross_source(
     if not source_documents:
         return []
     page_index = build_page_index(source_documents)
-    results = search_page_index(page_index, query, allowed_policies, top_k=top_k)
+    bm25_index = build_bm25_index(page_index)
+    results = search_bm25(bm25_index, query, allowed_policies, top_k=top_k)
     return [assemble_citation(result) for result in results]
 
 
@@ -171,7 +200,7 @@ def _build_shared_secondary_retrieval_bundle(
     documents = [*confluence_documents, *spec_documents]
     entries = build_page_index(documents)
     bundle = build_shared_retrieval_bundle(
-        engine=PAGE_INDEX_ENGINE,
+        engine=BM25_ENGINE,
         entries=entries,
         query=query,
         allowed_policies=allowed_policies,
@@ -239,7 +268,7 @@ def _build_section_retrieval_hooks_with_context(
             scope_hint=scope_hint,
         )
         followup_results = (
-            PAGE_INDEX_ENGINE.search(
+            BM25_ENGINE.search(
                 entries,
                 enhanced["query"],
                 allowed_policies,
@@ -278,10 +307,10 @@ def _select_analysis_profile(document: dict) -> dict[str, str]:
 def _build_evidence_text(citations: list[dict]) -> str:
     """Format citations into an evidence text block."""
     if not citations:
-        return "No evidence retrieved."
+        return "未检索到相关证据。"
     lines: list[str] = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     return "\n".join(lines)
 
@@ -298,19 +327,19 @@ def _build_deep_analysis_prompt(
     """Assemble the deep analysis prompt from all evidence sources."""
     mode_instructions = {
         "strict": [
-            "Mode: strict evidence review.",
-            "If the evidence does not directly support a conclusion, say the evidence is insufficient.",
-            "Do not infer facts that are not grounded in the retrieved evidence.",
+            "模式：严格证据审查",
+            "如果证据不能直接支持结论，请明确说明证据不足。",
+            "不要推断未在检索证据中明确体现的事实。",
         ],
         "balanced": [
-            "Mode: balanced evidence review.",
-            "Separate direct evidence from reasonable inference.",
-            "Call out uncertainty and the missing evidence needed to strengthen the conclusion.",
+            "模式：平衡证据审查",
+            "区分直接证据和合理推断。",
+            "指出不确定性以及需要哪些额外证据来加强结论。",
         ],
         "exploratory": [
-            "Mode: exploratory evidence review.",
-            "Label hypotheses explicitly and do not present them as established facts.",
-            "Use hypotheses only to suggest follow-up checks, not to claim final conclusions.",
+            "模式：探索性证据审查",
+            "明确标注假设，不要将其作为既定事实呈现。",
+            "仅使用假设来建议后续检查，而非声称最终结论。",
         ],
     }
     if prompt_mode not in mode_instructions:
@@ -322,23 +351,23 @@ def _build_deep_analysis_prompt(
             profile["task_instruction"],
             *mode_instructions[prompt_mode],
             "",
-            "Output format:",
-            "1. Summary: concise issue overview.",
-            "2. Cross-source evidence: cite Confluence and spec evidence with document IDs.",
-            "3. Analysis: root cause / traceability / impact based on issue family.",
-            "4. Gaps: missing evidence or unanswered questions.",
-            "5. Recommendations: suggested next steps.",
+            "输出格式：",
+            "1. 概述：简明的问题概览",
+            "2. 跨源证据：引用Confluence和规格证据，标注文档ID",
+            "3. 分析：根据问题类型进行根因/追溯/影响分析",
+            "4. 差距：缺失的证据或未解答的问题",
+            "5. 建议：建议的后续步骤",
             "",
-            "## Jira Issue Context",
+            "## Jira问题上下文",
             issue_summary,
             "",
-            "## Confluence Evidence",
+            "## Confluence证据",
             confluence_evidence_text,
             "",
-            "## Specification Evidence",
+            "## 规格说明证据",
             spec_evidence_text,
             "",
-            "## Image Evidence Status",
+            "## 图像证据状态",
             image_evidence_text,
         ]
     ).strip()
@@ -354,20 +383,20 @@ def _extractive_deep_answer(
     """Build a deterministic extractive answer when no LLM is available."""
     all_citations = confluence_citations + spec_citations
     if not all_citations:
-        conclusion = "No cross-source evidence found for this issue."
+        conclusion = "未找到此问题的跨源证据。"
     elif confluence_citations and spec_citations:
         conclusion = (
-            f"Cross-source evidence found: {len(confluence_citations)} Confluence hit(s) "
-            f"and {len(spec_citations)} spec hit(s). Review cited evidence directly."
+            f"找到跨源证据：{len(confluence_citations)}条Confluence证据 "
+            f"和{len(spec_citations)}条规格证据。请直接查看引用的证据。"
         )
     elif confluence_citations:
-        conclusion = f"{len(confluence_citations)} Confluence hit(s) found. No spec evidence."
+        conclusion = f"找到{len(confluence_citations)}条Confluence证据。未找到规格证据。"
     else:
-        conclusion = f"{len(spec_citations)} spec hit(s) found. No Confluence evidence."
+        conclusion = f"找到{len(spec_citations)}条规格证据。未找到Confluence证据。"
 
     evidence_lines: list[str] = []
     for citation in all_citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         evidence_lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
 
     return {
@@ -375,12 +404,12 @@ def _extractive_deep_answer(
         "profile": profile["label"],
         "text": "\n".join(
             [
-                f"Deep analysis ({profile['label']}) for {issue_id}",
+                f"深度分析（{profile['label']}）- {issue_id}",
                 "",
                 conclusion,
                 "",
-                "Evidence:",
-                *(evidence_lines or ["- None"]),
+                "证据：",
+                *(evidence_lines or ["- 无"]),
             ]
         ).strip(),
         "citation_count": len(all_citations),

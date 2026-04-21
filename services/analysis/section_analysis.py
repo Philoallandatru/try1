@@ -5,34 +5,62 @@ from services.analysis.llm_backends import LLMBackend
 
 SECTION_RUNNERS: dict[str, dict[str, str]] = {
     "rca": {
-        "label": "RCA",
+        "label": "根因分析",
         "version": "v1",
-        "instruction": "Explain likely root cause, failure mechanism, and what evidence supports or weakens the root-cause hypothesis.",
+        "instruction": (
+            "解释可能的根本原因、失效机制，以及哪些证据支持或削弱根因假设。\n"
+            "要求：\n"
+            "- 识别直接原因和根本原因\n"
+            "- 分析失效的触发条件和传播路径\n"
+            "- 引用具体的日志、错误代码、规格条款\n"
+            "- 评估证据的可信度和完整性"
+        ),
     },
     "spec_impact": {
-        "label": "Spec Impact",
+        "label": "规格影响",
         "version": "v1",
-        "instruction": "Explain which specifications, clauses, or requirements appear affected and what evidence anchors that impact.",
+        "instruction": (
+            "解释哪些规格、条款或需求受到影响，以及哪些证据支撑这种影响。\n"
+            "要求：\n"
+            "- 列出受影响的规格条款（章节号、版本）\n"
+            "- 分析对合规性的影响\n"
+            "- 评估对功能、性能、兼容性的影响\n"
+            "- 引用具体的规格文本和设计文档"
+        ),
     },
     "decision_brief": {
-        "label": "Decision Brief",
+        "label": "决策简报",
         "version": "v1",
-        "instruction": "Summarize decision-ready takeaways, key risks, and what needs confirmation before action.",
+        "instruction": (
+            "总结决策就绪的要点、关键风险，以及在采取行动前需要确认的内容。\n"
+            "要求：\n"
+            "- 提供清晰的行动建议\n"
+            "- 识别高风险区域和不确定性\n"
+            "- 列出需要进一步确认的事项\n"
+            "- 评估不同方案的利弊"
+        ),
     },
     "general_summary": {
-        "label": "General Summary",
+        "label": "综合总结",
         "version": "v1",
-        "instruction": "Summarize the issue and the most important cross-source evidence for a broad engineering audience.",
+        "instruction": (
+            "为广泛的工程受众总结问题和最重要的跨源证据。\n"
+            "要求：\n"
+            "- 用简洁的语言概括问题核心\n"
+            "- 整合来自不同来源的关键信息\n"
+            "- 突出最重要的技术发现\n"
+            "- 提供清晰的结论和建议"
+        ),
     },
 }
 
 
 def _section_evidence_text(citations: list[dict]) -> str:
     if not citations:
-        return "No evidence retrieved."
+        return "未检索到证据。"
     lines: list[str] = []
     for citation in citations:
-        evidence = " ".join(citation.get("evidence_span", []))
+        evidence = citation.get("evidence_span", "")
         lines.append(f"- {citation['document']} v{citation['version']}: {evidence}")
     return "\n".join(lines)
 
@@ -46,7 +74,7 @@ def _combined_citations(shared_citations: list[dict], followup_citations: list[d
             citation.get("version"),
             citation.get("page"),
             citation.get("section"),
-            tuple(citation.get("evidence_span", [])),
+            citation.get("evidence_span", ""),
         )
         if key in seen:
             continue
@@ -64,15 +92,17 @@ def _section_prompt(
     section = SECTION_RUNNERS[section_name]
     return "\n".join(
         [
-            f"Section: {section['label']}",
-            f"Section version: {section['version']}",
+            f"章节：{section['label']}",
+            f"章节版本：{section['version']}",
             section["instruction"],
             "",
-            "## Jira Issue Context",
+            "## Jira问题上下文",
             issue_summary,
             "",
-            "## Shared Retrieval Evidence",
+            "## 共享检索证据",
             _section_evidence_text(citations),
+            "",
+            "请使用中文输出分析结果。",
         ]
     ).strip()
 
@@ -80,9 +110,9 @@ def _section_prompt(
 def _extractive_section_answer(section_name: str, citations: list[dict]) -> dict:
     section = SECTION_RUNNERS[section_name]
     if not citations:
-        summary = "No shared evidence is available for this section yet."
+        summary = f"此章节暂无可用的共享证据。"
     else:
-        summary = f"{len(citations)} shared evidence citation(s) are available for {section['label']}."
+        summary = f"{section['label']}有{len(citations)}条共享证据引用可用。"
     return {
         "mode": "extractive",
         "text": summary,
@@ -135,12 +165,12 @@ def build_composite_report_markdown(
     title: str,
     section_outputs: dict[str, dict],
 ) -> str:
-    lines = [f"# Deep Analysis Report: {title}", "", f"Issue ID: {issue_id}", ""]
+    lines = [f"# 深度分析报告：{title}", "", f"问题ID：{issue_id}", ""]
     for section_name in ("rca", "spec_impact", "decision_brief", "general_summary"):
         section = section_outputs[section_name]
         citation_lines = []
         for citation in section.get("citations", []):
-            evidence = " ".join(citation.get("evidence_span", []))
+            evidence = citation.get("evidence_span", "")
             citation_lines.append(f"- `{citation['document']}` v{citation['version']}: {evidence}")
         lines.extend(
             [
@@ -148,11 +178,11 @@ def build_composite_report_markdown(
                 "",
                 section["answer"]["text"],
                 "",
-                "### Evidence",
+                "### 证据",
                 "",
-                *(citation_lines or ["- No shared evidence retrieved."]),
+                *(citation_lines or ["- 未检索到共享证据。"]),
                 "",
-                f"Section artifact: `section_outputs/{section_name}.json`",
+                f"章节产物：`section_outputs/{section_name}.json`",
                 "",
             ]
         )
