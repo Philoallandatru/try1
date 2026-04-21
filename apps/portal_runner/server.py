@@ -42,6 +42,7 @@ from apps.portal_runner.analysis_websocket import create_websocket_router
 from apps.portal_runner.export_routes import create_export_routes
 from apps.portal_runner.trends_routes import create_trends_routes
 from apps.portal_runner.cross_reference_routes import create_cross_reference_routes
+from apps.portal_runner.document_routes import create_document_router
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -420,6 +421,10 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include Cross-Reference API routes
     cross_ref_router = create_cross_reference_routes(config.workspace.root)
     app.include_router(cross_ref_router)
+
+    # Include Document Management API routes
+    document_router = create_document_router(str(config.workspace.root), require_auth=require_auth)
+    app.include_router(document_router)
 
     return app
 

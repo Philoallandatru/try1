@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { AnalysisResultsPage } from "./AnalysisResultsPage";
 import { DailyReportPage } from "./DailyReportPage";
 import { BatchAnalysisPage } from "./BatchAnalysisPage";
+import { DocumentManagementPage } from "./DocumentManagementPage";
 import {
   CheckCircle2,
   XCircle,
@@ -387,6 +388,7 @@ function App() {
             { id: "/analysis", label: "Analysis", icon: BarChart3 },
             { id: "/daily-report", label: "Daily Report", icon: Calendar },
             { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
+            { id: "/documents", label: "Documents", icon: Upload },
             { id: "/sources", label: "Sources", icon: Database },
             { id: "/profiles", label: "Profiles", icon: Settings },
             { id: "/wiki", label: "Wiki", icon: FileText },
@@ -464,6 +466,7 @@ function App() {
             <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
             <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
             <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
+            <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
             <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
             <Route path="/profiles" element={
               <ProfilesPage
