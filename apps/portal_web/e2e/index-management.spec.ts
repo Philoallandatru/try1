@@ -7,7 +7,7 @@ test.describe('Index Management E2E Tests', () => {
 
   test('should display home page with correct branding', async ({ page }) => {
     // Check page title matches actual branding
-    await expect(page.locator('h1')).toContainText('Codex Ops');
+    await expect(page.locator('h1')).toContainText('SSD Quality Wiki');
   });
 
   test('should show index build button in search page', async ({ page }) => {
