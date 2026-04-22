@@ -43,6 +43,8 @@ from apps.portal_runner.export_routes import create_export_routes
 from apps.portal_runner.trends_routes import create_trends_routes
 from apps.portal_runner.cross_reference_routes import create_cross_reference_routes
 from apps.portal_runner.document_routes import create_document_router
+from apps.portal_runner.share_routes import create_share_router
+from apps.portal_runner.comment_routes import router as comment_router
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -415,6 +417,13 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include Document Management API routes
     document_router = create_document_router(str(config.workspace.root), require_auth=require_auth)
     app.include_router(document_router)
+
+    # Include Share API routes
+    share_router = create_share_router()
+    app.include_router(share_router)
+
+    # Include Comment API routes
+    app.include_router(comment_router)
 
     # Mount static files AFTER all API routes to prevent catch-all interference
     apps_root = Path(__file__).resolve().parents[1]

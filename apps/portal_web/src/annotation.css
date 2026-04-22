@@ -1,0 +1,287 @@
+/* 标注工具容器 */
+.annotation-tool {
+  position: relative;
+}
+
+.annotation-container {
+  position: relative;
+  user-select: text;
+  cursor: text;
+}
+
+.annotation-content {
+  line-height: 1.8;
+  font-size: 14px;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 标注样式 */
+.annotation {
+  padding: 2px 0;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.annotation-highlight {
+  background: linear-gradient(180deg, transparent 60%, #fef3c7 60%);
+}
+
+.annotation-highlight:hover {
+  background: #fef3c7;
+}
+
+.annotation-note {
+  background: linear-gradient(180deg, transparent 60%, #dbeafe 60%);
+}
+
+.annotation-note:hover {
+  background: #dbeafe;
+}
+
+.annotation-question {
+  background: linear-gradient(180deg, transparent 60%, #fce7f3 60%);
+}
+
+.annotation-question:hover {
+  background: #fce7f3;
+}
+
+.annotation-issue {
+  background: linear-gradient(180deg, transparent 60%, #fee2e2 60%);
+}
+
+.annotation-issue:hover {
+  background: #fee2e2;
+}
+
+/* 标注菜单 */
+.annotation-menu {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  z-index: 1000;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 10px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.annotation-menu::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid white;
+}
+
+.annotation-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.annotation-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.annotation-menu-highlight:hover {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.annotation-menu-note:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.annotation-menu-question:hover {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+.annotation-menu-issue:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* 标注对话框 */
+.annotation-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  z-index: 1001;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.annotation-dialog::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+.annotation-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.annotation-dialog-body {
+  padding: 20px;
+}
+
+.annotation-selected-text {
+  padding: 12px;
+  background: #f9fafb;
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.annotation-comment-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.annotation-comment-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.annotation-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .annotation-menu {
+    flex-direction: column;
+    padding: 8px;
+  }
+
+  .annotation-menu-item {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .annotation-dialog {
+    width: 95%;
+    max-width: none;
+  }
+}

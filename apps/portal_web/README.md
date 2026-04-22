@@ -40,8 +40,20 @@ npm run build
 ### 运行测试
 
 ```bash
-# E2E 测试
-npm run test:e2e
+# 单元测试
+npm run test
+
+# 单元测试（UI 模式）
+npm run test:ui
+
+# 单元测试（覆盖率）
+npm run test:coverage
+
+# E2E 测试（单元测试，不需要后端）
+npm run test:e2e:unit
+
+# E2E 测试（集成测试，需要后端运行）
+npm run test:e2e:integration
 
 # E2E 测试（UI 模式）
 npm run test:e2e:ui
@@ -139,6 +151,34 @@ apps/portal_web/
 - 重建索引
 
 ## 性能优化
+
+### 性能监控
+
+应用内置了完整的性能监控系统，自动收集和报告关键性能指标。
+
+**开发环境：**
+- 点击右下角的图表图标 📊 打开性能监控面板
+- 实时查看 Web Vitals、API 性能和自定义指标
+- 导出性能数据用于分析
+
+**编程接口：**
+
+```typescript
+import { performanceMonitor } from './performanceMonitor';
+
+// 记录自定义指标
+performanceMonitor.recordMetric('operation', 150);
+
+// 测量 API 调用
+await performanceMonitor.measureApiCall('fetch-data', async () => {
+  return await fetch('/api/data').then(r => r.json());
+});
+
+// 获取性能报告
+const report = performanceMonitor.getReport();
+```
+
+详细文档请参考 [PERFORMANCE.md](./PERFORMANCE.md)
 
 ### 代码分割
 
@@ -277,13 +317,43 @@ Token 存储在 localStorage 中：`ssdPortalToken`
 
 ## 测试
 
+### 单元测试
+
+使用 Vitest 和 React Testing Library 进行单元测试。
+
+**已测试组件：**
+- ErrorBoundary - 错误边界组件
+- SkeletonLoader - 骨架屏组件
+- apiUtils - API 工具函数
+
+**运行测试：**
+
+```bash
+npm run test              # 运行所有单元测试
+npm run test:ui           # UI 模式
+npm run test:coverage     # 生成覆盖率报告
+```
+
 ### E2E 测试覆盖
 
-- 文档管理（上传、分类、搜索）
-- 分析功能（深度分析、每日报告）
-- 索引管理（构建、统计）
+**单元测试（不需要后端）：**
+- 文档管理 UI 交互
+- Markdown 渲染
+- 中文输出支持
+
+**集成测试（需要后端）：**
+- 完整的文档上传流程
+- 分析功能
+- 索引管理
 - 数据源配置
-- 错误处理
+
+**运行 E2E 测试：**
+
+```bash
+npm run test:e2e:unit         # 单元测试
+npm run test:e2e:integration  # 集成测试（需要后端）
+npm run test:e2e:ui           # UI 模式
+```
 
 ### 测试最佳实践
 
@@ -292,6 +362,9 @@ Token 存储在 localStorage 中：`ssdPortalToken`
 3. 模拟真实用户行为
 4. 验证 UI 反馈
 5. 测试错误场景
+6. 分离单元测试和集成测试
+7. 使用 React Testing Library 测试组件
+8. 使用 Vitest 进行快速单元测试
 
 ## 开发指南
 

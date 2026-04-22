@@ -31,6 +31,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/e2e/*integration*.spec.ts', // Skip integration tests by default
+    },
+    {
+      name: 'integration',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/e2e/*integration*.spec.ts', // Only run integration tests
     },
   ],
   webServer: {

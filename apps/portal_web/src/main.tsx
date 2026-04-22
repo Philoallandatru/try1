@@ -1,4 +1,4 @@
-import React, { useMemo, useState, Suspense, lazy } from "react";
+import React, { useMemo, useState, Suspense, lazy, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,10 @@ import ReactMarkdown from "react-markdown";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { apiJson } from "./apiUtils";
 import { SkeletonPage } from "./SkeletonLoader";
+import { performanceMonitor } from "./performanceMonitor";
+import { PerformancePanel } from "./PerformancePanel";
+import { WorkspaceManager } from "./WorkspaceManager";
+import { PermissionProvider } from "./PermissionContext";
 import {
   CheckCircle2,
   XCircle,
@@ -37,6 +41,11 @@ import {
   Layers,
 } from "lucide-react";
 import "./styles.css";
+import "./workspace-manager.css";
+import "./permissions.css";
+import "./share.css";
+import "./comment.css";
+import "./annotation.css";
 
 // Lazy load page components for code splitting
 const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m => ({ default: m.AnalysisResultsPage })));
@@ -358,6 +367,21 @@ function App() {
   const queryClient = useQueryClient();
   const location = useLocation();
 
+  // Initialize performance monitoring
+  useEffect(() => {
+    performanceMonitor.init();
+
+    // Log performance report every 5 minutes in development
+    if (import.meta.env.DEV) {
+      const interval = setInterval(() => {
+        const report = performanceMonitor.getReport();
+        console.log('Performance Report:', report);
+      }, 5 * 60 * 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, []);
+
   const workspaces = useQuery({
     queryKey: ["workspaces", token],
     queryFn: () => apiJson("/api/workspaces", workspacesSchema),
@@ -449,26 +473,10 @@ function App() {
               Token
               <input value={token} onChange={(event) => setToken(event.target.value)} onBlur={saveToken} placeholder="change-me" />
             </label>
-            <label>
-              Workspace
-              <select value={selectedWorkspace} onChange={(event) => setWorkspaceDir(event.target.value)}>
-                {!selectedWorkspace && <option value="">No workspace</option>}
-                {(workspaces.data?.workspaces || []).map((workspace: Workspace) => (
-                  <option key={workspace.workspace_dir} value={workspace.workspace_dir}>
-                    {workspace.name || workspace.workspace_dir}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              New
-              <span className="inline-create">
-                <input value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} />
-                <button type="button" onClick={() => createWorkspace.mutate(workspaceName)}>
-                  Create
-                </button>
-              </span>
-            </label>
+            <WorkspaceManager
+              currentWorkspace={selectedWorkspace}
+              onWorkspaceChange={setWorkspaceDir}
+            />
           </div>
         </header>
 
@@ -2154,7 +2162,10 @@ createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <PermissionProvider>
+            <App />
+            <PerformancePanel />
+          </PermissionProvider>
         </QueryClientProvider>
       </BrowserRouter>
     </ErrorBoundary>

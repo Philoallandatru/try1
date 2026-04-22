@@ -1,0 +1,2957 @@
+npm warn Unknown user config "python". This will stop working in the next major version of npm.
+npm warn Unknown user config "msvs_version". This will stop working in the next major version of npm.
+
+Running 65 tests using 10 workers
+
+[1A[2K[1/65] [chromium] › e2e\analysis.spec.ts:66:3 › Analysis Page E2E Tests › should display analysis sections correctly
+[1A[2K[2/65] [chromium] › e2e\analysis.spec.ts:9:3 › Analysis Page E2E Tests › should display analysis page with correct UI elements
+[1A[2K[3/65] [chromium] › e2e\analysis.spec.ts:34:3 › Analysis Page E2E Tests › should display Markdown content correctly
+[1A[2K[4/65] [chromium] › e2e\analysis.spec.ts:50:3 › Analysis Page E2E Tests › should handle Chinese content in analysis results
+[1A[2K[5/65] [chromium] › e2e\analysis.spec.ts:17:3 › Analysis Page E2E Tests › should trigger deep analysis for a Jira issue
+[1A[2K[6/65] [chromium] › e2e\analysis.spec.ts:87:3 › Analysis Page E2E Tests › should render code blocks in analysis results
+[1A[2K[7/65] [chromium] › e2e\analysis.spec.ts:119:3 › Analysis Page E2E Tests › should render tables in analysis results
+[1A[2K[8/65] [chromium] › e2e\analysis.spec.ts:104:3 › Analysis Page E2E Tests › should render lists in analysis results
+[1A[2K[9/65] [chromium] › e2e\analysis.spec.ts:156:3 › Analysis Page E2E Tests › should display error message on API failure
+[1A[2K[10/65] [chromium] › e2e\analysis.spec.ts:137:3 › Analysis Page E2E Tests › should handle loading state during analysis
+[1A[2K[11/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:19:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace
+[1A[2K[12/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:37:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available
+[1A[2K[13/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:54:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button
+[1A[2K[14/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:69:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data
+[1A[2K[15/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:153:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available
+[1A[2K[16/65] [chromium] › e2e\analyze-demo-workspace.spec.ts:191:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run
+[1A[2K[17/65] [chromium] › e2e\analyze-page.spec.ts:13:3 › Analyze Page E2E Tests › should display Analyze page with correct UI elements
+[1A[2K[18/65] [chromium] › e2e\analyze-page.spec.ts:44:3 › Analyze Page E2E Tests › should have Run Analysis button
+[1A[2K[19/65] [chromium] › e2e\analyze-page.spec.ts:27:3 › Analyze Page E2E Tests › should show setup checklist status
+[1A[2K[20/65] [chromium] › e2e\analyze-page.spec.ts:51:3 › Analyze Page E2E Tests › should trigger analysis when form is submitted
+[1A[2K[21/65] [chromium] › e2e\analyze-page.spec.ts:106:3 › Analyze Page E2E Tests › should display error message when API fails
+[1A[2K[22/65] [chromium] › e2e\analyze-page.spec.ts:137:3 › Analyze Page E2E Tests › should show recent issues in datalist
+[1A[2K[23/65] [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis
+[1A[2K[24/65] [chromium] › e2e\analyze-page.spec.ts:164:3 › Analyze Page E2E Tests › should handle workspace selection
+[1A[2K[25/65] [chromium] › e2e\analyze-page.spec.ts:179:3 › Analyze Page E2E Tests › should show advanced options when clicked
+[1A[2K[26/65] [chromium] › e2e\analyze-page.spec.ts:198:3 › Analyze Page E2E Tests › should navigate to other pages from sidebar
+[1A[2K[27/65] [chromium] › e2e\analyze-page.spec.ts:214:3 › Analyze Page E2E Tests › should check backend connectivity
+[1A[2K[28/65] [chromium] › e2e\analyze-page.spec.ts:225:3 › Analyze Page E2E Tests › should validate form inputs
+[1A[2K[29/65] [chromium] › e2e\analyze-page.spec.ts:239:3 › Analyze Page E2E Tests › should display setup checklist items correctly
+[1A[2K[30/65] [chromium] › e2e\analyze-page.spec.ts:255:3 › Analyze Page E2E Tests › should handle setup item navigation
+[1A[2K[31/65] [chromium] › e2e\analyze-real-backend.spec.ts:13:3 › Analyze Page - Real Backend Integration › should load workspace and profiles from backend
+[1A[2K[32/65] [chromium] › e2e\analyze-real-backend.spec.ts:32:3 › Analyze Page - Real Backend Integration › should display setup checklist with real backend status
+[1A[2K[33/65] [chromium] › e2e\analyze-real-backend.spec.ts:56:3 › Analyze Page - Real Backend Integration › should attempt real analysis and capture response
+[1A[2K[chromium] › e2e\analyze-real-backend.spec.ts:32:3 › Analyze Page - Real Backend Integration › should display setup checklist with real backend status
+Setup status: 0 / 4 ready
+
+[1A[2K- Jira Source: ✗ (Add a Jira source)
+
+[1A[2K- Confluence Source: ✗ (Add a Confluence source)
+
+[1A[2K- File Asset: ✗ (Parse or register file assets (specs, policies, etc.))
+
+[1A[2K- Analysis Profile: ✗ (Create a profile with spec and LLM settings)
+
+[1A[2K[chromium] › e2e\analyze-real-backend.spec.ts:56:3 › Analyze Page - Real Backend Integration › should attempt real analysis and capture response
+Found 0 profile(s)
+
+[1A[2KSKIP: No profiles configured. Cannot run analysis.
+
+[1A[2K[34/65] [chromium] › e2e\analyze-real-backend.spec.ts:160:3 › Analyze Page - Real Backend Integration › should check backend API endpoints directly
+[1A[2K[35/65] [chromium] › e2e\analyze-real-backend.spec.ts:243:3 › Analyze Page - Real Backend Integration › should test analyze-jira endpoint with mock data
+[1A[2K[chromium] › e2e\analyze-real-backend.spec.ts:160:3 › Analyze Page - Real Backend Integration › should check backend API endpoints directly
+Workspaces API failed: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+Call log:
+[2m  - → GET http://localhost:8000/api/workspaces[22m
+[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+[2m    - accept: */*[22m
+[2m    - accept-encoding: gzip,deflate,br[22m
+[2m    - Authorization: Bearer change-me[22m
+
+    at [90mC:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\[39me2e\analyze-real-backend.spec.ts:163:48 {
+  name: [32m'Error'[39m,
+  [32mSymbol(step)[39m: {
+    location: {
+      file: [32m'C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts'[39m,
+      line: [33m163[39m,
+      column: [33m48[39m
+    },
+    category: [32m'pw:api'[39m,
+    title: [32m'GET "/api/workspaces"'[39m,
+    apiName: [32m'apiRequestContext.get'[39m,
+    params: {
+      url: [32m'http://localhost:8000/api/workspaces'[39m,
+      params: [90mundefined[39m,
+      encodedParams: [90mundefined[39m,
+      method: [32m'GET'[39m,
+      headers: [36m[Array][39m,
+      postData: [90mundefined[39m,
+      jsonData: [90mundefined[39m,
+      formData: [90mundefined[39m,
+      multipartData: [90mundefined[39m,
+      timeout: [33m0[39m,
+      failOnStatusCode: [90mundefined[39m,
+      ignoreHTTPSErrors: [90mundefined[39m,
+      maxRedirects: [90mundefined[39m,
+      maxRetries: [90mundefined[39m,
+      __testHookLookup: [90mundefined[39m
+    },
+    group: [90mundefined[39m,
+    stepId: [32m'pw:api@31'[39m,
+    boxedStack: [90mundefined[39m,
+    steps: [],
+    attachmentIndices: [],
+    info: TestStepInfoImpl {
+      annotations: [],
+      _testInfo: [36m[TestInfoImpl][39m,
+      _stepId: [32m'pw:api@31'[39m,
+      _title: [32m'GET "/api/workspaces"'[39m,
+      _parentStep: [90mundefined[39m,
+      skip: [36m[Function (anonymous)][39m
+    },
+    complete: [36m[Function: complete][39m,
+    endWallTime: [33m1776821762428[39m,
+    error: {
+      message: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m,
+      stack: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m +
+        [32m'\n'[39m +
+        [32m'    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'    at C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts:163:48'[39m,
+      cause: [90mundefined[39m
+    }
+  }
+}
+
+[1A[2K  1) [chromium] › e2e\analyze-real-backend.spec.ts:243:3 › Analyze Page - Real Backend Integration › should test analyze-jira endpoint with mock data 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+    Call log:
+    [2m  - → GET http://localhost:8000/api/workspaces[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - Authorization: Bearer change-me[22m
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:8000
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-real-backend.spec.ts:245:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-real-backend-Analy-0ceec-ira-endpoint-with-mock-data-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-real-backend-Analy-0ceec-ira-endpoint-with-mock-data-chromium\error-context.md
+
+
+[1A[2KProfiles API failed: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+Call log:
+[2m  - → GET http://localhost:8000/api/workspaces[22m
+[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+[2m    - accept: */*[22m
+[2m    - accept-encoding: gzip,deflate,br[22m
+[2m    - Authorization: Bearer change-me[22m
+
+    at [90mC:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\[39me2e\analyze-real-backend.spec.ts:182:48 {
+  name: [32m'Error'[39m,
+  [32mSymbol(step)[39m: {
+    location: {
+      file: [32m'C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts'[39m,
+      line: [33m182[39m,
+      column: [33m48[39m
+    },
+    category: [32m'pw:api'[39m,
+    title: [32m'GET "/api/workspaces"'[39m,
+    apiName: [32m'apiRequestContext.get'[39m,
+    params: {
+      url: [32m'http://localhost:8000/api/workspaces'[39m,
+      params: [90mundefined[39m,
+      encodedParams: [90mundefined[39m,
+      method: [32m'GET'[39m,
+      headers: [36m[Array][39m,
+      postData: [90mundefined[39m,
+      jsonData: [90mundefined[39m,
+      formData: [90mundefined[39m,
+      multipartData: [90mundefined[39m,
+      timeout: [33m0[39m,
+      failOnStatusCode: [90mundefined[39m,
+      ignoreHTTPSErrors: [90mundefined[39m,
+      maxRedirects: [90mundefined[39m,
+      maxRetries: [90mundefined[39m,
+      __testHookLookup: [90mundefined[39m
+    },
+    group: [90mundefined[39m,
+    stepId: [32m'pw:api@32'[39m,
+    boxedStack: [90mundefined[39m,
+    steps: [],
+    attachmentIndices: [],
+    info: TestStepInfoImpl {
+      annotations: [],
+      _testInfo: [36m[TestInfoImpl][39m,
+      _stepId: [32m'pw:api@32'[39m,
+      _title: [32m'GET "/api/workspaces"'[39m,
+      _parentStep: [90mundefined[39m,
+      skip: [36m[Function (anonymous)][39m
+    },
+    complete: [36m[Function: complete][39m,
+    endWallTime: [33m1776821762739[39m,
+    error: {
+      message: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m,
+      stack: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m +
+        [32m'\n'[39m +
+        [32m'    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'    at C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts:182:48'[39m,
+      cause: [90mundefined[39m
+    }
+  }
+}
+
+[1A[2K  2) [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.result-surface')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.result-surface')[22m
+
+
+      159 |     // Check if result surface exists (might be empty initially)
+      160 |     const resultSurface = page.locator('.result-surface');
+    > 161 |     await expect(resultSurface).toBeVisible();
+          |                                 ^
+      162 |   });
+      163 |
+      164 |   test('should handle workspace selection', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:161:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--4c3c0-w-after-successful-analysis-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--4c3c0-w-after-successful-analysis-chromium\error-context.md
+
+
+[1A[2K[chromium] › e2e\analyze-real-backend.spec.ts:13:3 › Analyze Page - Real Backend Integration › should load workspace and profiles from backend
+Found 1 workspace(s)
+
+[1A[2K[chromium] › e2e\analyze-real-backend.spec.ts:160:3 › Analyze Page - Real Backend Integration › should check backend API endpoints directly
+Sources API failed: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+Call log:
+[2m  - → GET http://localhost:8000/api/workspaces[22m
+[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+[2m    - accept: */*[22m
+[2m    - accept-encoding: gzip,deflate,br[22m
+[2m    - Authorization: Bearer change-me[22m
+
+    at [90mC:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\[39me2e\analyze-real-backend.spec.ts:213:48 {
+  name: [32m'Error'[39m,
+  [32mSymbol(step)[39m: {
+    location: {
+      file: [32m'C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts'[39m,
+      line: [33m213[39m,
+      column: [33m48[39m
+    },
+    category: [32m'pw:api'[39m,
+    title: [32m'GET "/api/workspaces"'[39m,
+    apiName: [32m'apiRequestContext.get'[39m,
+    params: {
+      url: [32m'http://localhost:8000/api/workspaces'[39m,
+      params: [90mundefined[39m,
+      encodedParams: [90mundefined[39m,
+      method: [32m'GET'[39m,
+      headers: [36m[Array][39m,
+      postData: [90mundefined[39m,
+      jsonData: [90mundefined[39m,
+      formData: [90mundefined[39m,
+      multipartData: [90mundefined[39m,
+      timeout: [33m0[39m,
+      failOnStatusCode: [90mundefined[39m,
+      ignoreHTTPSErrors: [90mundefined[39m,
+      maxRedirects: [90mundefined[39m,
+      maxRetries: [90mundefined[39m,
+      __testHookLookup: [90mundefined[39m
+    },
+    group: [90mundefined[39m,
+    stepId: [32m'pw:api@33'[39m,
+    boxedStack: [90mundefined[39m,
+    steps: [],
+    attachmentIndices: [],
+    info: TestStepInfoImpl {
+      annotations: [],
+      _testInfo: [36m[TestInfoImpl][39m,
+      _stepId: [32m'pw:api@33'[39m,
+      _title: [32m'GET "/api/workspaces"'[39m,
+      _parentStep: [90mundefined[39m,
+      skip: [36m[Function (anonymous)][39m
+    },
+    complete: [36m[Function: complete][39m,
+    endWallTime: [33m1776821763052[39m,
+    error: {
+      message: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m,
+      stack: [32m'Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → GET http://localhost:8000/api/workspaces\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m +
+        [32m'\n'[39m +
+        [32m'    at apiRequestContext.get: connect ECONNREFUSED ::1:8000\n'[39m +
+        [32m'    at C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.spec.ts:213:48'[39m,
+      cause: [90mundefined[39m
+    }
+  }
+}
+
+[1A[2K[36/65] [chromium] › e2e\document-management.spec.ts:42:3 › Document Management E2E › should load document types
+[1A[2K[37/65] [chromium] › e2e\document-management.spec.ts:62:3 › Document Management E2E › should list existing documents
+[1A[2K[38/65] [chromium] › e2e\diagnose-frontend.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4
+[1A[2K[39/65] [chromium] › e2e\diagnose-frontend.spec.ts:93:3 › Frontend Diagnosis › manually check API responses
+[1A[2K  3) [chromium] › e2e\diagnose-frontend.spec.ts:93:3 › Frontend Diagnosis › manually check API responses 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+    Call log:
+    [2m  - → GET http://localhost:8000/api/workspaces[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - Authorization: Bearer change-me[22m
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:8000
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\diagnose-frontend.spec.ts:95:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\diagnose-frontend-Frontend-785cf-anually-check-API-responses-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\diagnose-frontend-Frontend-785cf-anually-check-API-responses-chromium\error-context.md
+
+
+[1A[2K[40/65] [chromium] › e2e\document-management.spec.ts:77:3 › Document Management E2E › should filter documents by type
+[1A[2K[chromium] › e2e\diagnose-frontend.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4
+Selected workspace: 
+
+[1A[2KAvailable workspaces: [ [32m'No workspace'[39m ]
+
+[1A[2KHas demo workspace: [33mfalse[39m
+
+[1A[2KSetup status after selection: 0 / 4 ready
+
+[1A[2K- Jira Source: ✗ (Add a Jira source)
+
+[1A[2K- Confluence Source: ✗ (Add a Confluence source)
+
+[1A[2K- File Asset: ✗ (Parse or register file assets (specs, policies, etc.))
+
+[1A[2K- Analysis Profile: ✗ (Create a profile with spec and LLM settings)
+
+[1A[2KAvailable profiles: []
+
+[1A[2K[41/65] [chromium] › e2e\document-management.spec.ts:97:3 › Document Management E2E › should upload a new document
+[1A[2K[chromium] › e2e\document-management.spec.ts:62:3 › Document Management E2E › should list existing documents
+Found 14 documents in the list
+
+[1A[2K[42/65] [chromium] › e2e\document-management.spec.ts:126:3 › Document Management E2E › should search uploaded documents
+[1A[2K[chromium] › e2e\diagnose-frontend.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4
+
+API calls made:
+
+[1A[2K  GET http://localhost:5173/api/workspaces -> 401
+
+[1A[2K  GET http://localhost:5173/api/workspaces -> 401
+
+[1A[2K
+React Query state: "React Query not found"
+
+[1A[2K[43/65] [chromium] › e2e\document-management.spec.ts:155:3 › Document Management E2E › should verify document appears in search with correct metadata
+[1A[2K[chromium] › e2e\document-management.spec.ts:77:3 › Document Management E2E › should filter documents by type
+Found 13 spec documents
+
+[1A[2K[44/65] [chromium] › e2e\index-management.spec.ts:8:3 › Index Management E2E Tests › should display home page with correct branding
+[1A[2K[45/65] [chromium] › e2e\index-management.spec.ts:13:3 › Index Management E2E Tests › should show index build button in search page
+[1A[2K[46/65] [chromium] › e2e\index-management.spec.ts:22:3 › Index Management E2E Tests › should navigate to search page
+[1A[2K[47/65] [chromium] › e2e\index-management.spec.ts:34:3 › Index Management E2E Tests › should display document count in search page
+[1A[2K[48/65] [chromium] › e2e\index-management.spec.ts:43:3 › Index Management E2E Tests › should handle index rebuild if available
+[1A[2K[chromium] › e2e\document-management.spec.ts:97:3 › Document Management E2E › should upload a new document
+Upload started successfully. Full processing happens in background.
+
+[1A[2K[49/65] [chromium] › e2e\index-management.spec.ts:61:3 › Index Management E2E Tests › should show index statistics in search page
+[1A[2K[50/65] [chromium] › e2e\index-management.spec.ts:75:3 › Index Management E2E Tests › should handle API errors gracefully
+[1A[2K[51/65] [chromium] › e2e\index-management.spec.ts:96:3 › Index Management E2E Tests › should maintain responsive layout
+[1A[2K[52/65] [chromium] › e2e\search.spec.ts:9:3 › Search Page E2E Tests › should display search page with all UI elements
+[1A[2K[53/65] [chromium] › e2e\search.spec.ts:23:3 › Search Page E2E Tests › should perform search and display results
+[1A[2K[chromium] › e2e\document-management.spec.ts:155:3 › Document Management E2E › should verify document appears in search with correct metadata
+First search result: {
+  title: [32m'PCI Firmware Specification'[39m,
+  score: [33m1.0717941531769184[39m,
+  doc_type: [32m'spec'[39m
+}
+
+[1A[2K[54/65] [chromium] › e2e\search.spec.ts:49:3 › Search Page E2E Tests › should handle empty search query
+[1A[2K[55/65] [chromium] › e2e\search.spec.ts:57:3 › Search Page E2E Tests › should display search results with highlights
+[1A[2K[56/65] [chromium] › e2e\search.spec.ts:82:3 › Search Page E2E Tests › should show loading state during search
+[1A[2K[57/65] [chromium] › e2e\search.spec.ts:103:3 › Search Page E2E Tests › should handle Chinese search queries
+[1A[2K[58/65] [chromium] › e2e\search.spec.ts:120:3 › Search Page E2E Tests › should navigate back to home page
+[1A[2K[59/65] [chromium] › e2e\search.spec.ts:130:3 › Search Page E2E Tests › should display document count
+[1A[2K[60/65] [chromium] › e2e\test-api-direct.spec.ts:4:3 › Direct API Test › should fetch workspaces via API
+[1A[2K[61/65] [chromium] › e2e\test-api-direct.spec.ts:35:3 › Direct API Test › should load page and check workspace dropdown
+[1A[2K[62/65] [chromium] › e2e\test-chinese-output.spec.ts:4:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model
+[1A[2K[63/65] [chromium] › e2e\test-markdown-rendering.spec.ts:18:3 › Markdown Rendering Test › should render markdown in Runs page
+[1A[2K  4) [chromium] › e2e\test-api-direct.spec.ts:4:3 › Direct API Test › should fetch workspaces via API 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:8000
+    Call log:
+    [2m  - → GET http://localhost:8000/api/workspaces[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - Authorization: Bearer change-me[22m
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:8000
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-api-direct.spec.ts:14:41
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-api-direct-Direct-API-c7fee-ld-fetch-workspaces-via-API-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-api-direct-Direct-API-c7fee-ld-fetch-workspaces-via-API-chromium\error-context.md
+
+
+[1A[2K[64/65] [chromium] › e2e\test-markdown-rendering.spec.ts:75:3 › Markdown Rendering Test › should check all section tabs for markdown rendering
+[1A[2K[chromium] › e2e\test-api-direct.spec.ts:35:3 › Direct API Test › should load page and check workspace dropdown
+Available workspace options: [ [32m'No workspace'[39m ]
+
+[1A[2KHas demo option: [33mfalse[39m
+
+[1A[2K[65/65] [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering
+[1A[2K  5) [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('text=20260421T042441644174Z-bac9f1a0-workspace-deep-analyze') to be visible[22m
+
+
+       7 |     // Navigate to the latest run
+       8 |     await page.click('a[href="/runs"]');
+    >  9 |     await page.waitForSelector('text=20260421T042441644174Z-bac9f1a0-workspace-deep-analyze', { timeout: 10000 });
+         |                ^
+      10 |     await page.click('text=20260421T042441644174Z-bac9f1a0-workspace-deep-analyze');
+      11 |
+      12 |     // Wait for content to load
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\verify-chinese-output.spec.ts:9:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\verify-chinese-output-Veri-163b5-h-proper-markdown-rendering-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\verify-chinese-output-Veri-163b5-h-proper-markdown-rendering-chromium\error-context.md
+
+
+[1A[2K  6) [chromium] › e2e\analyze-demo-workspace.spec.ts:19:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1981 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m    - element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    13 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    71 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    292 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    170 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1049 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-4e519-4-ready-with-demo-workspace-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-4e519-4-ready-with-demo-workspace-chromium\error-context.md
+
+
+[1A[2K  7) [chromium] › e2e\analyze-demo-workspace.spec.ts:37:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1981 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m    - did not find some options[22m
+    [2m  - retrying select option action[22m
+    [2m    - waiting 100ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    58 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    2 × locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    292 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1049 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-fe856-uld-have-profiles-available-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-fe856-uld-have-profiles-available-chromium\error-context.md
+
+
+[1A[2K  8) [chromium] › e2e\analyze-demo-workspace.spec.ts:153:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1979 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m    - did not find some options[22m
+    [2m  - retrying select option action[22m
+    [2m    - waiting 100ms[22m
+    [2m    2 × waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m      - navigated to "http://localhost:5173/"[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m    - element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    59 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    293 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1051 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-9dd5f-r-when-LLM-is-not-available-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-9dd5f-r-when-LLM-is-not-available-chromium\error-context.md
+
+
+[1A[2K  9) [chromium] › e2e\analyze-demo-workspace.spec.ts:69:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1979 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m    - did not find some options[22m
+    [2m  - retrying select option action[22m
+    [2m    - waiting 100ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    58 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    292 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1051 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-82d56-y-run-analysis-on-demo-data-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-82d56-y-run-analysis-on-demo-data-chromium\error-context.md
+
+
+[1A[2K  10) [chromium] › e2e\analyze-demo-workspace.spec.ts:54:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1980 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    13 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    71 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    292 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1051 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-06706--enable-Run-Analysis-button-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-06706--enable-Run-Analysis-button-chromium\error-context.md
+
+
+[1A[2K  11) [chromium] › e2e\analyze-demo-workspace.spec.ts:191:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     // Set up token
+      6 |     await page.goto('http://localhost:5173');
+      7 |     await page.evaluate(() => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1979 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m    - did not find some options[22m
+    [2m  - retrying select option action[22m
+    [2m    - waiting 100ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    59 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    292 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1051 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |   });
+      18 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-6f850-o-Runs-page-and-see-the-run-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-6f850-o-Runs-page-and-see-the-run-chromium\error-context.md
+
+
+[1A[2K  12) [chromium] › e2e\test-markdown-rendering.spec.ts:18:3 › Markdown Rendering Test › should render markdown in Runs page 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Markdown Rendering Test', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     await page.goto('http://localhost:5173');
+      6 |     await page.evaluate(() => {
+      7 |       localStorage.setItem('ssdPortalToken', 'change-me');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('select').first()[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1939 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m    - element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    12 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    221 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    168 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1092 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      12 |     // Select demo workspace
+      13 |     const workspaceSelect = page.locator('select').first();
+    > 14 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      15 |     await page.waitForTimeout(2000);
+      16 |   });
+      17 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:14:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-markdown-rendering-Ma-4c183-ender-markdown-in-Runs-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-markdown-rendering-Ma-4c183-ender-markdown-in-Runs-page-chromium\error-context.md
+
+
+[1A[2K  13) [chromium] › e2e\test-chinese-output.spec.ts:4:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('select').first()[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1939 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m    - did not find some options[22m
+    [2m  - retrying select option action[22m
+    [2m    - waiting 100ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    59 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    293 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    168 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1092 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      13 |     // Select demo workspace
+      14 |     const workspaceSelect = page.locator('select').first();
+    > 15 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      16 |     await page.waitForTimeout(2000);
+      17 |
+      18 |     // Wait for setup to be ready
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-chinese-output.spec.ts:15:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-chinese-output-Chines-3b486-analysis-with-qwen-9b-model-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-chinese-output-Chines-3b486-analysis-with-qwen-9b-model-chromium\error-context.md
+
+
+[1A[2K  14) [chromium] › e2e\test-markdown-rendering.spec.ts:75:3 › Markdown Rendering Test › should check all section tabs for markdown rendering 
+
+    [31mTest timeout of 1860000ms exceeded while running "beforeEach" hook.[39m
+
+      2 |
+      3 | test.describe('Markdown Rendering Test', () => {
+    > 4 |   test.beforeEach(async ({ page }) => {
+        |        ^
+      5 |     await page.goto('http://localhost:5173');
+      6 |     await page.evaluate(() => {
+      7 |       localStorage.setItem('ssdPortalToken', 'change-me');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:4:8
+
+    Error: locator.selectOption: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('select').first()[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    1936 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m    - element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    12 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    71 × waiting for element to be visible and enabled[22m
+    [2m       - did not find some options[22m
+    [2m     - retrying select option action[22m
+    [2m       - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    - waiting for" http://localhost:5173/" navigation to finish...[22m
+    [2m    - navigated to "http://localhost:5173/"[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    293 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m    - waiting for element to be visible and enabled[22m
+    [2m  - element was detached from the DOM, retrying[22m
+    [2m    - locator resolved to <select>…</select>[22m
+    [2m  - attempting select option action[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m    169 × waiting for element to be visible and enabled[22m
+    [2m        - did not find some options[22m
+    [2m      - retrying select option action[22m
+    [2m        - waiting 500ms[22m
+    [2m  2 × element was detached from the DOM, retrying[22m
+    [2m      - locator resolved to <select>…</select>[22m
+    [2m    - attempting select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 20ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 100ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m      - waiting for element to be visible and enabled[22m
+    [2m      - did not find some options[22m
+    [2m    - retrying select option action[22m
+    [2m      - waiting 500ms[22m
+    [2m    1095 × waiting for element to be visible and enabled[22m
+    [2m         - did not find some options[22m
+    [2m       - retrying select option action[22m
+    [2m         - waiting 500ms[22m
+
+
+      12 |     // Select demo workspace
+      13 |     const workspaceSelect = page.locator('select').first();
+    > 14 |     await workspaceSelect.selectOption({ label: 'demo' });
+         |                           ^
+      15 |     await page.waitForTimeout(2000);
+      16 |   });
+      17 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:14:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-markdown-rendering-Ma-0ff66-tabs-for-markdown-rendering-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-markdown-rendering-Ma-0ff66-tabs-for-markdown-rendering-chromium\error-context.md
+
+
+[1A[2K  Slow test file: [chromium] › e2e\test-chinese-output.spec.ts (31.1m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  14 failed
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:19:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:37:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:54:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:69:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:153:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:191:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run 
+    [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis 
+    [chromium] › e2e\analyze-real-backend.spec.ts:243:3 › Analyze Page - Real Backend Integration › should test analyze-jira endpoint with mock data 
+    [chromium] › e2e\diagnose-frontend.spec.ts:93:3 › Frontend Diagnosis › manually check API responses 
+    [chromium] › e2e\test-api-direct.spec.ts:4:3 › Direct API Test › should fetch workspaces via API 
+    [chromium] › e2e\test-chinese-output.spec.ts:4:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model 
+    [chromium] › e2e\test-markdown-rendering.spec.ts:18:3 › Markdown Rendering Test › should render markdown in Runs page 
+    [chromium] › e2e\test-markdown-rendering.spec.ts:75:3 › Markdown Rendering Test › should check all section tabs for markdown rendering 
+    [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering 
+  51 passed (31.5m)
