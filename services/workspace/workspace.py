@@ -16,7 +16,7 @@ from services.analysis.llm_backends import build_llm_backend
 from services.analysis.llm_backends import LLMBackend
 from services.analysis.deep_analysis import build_deep_analysis_from_documents
 from services.analysis.demo_profiles import build_confluence_wiki_summary_prompt
-from services.analysis.jira_issue_analysis import build_confluence_wiki_summary_payload
+from services.analysis.confluence_wiki import build_confluence_wiki_summary_payload
 from services.analysis.jira_issue_analysis import summarize_jira_issue_markdown
 from services.analysis.knowledge_compiler import build_knowledge_artifacts
 from services.analysis.retrieval_consumption import build_retrieval_consumption_payload

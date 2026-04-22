@@ -22,6 +22,9 @@ interface DocumentManagementPageProps {
 }
 
 export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageProps) {
+  // Extract workspace name from full path (e.g., ".tmp\portal-runner\workspaces\demo" -> "demo")
+  const workspaceName = workspaceDir.split(/[/\\]/).pop() || workspaceDir;
+
   const [documents, setDocuments] = useState<DocumentAsset[]>([]);
   const [documentTypes, setDocumentTypes] = useState<Record<string, DocumentType>>({});
   const [loading, setLoading] = useState(false);
@@ -46,7 +49,10 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/documents/task/${processingTaskId}`);
+        const token = localStorage.getItem("ssdPortalToken") || "";
+        const response = await fetch(`/api/documents/task/${processingTaskId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const taskStatus = await response.json();
 
         if (taskStatus.status === "completed") {
@@ -69,7 +75,10 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
 
   const loadDocumentTypes = async () => {
     try {
-      const response = await fetch("/api/documents/types");
+      const token = localStorage.getItem("ssdPortalToken") || "";
+      const response = await fetch("/api/documents/types", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       if (data.success) {
         setDocumentTypes(data.types);
@@ -82,10 +91,13 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
   const loadDocuments = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("ssdPortalToken") || "";
       const url = filterType
-        ? `/api/documents/list?workspace=${encodeURIComponent(workspaceDir)}&document_type=${filterType}`
-        : `/api/documents/list?workspace=${encodeURIComponent(workspaceDir)}`;
-      const response = await fetch(url);
+        ? `/api/documents/list?workspace=${encodeURIComponent(workspaceName)}&document_type=${filterType}`
+        : `/api/documents/list?workspace=${encodeURIComponent(workspaceName)}`;
+      const response = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const data = await response.json();
       if (data.success) {
         setDocuments(data.documents);
@@ -138,15 +150,17 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
 
     try {
       const formData = new FormData();
-      formData.append("workspace", workspaceDir);
+      formData.append("workspace", workspaceName);
       formData.append("file", selectedFile);
       formData.append("document_type", uploadType);
       if (displayName) {
         formData.append("display_name", displayName);
       }
 
+      const token = localStorage.getItem("ssdPortalToken") || "";
       const response = await fetch("/api/documents/upload", {
         method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
@@ -180,9 +194,13 @@ export function DocumentManagementPage({ workspaceDir }: DocumentManagementPageP
     }
 
     try {
+      const token = localStorage.getItem("ssdPortalToken") || "";
       const response = await fetch(
-        `/api/documents/delete?workspace=${encodeURIComponent(workspaceDir)}&doc_id=${encodeURIComponent(docId)}`,
-        { method: "DELETE" }
+        `/api/documents/delete?workspace=${encodeURIComponent(workspaceName)}&doc_id=${encodeURIComponent(docId)}`,
+        {
+          method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
       );
       const data = await response.json();
       if (data.success) {

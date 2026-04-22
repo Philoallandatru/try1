@@ -13,7 +13,16 @@
       "Bash(grep:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx playwright:*)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s http://localhost:8787/api/workspaces)",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -H \"Authorization: Bearer test-token-123\" http://localhost:8787/api/workspaces)",
+      "Bash(ls:*)",
+      "Bash(curl -s http://127.0.0.1:8787/api/documents/types)",
+      "Bash(curl:*)"
     ]
   }
 }

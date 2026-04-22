@@ -21,12 +21,14 @@ from services.eval.real_pdf_validation import validate_real_pdfs
 from scripts.gates.run_phase1_gate import evaluate_phase1_gate
 from services.analysis.deep_analysis import build_deep_analysis_from_documents
 from services.analysis.jira_issue_analysis import (
-    build_confluence_wiki_summary_payload,
     build_jira_batch_spec_report,
     build_jira_pm_daily_report,
     build_jira_spec_question_payload,
     build_jira_time_report,
     build_spec_section_explain_payload,
+)
+from services.analysis.confluence_wiki import (
+    build_confluence_wiki_summary_payload,
     render_confluence_static_wiki,
 )
 from services.analysis.llm_backends import build_llm_backend
