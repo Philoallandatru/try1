@@ -3,13 +3,15 @@ from pathlib import Path
 import unittest
 
 from services.analysis.jira_issue_analysis import (
-    build_confluence_wiki_summary_payload,
     build_jira_pm_daily_report,
     build_jira_batch_spec_report,
     build_jira_spec_question_payload,
     build_spec_section_explain_payload,
     build_jira_time_report,
     summarize_jira_issue_markdown,
+)
+from services.analysis.confluence_wiki import (
+    build_confluence_wiki_summary_payload,
 )
 from services.analysis.llm_backends import MockLLMBackend
 from services.connectors.confluence.connector import load_confluence_sync

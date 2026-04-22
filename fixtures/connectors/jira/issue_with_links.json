@@ -1,0 +1,102 @@
+{
+  "sync_type": "full",
+  "cursor": "jira-links-001",
+  "issues": [
+    {
+      "key": "SSD-201",
+      "project": "SSD",
+      "summary": "Implement user authentication",
+      "type": "Story",
+      "priority": "High",
+      "status": "In Progress",
+      "description": "Add JWT-based authentication to the API",
+      "updated_at": "2026-04-10T10:00:00Z",
+      "fields": {
+        "issuelinks": [
+          {
+            "id": "10001",
+            "type": {
+              "name": "Blocks",
+              "inward": "is blocked by",
+              "outward": "blocks"
+            },
+            "outwardIssue": {
+              "key": "SSD-202",
+              "fields": {
+                "summary": "Deploy authentication service",
+                "status": {"name": "To Do"}
+              }
+            }
+          },
+          {
+            "id": "10002",
+            "type": {
+              "name": "Relates",
+              "inward": "relates to",
+              "outward": "relates to"
+            },
+            "inwardIssue": {
+              "key": "SSD-200",
+              "fields": {
+                "summary": "Design authentication architecture",
+                "status": {"name": "Done"}
+              }
+            }
+          }
+        ],
+        "subtasks": [
+          {
+            "key": "SSD-203",
+            "fields": {
+              "summary": "Add JWT token generation",
+              "status": {"name": "Done"}
+            }
+          },
+          {
+            "key": "SSD-204",
+            "fields": {
+              "summary": "Add token validation middleware",
+              "status": {"name": "In Progress"}
+            }
+          }
+        ]
+      },
+      "comments": [
+        {
+          "author": {"displayName": "Alice"},
+          "created": "2026-04-09T14:00:00Z",
+          "body": "Started implementation, JWT library selected"
+        }
+      ]
+    },
+    {
+      "key": "SSD-202",
+      "project": "SSD",
+      "summary": "Deploy authentication service",
+      "type": "Task",
+      "priority": "High",
+      "status": "To Do",
+      "description": "Deploy the authentication service to production",
+      "updated_at": "2026-04-10T10:00:00Z",
+      "fields": {
+        "issuelinks": [
+          {
+            "id": "10001",
+            "type": {
+              "name": "Blocks",
+              "inward": "is blocked by",
+              "outward": "blocks"
+            },
+            "inwardIssue": {
+              "key": "SSD-201",
+              "fields": {
+                "summary": "Implement user authentication",
+                "status": {"name": "In Progress"}
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
