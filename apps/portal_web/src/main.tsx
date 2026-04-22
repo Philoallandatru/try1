@@ -9,6 +9,8 @@ import { AnalysisResultsPage } from "./AnalysisResultsPage";
 import { DailyReportPage } from "./DailyReportPage";
 import { BatchAnalysisPage } from "./BatchAnalysisPage";
 import { DocumentManagementPage } from "./DocumentManagementPage";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { apiJson } from "./apiUtils";
 import {
   CheckCircle2,
   XCircle,
@@ -283,14 +285,27 @@ type SpecIngestValues = {
 
 type Page = "analyze" | "runs" | "sources" | "profiles" | "wiki" | "reports" | "spec" | "search";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+      retryDelay: 1000,
+    },
+  },
+});
 
 function tokenHeaders(): HeadersInit {
   const token = localStorage.getItem("ssdPortalToken") || "";
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-async function apiJson<T>(path: string, schema: z.ZodType<T>, init: RequestInit = {}): Promise<T> {
+async function apiJsonLegacy<T>(path: string, schema: z.ZodType<T>, init: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: {
@@ -2125,10 +2140,12 @@ function EmptyState({ title, body }: { title: string; body: string }) {
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 );

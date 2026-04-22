@@ -88,6 +88,82 @@
   display: inline-block;
 }
 
+/* Error Boundary Styles */
+.error-boundary-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-4);
+  background: var(--page);
+}
+
+.error-boundary-content {
+  max-width: 600px;
+  padding: 2rem;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.error-boundary-content .error-icon {
+  color: var(--danger);
+  margin-bottom: 1rem;
+}
+
+.error-boundary-content h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.error-boundary-content .error-message {
+  color: var(--muted);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.error-boundary-content .error-action-hint {
+  color: var(--accent);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.error-boundary-content .error-details {
+  text-align: left;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--panel-soft);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+.error-boundary-content .error-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--muted);
+  user-select: none;
+}
+
+.error-boundary-content .error-details pre {
+  margin: 1rem 0 0 0;
+  padding: 0.75rem;
+  background: var(--page);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.error-boundary-content .error-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
 html {
   min-width: 0;
 }
