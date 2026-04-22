@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { FileText, Clock, TrendingUp, Search, Wifi, WifiOff } from "lucide-react";
+import { FileText, Clock, TrendingUp, Search, Wifi, WifiOff, Share2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useWebSocket } from "./useWebSocket";
 import { SkeletonList, SkeletonText } from "./SkeletonLoader";
+import { ShareDialog } from "./ShareDialog";
+import { CommentThread } from "./CommentThread";
+import { AnnotationTool } from "./AnnotationTool";
 
 interface AnalysisResult {
   issue_id: string;
@@ -22,6 +25,8 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [analysisContent, setAnalysisContent] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [annotations, setAnnotations] = useState<any[]>([]);
 
   // WebSocket for real-time updates
   const wsUrl = selectedIssue
@@ -92,6 +97,51 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
     }
   };
 
+  const handleShare = async (settings: any) => {
+    if (!selectedIssue) return;
+
+    try {
+      const response = await fetch('/api/shares', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workspace_dir: workspaceDir,
+          analysis_id: selectedIssue,
+          permissions: settings.permissions,
+          expires_in: settings.expiresAt ? calculateExpiresIn(settings.expiresAt) : undefined,
+          require_auth: settings.requireAuth,
+          allowed_users: settings.allowedUsers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create share');
+      }
+
+      const data = await response.json();
+      console.log('Share created:', data);
+    } catch (error) {
+      console.error('Failed to create share:', error);
+      throw error;
+    }
+  };
+
+  const calculateExpiresIn = (expiresAt: string): string => {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const diffMs = expiry.getTime() - now.getTime();
+    const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 1) {
+      return `${diffDays}d`;
+    } else {
+      return `${diffHours}h`;
+    }
+  };
+
   return (
     <div className="analysis-results-page">
       <div className="page-header">
@@ -155,7 +205,19 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
         </div>
 
         <div className="analysis-viewer">
-          <h2>Analysis Content</h2>
+          <div className="analysis-viewer-header">
+            <h2>Analysis Content</h2>
+            {selectedIssue && (
+              <button
+                className="share-button"
+                onClick={() => setShowShareDialog(true)}
+                disabled={loading}
+              >
+                <Share2 size={16} />
+                Share
+              </button>
+            )}
+          </div>
           {selectedIssue ? (
             <>
               {loading && progress > 0 && (
@@ -172,9 +234,26 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
               {loading && progress === 0 ? (
                 <div className="loading">Loading analysis...</div>
               ) : (
-                <div className="analysis-content markdown-body">
-                  <ReactMarkdown>{analysisContent}</ReactMarkdown>
-                </div>
+                <>
+                  <div className="analysis-content markdown-body">
+                    <AnnotationTool
+                      content={analysisContent}
+                      analysisId={selectedIssue}
+                      workspaceDir={workspaceDir}
+                      userId="user123"
+                      userName="Current User"
+                      onAnnotate={(annotation, comment) => {
+                        console.log('Annotation created:', annotation, comment);
+                      }}
+                    />
+                  </div>
+                  <CommentThread
+                    analysisId={selectedIssue}
+                    workspaceDir={workspaceDir}
+                    userId="user123"
+                    userName="Current User"
+                  />
+                </>
               )}
             </>
           ) : (
@@ -184,6 +263,14 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
           )}
         </div>
       </div>
+
+      <ShareDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        analysisId={selectedIssue || ''}
+        workspaceDir={workspaceDir}
+        onShare={handleShare}
+      />
     </div>
   );
 }

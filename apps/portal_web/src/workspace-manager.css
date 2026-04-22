@@ -1,0 +1,285 @@
+/* Workspace Manager Styles */
+
+.workspace-manager {
+  position: relative;
+}
+
+.workspace-selector-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+
+.workspace-selector-button:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+.workspace-selector-button span {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
+.workspace-dropdown-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.workspace-section {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-section:last-child {
+  border-bottom: none;
+}
+
+.workspace-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.workspace-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.workspace-item:hover {
+  background: var(--surface-hover);
+}
+
+.workspace-item.current {
+  background: var(--primary-bg);
+}
+
+.workspace-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.workspace-item-main:hover {
+  background: var(--surface-hover);
+}
+
+.workspace-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.workspace-item-name {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-item.current .workspace-item-name {
+  color: var(--primary);
+}
+
+.current-indicator {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.workspace-item-description {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-item-actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.workspace-item:hover .workspace-item-actions {
+  opacity: 1;
+}
+
+.workspace-item-edit {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-hover);
+  border-radius: 4px;
+}
+
+.workspace-item-edit input {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.workspace-item-edit-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.icon-button.active {
+  color: var(--warning);
+}
+
+.icon-button.danger:hover {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.workspace-create-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.workspace-create-form input {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.workspace-create-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.workspace-create-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.workspace-create-button:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.workspace-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background: var(--error-bg);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--error);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .workspace-dropdown {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+}

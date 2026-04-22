@@ -2047,6 +2047,20 @@ mark {
   overflow: auto;
 }
 
+.analysis-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.analysis-viewer-header h2 {
+  font-size: 16px;
+  margin: 0;
+}
+
 .analysis-viewer h2 {
   font-size: 16px;
   margin-bottom: 16px;
