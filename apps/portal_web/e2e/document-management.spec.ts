@@ -67,7 +67,7 @@ test.describe('Document Management E2E', () => {
     const documentList = page.locator('.document-list, .documents-table, [data-testid="document-list"]');
 
     // Should have at least some documents (from previous uploads)
-    const documentItems = page.locator('.document-item, tr[data-document], [data-testid="document-item"]');
+    const documentItems = page.locator('.document-card, [data-testid="document-item"]');
     const count = await documentItems.count();
 
     console.log(`Found ${count} documents in the list`);
@@ -86,7 +86,7 @@ test.describe('Document Management E2E', () => {
       await page.waitForTimeout(500);
 
       // Verify filtered results
-      const documentItems = page.locator('.document-item, tr[data-document]');
+      const documentItems = page.locator('.document-card');
       const count = await documentItems.count();
 
       console.log(`Found ${count} spec documents`);
