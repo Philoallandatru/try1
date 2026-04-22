@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { FileText, Clock, TrendingUp, Search } from "lucide-react";
+import { FileText, Clock, TrendingUp, Search, Wifi, WifiOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useWebSocket } from "./useWebSocket";
+import { SkeletonList, SkeletonText } from "./SkeletonLoader";
 
 interface AnalysisResult {
   issue_id: string;
@@ -19,6 +21,35 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
   const [loading, setLoading] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [analysisContent, setAnalysisContent] = useState<string>("");
+  const [progress, setProgress] = useState<number>(0);
+
+  // WebSocket for real-time updates
+  const wsUrl = selectedIssue
+    ? `ws://localhost:8000/api/analysis/deep/${selectedIssue}/stream?workspace_dir=${encodeURIComponent(workspaceDir)}`
+    : null;
+
+  const { isConnected, lastMessage } = useWebSocket(wsUrl, {
+    onMessage: (message) => {
+      if (message.type === "progress" && message.progress !== undefined) {
+        setProgress(message.progress);
+      } else if (message.type === "section" && message.data) {
+        setAnalysisContent((prev) => prev + "\n\n" + String(message.data));
+      } else if (message.type === "complete" && message.data) {
+        setAnalysisContent(String(message.data));
+        setProgress(100);
+        setLoading(false);
+      } else if (message.type === "error") {
+        console.error("WebSocket error:", message.error);
+        setLoading(false);
+      }
+    },
+    onOpen: () => {
+      console.log("Connected to analysis stream");
+    },
+    onClose: () => {
+      console.log("Disconnected from analysis stream");
+    },
+  });
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -39,25 +70,39 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
 
   const loadAnalysis = async (issueId: string) => {
     setSelectedIssue(issueId);
+    setAnalysisContent("");
+    setProgress(0);
     setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/analysis/deep/${issueId}?workspace_dir=${encodeURIComponent(workspaceDir)}`
-      );
-      const data = await response.json();
-      setAnalysisContent(data.content || "No content available");
-    } catch (error) {
-      console.error("Failed to load analysis:", error);
-      setAnalysisContent("Failed to load analysis");
-    } finally {
-      setLoading(false);
+
+    // WebSocket will handle the streaming updates
+    // Fallback to REST API if WebSocket is not available
+    if (!isConnected) {
+      try {
+        const response = await fetch(
+          `/api/analysis/deep/${issueId}?workspace_dir=${encodeURIComponent(workspaceDir)}`
+        );
+        const data = await response.json();
+        setAnalysisContent(data.content || "No content available");
+      } catch (error) {
+        console.error("Failed to load analysis:", error);
+        setAnalysisContent("Failed to load analysis");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
     <div className="analysis-results-page">
       <div className="page-header">
-        <h1><FileText size={24} /> Analysis Results</h1>
+        <h1>
+          <FileText size={24} /> Analysis Results
+          {selectedIssue && (
+            <span className="connection-status">
+              {isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+            </span>
+          )}
+        </h1>
         <p>Search and view deep analysis results from the knowledge base</p>
       </div>
 
@@ -112,13 +157,26 @@ export function AnalysisResultsPage({ workspaceDir }: AnalysisResultsPageProps) 
         <div className="analysis-viewer">
           <h2>Analysis Content</h2>
           {selectedIssue ? (
-            loading ? (
-              <div className="loading">Loading analysis...</div>
-            ) : (
-              <div className="analysis-content markdown-body">
-                <ReactMarkdown>{analysisContent}</ReactMarkdown>
-              </div>
-            )
+            <>
+              {loading && progress > 0 && (
+                <div className="progress-container">
+                  <div className="progress-bar">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="progress-text">{progress}% complete</div>
+                </div>
+              )}
+              {loading && progress === 0 ? (
+                <div className="loading">Loading analysis...</div>
+              ) : (
+                <div className="analysis-content markdown-body">
+                  <ReactMarkdown>{analysisContent}</ReactMarkdown>
+                </div>
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <p>Select a result to view its analysis</p>

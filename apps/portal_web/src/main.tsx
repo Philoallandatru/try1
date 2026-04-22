@@ -1,16 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ReactMarkdown from "react-markdown";
-import { AnalysisResultsPage } from "./AnalysisResultsPage";
-import { DailyReportPage } from "./DailyReportPage";
-import { BatchAnalysisPage } from "./BatchAnalysisPage";
-import { DocumentManagementPage } from "./DocumentManagementPage";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { apiJson } from "./apiUtils";
+import { SkeletonPage } from "./SkeletonLoader";
 import {
   CheckCircle2,
   XCircle,
@@ -40,6 +37,12 @@ import {
   Layers,
 } from "lucide-react";
 import "./styles.css";
+
+// Lazy load page components for code splitting
+const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m => ({ default: m.AnalysisResultsPage })));
+const DailyReportPage = lazy(() => import("./DailyReportPage").then(m => ({ default: m.DailyReportPage })));
+const BatchAnalysisPage = lazy(() => import("./BatchAnalysisPage").then(m => ({ default: m.BatchAnalysisPage })));
+const DocumentManagementPage = lazy(() => import("./DocumentManagementPage").then(m => ({ default: m.DocumentManagementPage })));
 
 const workspaceSchema = z.object({
   name: z.string().optional(),
@@ -291,11 +294,17 @@ const queryClient = new QueryClient({
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      refetchOnMount: true,
     },
     mutations: {
       retry: 1,
       retryDelay: 1000,
+      onError: (error) => {
+        console.error("Mutation error:", error);
+      },
     },
   },
 });
@@ -466,35 +475,37 @@ function App() {
         {!token ? (
           <EmptyState title="Connect the runner" body="Enter the local runner token to load workspaces, sources, profiles, and runs." />
         ) : (
-          <Routes>
-            <Route path="/" element={
-              <AnalyzePage
-                workspaceDir={selectedWorkspace}
-                profiles={profiles.data?.profiles || []}
-                sources={sources.data?.sources || []}
-                latestResult={latestResult}
-                onResult={setLatestResult}
-              />
-            } />
-            <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
-            <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
-            <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/profiles" element={
-              <ProfilesPage
-                workspaceDir={selectedWorkspace}
-                profiles={profiles.data?.profiles || []}
-                sources={sources.data?.sources || []}
-                selectors={sources.data?.selectors || []}
-              />
-            } />
-            <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
-            <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
-            <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
-          </Routes>
+          <Suspense fallback={<SkeletonPage />}>
+            <Routes>
+              <Route path="/" element={
+                <AnalyzePage
+                  workspaceDir={selectedWorkspace}
+                  profiles={profiles.data?.profiles || []}
+                  sources={sources.data?.sources || []}
+                  latestResult={latestResult}
+                  onResult={setLatestResult}
+                />
+              } />
+              <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
+              <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
+              <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/profiles" element={
+                <ProfilesPage
+                  workspaceDir={selectedWorkspace}
+                  profiles={profiles.data?.profiles || []}
+                  sources={sources.data?.sources || []}
+                  selectors={sources.data?.selectors || []}
+                />
+              } />
+              <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
+              <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
+            </Routes>
+          </Suspense>
         )}
       </main>
     </div>
