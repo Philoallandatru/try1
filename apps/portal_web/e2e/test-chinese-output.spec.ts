@@ -1,19 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { setupAuthAndWorkspace } from './test-helpers';
 
 test.describe('Chinese Output Test', () => {
   test('should generate Chinese analysis with qwen-9b model', async ({ page }) => {
-    // Set auth token
-    await page.goto('http://localhost:5173');
-    await page.evaluate(() => {
-      localStorage.setItem('ssdPortalToken', 'change-me');
-    });
-    await page.reload();
-    await page.waitForTimeout(2000);
-
-    // Select demo workspace
-    const workspaceSelect = page.locator('select').first();
-    await workspaceSelect.selectOption({ label: 'demo' });
-    await page.waitForTimeout(2000);
+    await setupAuthAndWorkspace(page, 'change-me', 'demo');
 
     // Wait for setup to be ready
     await page.waitForSelector('.setup-header', { timeout: 10000 });

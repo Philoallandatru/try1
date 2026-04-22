@@ -1,18 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { setupAuthAndWorkspace } from './test-helpers';
 
 test.describe('Markdown Rendering Test', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173');
-    await page.evaluate(() => {
-      localStorage.setItem('ssdPortalToken', 'change-me');
-    });
-    await page.reload();
-    await page.waitForTimeout(2000);
-
-    // Select demo workspace
-    const workspaceSelect = page.locator('select').first();
-    await workspaceSelect.selectOption({ label: 'demo' });
-    await page.waitForTimeout(2000);
+    await setupAuthAndWorkspace(page, 'change-me', 'demo');
   });
 
   test('should render markdown in Runs page', async ({ page }) => {

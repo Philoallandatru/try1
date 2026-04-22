@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { formatErrorForDisplay } from "./errorMessages";
+import { performanceMonitor } from "./performanceMonitor";
 
 export interface RetryConfig {
   maxRetries?: number;
@@ -61,6 +62,7 @@ export async function fetchWithRetry<T>(
 ): Promise<T> {
   const config = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
   const headers = init.headers || {};
+  const startTime = performance.now();
 
   let lastError: unknown;
 
@@ -96,12 +98,31 @@ export async function fetchWithRetry<T>(
       }
 
       const data = await response.json();
-      return schema.parse(data);
+      const result = schema.parse(data);
+
+      // Record successful API call
+      const duration = performance.now() - startTime;
+      performanceMonitor.recordMetric(`api.${path}`, duration, {
+        status: response.status,
+        attempt: attempt + 1,
+        method: init.method || 'GET',
+      });
+
+      return result;
     } catch (error) {
       lastError = error;
 
       // Don't retry if it's not a retryable error
       if (!isRetryableError(error, config.retryableStatuses)) {
+        // Record failed API call
+        const duration = performance.now() - startTime;
+        performanceMonitor.recordMetric(`api.${path}`, duration, {
+          status: error instanceof ApiError ? error.status : 0,
+          attempt: attempt + 1,
+          method: init.method || 'GET',
+          error: true,
+        });
+
         // Convert to user-friendly error before throwing
         const friendlyMessage = formatErrorForDisplay(error);
         throw new Error(friendlyMessage);
@@ -109,6 +130,16 @@ export async function fetchWithRetry<T>(
 
       // Don't retry if we've exhausted attempts
       if (attempt >= config.maxRetries) {
+        // Record failed API call after all retries
+        const duration = performance.now() - startTime;
+        performanceMonitor.recordMetric(`api.${path}`, duration, {
+          status: error instanceof ApiError ? error.status : 0,
+          attempt: attempt + 1,
+          method: init.method || 'GET',
+          error: true,
+          retriesExhausted: true,
+        });
+
         // Convert to user-friendly error before throwing
         const friendlyMessage = formatErrorForDisplay(error);
         throw new Error(friendlyMessage);

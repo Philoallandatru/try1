@@ -1,19 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { setupAuthAndWorkspace } from './test-helpers';
 
 test.describe('Analyze Page - Full E2E with Demo Workspace', () => {
   test.beforeEach(async ({ page }) => {
-    // Set up token
-    await page.goto('http://localhost:5173');
-    await page.evaluate(() => {
-      localStorage.setItem('ssdPortalToken', 'change-me');
-    });
-    await page.reload();
-    await page.waitForTimeout(2000);
-
-    // Select demo workspace
-    const workspaceSelect = page.locator('label:has-text("Workspace") select');
-    await workspaceSelect.selectOption({ label: 'demo' });
-    await page.waitForTimeout(2000);
+    await setupAuthAndWorkspace(page, 'change-me', 'demo');
   });
 
   test('should show 4/4 ready with demo workspace', async ({ page }) => {
