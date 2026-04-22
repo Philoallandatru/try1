@@ -28,6 +28,30 @@ CONFLUENCE_PARAGRAPH_PATTERN = re.compile(r"<p[^>]*>(.*?)</p>", re.IGNORECASE | 
 CONFLUENCE_TABLE_PATTERN = re.compile(r"<table[^>]*>(.*?)</table>", re.IGNORECASE | re.DOTALL)
 CONFLUENCE_TABLE_ROW_PATTERN = re.compile(r"<tr[^>]*>(.*?)</tr>", re.IGNORECASE | re.DOTALL)
 CONFLUENCE_TABLE_CELL_PATTERN = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.IGNORECASE | re.DOTALL)
+CONFLUENCE_MACRO_PATTERN = re.compile(
+    r"<ac:structured-macro\s+ac:name=\"(?P<macro_name>[^\"]+)\"[^>]*>(?P<macro_body>.*?)</ac:structured-macro>",
+    re.IGNORECASE | re.DOTALL,
+)
+CONFLUENCE_MACRO_PARAM_PATTERN = re.compile(
+    r"<ac:parameter\s+ac:name=\"(?P<param_name>[^\"]+)\"[^>]*>(?P<param_value>.*?)</ac:parameter>",
+    re.IGNORECASE | re.DOTALL,
+)
+CONFLUENCE_PLAIN_TEXT_BODY_PATTERN = re.compile(
+    r"<ac:plain-text-body>(?:<!\[CDATA\[)?(?P<content>.*?)(?:\]\]>)?</ac:plain-text-body>",
+    re.IGNORECASE | re.DOTALL,
+)
+CONFLUENCE_RICH_TEXT_BODY_PATTERN = re.compile(
+    r"<ac:rich-text-body>(?P<content>.*?)</ac:rich-text-body>",
+    re.IGNORECASE | re.DOTALL,
+)
+CONFLUENCE_TASK_LIST_PATTERN = re.compile(
+    r"<ac:task-list>(?P<tasks>.*?)</ac:task-list>",
+    re.IGNORECASE | re.DOTALL,
+)
+CONFLUENCE_TASK_PATTERN = re.compile(
+    r"<ac:task>.*?<ac:task-status>(?P<status>[^<]+)</ac:task-status>.*?<ac:task-body>(?P<body>.*?)</ac:task-body>.*?</ac:task>",
+    re.IGNORECASE | re.DOTALL,
+)
 CONFLUENCE_BLOCK_PATTERN = re.compile(
     r"(?P<heading><h(?P<heading_level>[1-6])[^>]*>(?P<heading_body>.*?)</h(?P=heading_level)>)|"
     r"(?P<paragraph><p[^>]*>(?P<paragraph_body>.*?)</p>)|"
@@ -68,6 +92,84 @@ def _strip_tags(text: str) -> str:
     return unescape(TAG_PATTERN.sub("", text)).strip()
 
 
+def _extract_macro_parameters(macro_body: str) -> dict[str, str]:
+    """Extract parameters from a Confluence macro."""
+    params = {}
+    for match in CONFLUENCE_MACRO_PARAM_PATTERN.finditer(macro_body):
+        param_name = match.group("param_name")
+        param_value = _strip_tags(match.group("param_value"))
+        params[param_name] = param_value
+    return params
+
+
+def _process_confluence_macro(macro_name: str, macro_body: str) -> str:
+    """Process a Confluence macro and return markdown representation."""
+    params = _extract_macro_parameters(macro_body)
+
+    # Handle Jira issue macro
+    if macro_name == "jira":
+        issue_key = params.get("key", "")
+        server = params.get("server", "Jira")
+        if issue_key:
+            return f"\n**Jira Issue**: [{issue_key}] (from {server})\n"
+        return ""
+
+    # Handle code macro
+    if macro_name == "code":
+        language = params.get("language", "")
+        plain_text_match = CONFLUENCE_PLAIN_TEXT_BODY_PATTERN.search(macro_body)
+        if plain_text_match:
+            code_content = plain_text_match.group("content").strip()
+            lang_marker = language if language else ""
+            return f"\n```{lang_marker}\n{code_content}\n```\n"
+        return ""
+
+    # Handle status macro
+    if macro_name == "status":
+        title = params.get("title", "")
+        colour = params.get("colour", "")
+        if title:
+            return f"\n**Status**: {title} ({colour})\n"
+        return ""
+
+    # Handle info/warning/note panels
+    if macro_name in ("info", "warning", "note", "tip"):
+        rich_text_match = CONFLUENCE_RICH_TEXT_BODY_PATTERN.search(macro_body)
+        if rich_text_match:
+            content = _strip_tags(rich_text_match.group("content"))
+            icon = {"info": "ℹ️", "warning": "⚠️", "note": "📝", "tip": "💡"}.get(macro_name, "")
+            return f"\n> {icon} **{macro_name.upper()}**: {content}\n"
+        return ""
+
+    # Handle expand macro
+    if macro_name == "expand":
+        title = params.get("title", "Details")
+        rich_text_match = CONFLUENCE_RICH_TEXT_BODY_PATTERN.search(macro_body)
+        if rich_text_match:
+            content = _strip_tags(rich_text_match.group("content"))
+            return f"\n**{title}**: {content}\n"
+        return ""
+
+    # Handle user mention
+    if macro_name == "user-mention":
+        display_name = params.get("displayName", params.get("accountId", "User"))
+        return f"@{display_name}"
+
+    # Generic fallback for unknown macros
+    return f"\n[{macro_name} macro]\n"
+
+
+def _process_task_list(task_list_html: str) -> str:
+    """Process Confluence task list and return markdown."""
+    tasks = []
+    for match in CONFLUENCE_TASK_PATTERN.finditer(task_list_html):
+        status = match.group("status").strip()
+        body = _strip_tags(match.group("body"))
+        checkbox = "[x]" if status == "complete" else "[ ]"
+        tasks.append(f"- {checkbox} {body}")
+    return "\n".join(tasks) if tasks else ""
+
+
 def _attachment_name(attachment: dict) -> str:
     return attachment.get("title") or attachment.get("name") or attachment.get("filename") or "attachment"
 
@@ -101,6 +203,18 @@ def _storage_html_to_markdown(
             section="Inline Image",
         )
         return f"\n{build_visual_asset_markdown(asset)}\n"
+
+    # Process task lists first
+    markdown = CONFLUENCE_TASK_LIST_PATTERN.sub(
+        lambda match: "\n" + _process_task_list(match.group("tasks")) + "\n",
+        markdown,
+    )
+
+    # Process macros
+    markdown = CONFLUENCE_MACRO_PATTERN.sub(
+        lambda match: _process_confluence_macro(match.group("macro_name"), match.group("macro_body")),
+        markdown,
+    )
 
     markdown = CONFLUENCE_IMAGE_PATTERN.sub(replace_image, markdown)
     markdown = CONFLUENCE_TABLE_PATTERN.sub(lambda match: "\n" + _table_html_to_markdown(match.group(1)) + "\n", markdown)
@@ -181,6 +295,50 @@ def _storage_html_to_blocks(
             section="Inline Image",
         )
         return f"\n{build_visual_asset_markdown(asset)}\n"
+
+    # Process task lists and extract content
+    for match in CONFLUENCE_TASK_LIST_PATTERN.finditer(normalized_html):
+        task_content = _process_task_list(match.group("tasks"))
+        if task_content:
+            # Add task list content to blocks
+            for line in task_content.split("\n"):
+                if line.strip():
+                    blocks.append({"text": line.strip(), "section_heading": current_heading})
+
+    normalized_html = CONFLUENCE_TASK_LIST_PATTERN.sub(
+        lambda match: "\n" + _process_task_list(match.group("tasks")) + "\n",
+        normalized_html,
+    )
+
+    # Process macros and extract content
+    for match in CONFLUENCE_MACRO_PATTERN.finditer(normalized_html):
+        macro_name = match.group("macro_name")
+        macro_body = match.group("macro_body")
+        macro_content = _process_confluence_macro(macro_name, macro_body)
+
+        # Extract searchable text from macro content
+        if macro_content:
+            # Remove markdown formatting for search
+            searchable_text = macro_content.strip()
+            # Remove code block markers
+            searchable_text = re.sub(r"```[\w]*\n", "", searchable_text)
+            searchable_text = re.sub(r"```", "", searchable_text)
+            # Remove markdown bold/italic
+            searchable_text = re.sub(r"\*\*([^*]+)\*\*", r"\1", searchable_text)
+            searchable_text = re.sub(r"\*([^*]+)\*", r"\1", searchable_text)
+            # Remove blockquote markers
+            searchable_text = re.sub(r"^>\s*", "", searchable_text, flags=re.MULTILINE)
+
+            # Add non-empty lines to blocks
+            for line in searchable_text.split("\n"):
+                line = line.strip()
+                if line and len(line) > 2:  # Skip very short lines
+                    blocks.append({"text": line, "section_heading": current_heading})
+
+    normalized_html = CONFLUENCE_MACRO_PATTERN.sub(
+        lambda match: _process_confluence_macro(match.group("macro_name"), match.group("macro_body")),
+        normalized_html,
+    )
 
     normalized_html = CONFLUENCE_IMAGE_PATTERN.sub(replace_image, normalized_html)
     table_index = 0
@@ -288,6 +446,22 @@ def _page_to_markdown(page: dict) -> str:
         attachments=page.get("attachments", []),
     ) or "No body."
     lines = [f"# {page.get('title', 'Untitled Confluence Page')}", "", content]
+
+    # Add page hierarchy
+    ancestors = page.get("ancestors", [])
+    if ancestors:
+        lines.extend(["", "## Page Hierarchy"])
+        breadcrumb = " > ".join([ancestor.get("title", "Unknown") for ancestor in ancestors])
+        breadcrumb += f" > {page.get('title', 'This Page')}"
+        lines.append(breadcrumb)
+
+    # Add labels
+    labels = page.get("metadata", {}).get("labels", {}).get("results", [])
+    if labels:
+        lines.extend(["", "## Labels"])
+        label_names = [label.get("name", "") for label in labels if label.get("name")]
+        lines.append(", ".join(label_names))
+
     attachments = page.get("attachments", [])
     if attachments:
         non_inline_attachments = [
@@ -307,6 +481,24 @@ def _page_to_markdown(page: dict) -> str:
                 for attachment in non_inline_attachments
             )
     return "\n".join(lines)
+
+
+def _extract_ancestors(page: dict) -> list[dict]:
+    """Extract page hierarchy from ancestors field."""
+    ancestors = page.get("ancestors", [])
+    return [
+        {
+            "id": ancestor.get("id"),
+            "title": ancestor.get("title", "Unknown"),
+        }
+        for ancestor in ancestors
+    ]
+
+
+def _extract_labels(page: dict) -> list[str]:
+    """Extract labels from page metadata."""
+    labels = page.get("metadata", {}).get("labels", {}).get("results", [])
+    return [label.get("name") for label in labels if label.get("name")]
 
 
 def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_policy: str) -> dict:
@@ -346,6 +538,21 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         append_section(document, section["heading"], level=section["level"])
     for block in blocks:
         append_content_block(document, block["text"], section_heading=block.get("section_heading"))
+
+    # Add page hierarchy
+    ancestors = _extract_ancestors(page)
+    if ancestors:
+        append_section(document, "Page Hierarchy")
+        breadcrumb = " > ".join([ancestor["title"] for ancestor in ancestors])
+        breadcrumb += f" > {page.get('title', 'This Page')}"
+        append_content_block(document, breadcrumb, section="Page Hierarchy")
+
+    # Add labels
+    labels = _extract_labels(page)
+    if labels:
+        append_section(document, "Labels")
+        append_content_block(document, ", ".join(labels), section="Labels")
+
     for table in tables:
         document["structure"]["tables"].append(
             {
@@ -357,15 +564,27 @@ def _page_to_document(page: dict, *, source_uri: str, incremental: bool, acl_pol
         )
     if attachments:
         append_section(document, "Attachments")
+
+    # Extract ancestors and labels
+    ancestors = _extract_ancestors(page)
+    labels = _extract_labels(page)
+
     document["markdown"] = markdown
     document["attachments"] = attachments
     document["visual_assets"] = []
+    document["ancestors"] = ancestors
+    document["labels"] = labels
     document["metadata"] = {
         "space": space_key,
         "incremental": incremental,
         "attachment_count": len(attachments),
         "visual_asset_count": 0,
         "sync_cursor": ingested_at,
+        "ancestor_count": len(ancestors),
+        "parent_id": ancestors[-1]["id"] if ancestors else None,
+        "parent_title": ancestors[-1]["title"] if ancestors else None,
+        "label_count": len(labels),
+        "labels": labels,
     }
     for attachment in attachments:
         media_type = attachment.get("media_type") or attachment.get("metadata", {}).get("mediaType")

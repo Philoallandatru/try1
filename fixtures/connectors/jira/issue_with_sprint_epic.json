@@ -1,0 +1,141 @@
+{
+  "sync_type": "full",
+  "cursor": "jira-sprint-epic-001",
+  "issues": [
+    {
+      "key": "SSD-301",
+      "project": "SSD",
+      "summary": "Implement search functionality",
+      "type": "Story",
+      "priority": "High",
+      "status": "In Progress",
+      "description": "Add full-text search with BM25 ranking",
+      "updated_at": "2026-04-22T10:00:00Z",
+      "fields": {
+        "issuetype": {"name": "Story"},
+        "summary": "Implement search functionality",
+        "description": "Add full-text search with BM25 ranking",
+        "status": {"name": "In Progress"},
+        "priority": {"name": "High"},
+        "sprint": [
+          {
+            "id": 123,
+            "name": "Sprint 15",
+            "state": "active",
+            "startDate": "2026-04-15T00:00:00.000Z",
+            "endDate": "2026-04-29T00:00:00.000Z",
+            "goal": "Complete search and analysis features"
+          }
+        ],
+        "customfield_10001": [
+          {
+            "id": 123,
+            "name": "Sprint 15",
+            "state": "active",
+            "startDate": "2026-04-15T00:00:00.000Z",
+            "endDate": "2026-04-29T00:00:00.000Z",
+            "goal": "Complete search and analysis features"
+          }
+        ],
+        "epic": {
+          "key": "SSD-300",
+          "summary": "Search and Retrieval System",
+          "status": {"name": "In Progress"}
+        },
+        "customfield_10002": "SSD-300",
+        "parent": {
+          "key": "SSD-300",
+          "fields": {
+            "summary": "Search and Retrieval System",
+            "status": {"name": "In Progress"},
+            "issuetype": {"name": "Epic"}
+          }
+        },
+        "issuelinks": [
+          {
+            "id": "10003",
+            "type": {
+              "name": "Relates",
+              "inward": "relates to",
+              "outward": "relates to"
+            },
+            "outwardIssue": {
+              "key": "SSD-302",
+              "fields": {
+                "summary": "Add search API endpoint",
+                "status": {"name": "To Do"}
+              }
+            }
+          }
+        ],
+        "comment": {
+          "comments": [
+            {
+              "id": "10100",
+              "author": {
+                "displayName": "Bob Chen",
+                "emailAddress": "bob@example.com",
+                "accountId": "user123"
+              },
+              "created": "2026-04-20T14:30:00.000Z",
+              "updated": "2026-04-20T15:00:00.000Z",
+              "body": "BM25 implementation is complete, now working on the API integration",
+              "updateAuthor": {
+                "displayName": "Bob Chen"
+              }
+            },
+            {
+              "id": "10101",
+              "author": {
+                "displayName": "Alice Wang",
+                "emailAddress": "alice@example.com",
+                "accountId": "user456"
+              },
+              "created": "2026-04-21T09:15:00.000Z",
+              "body": "Great progress! Please add unit tests for the ranking algorithm"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "SSD-302",
+      "project": "SSD",
+      "summary": "Add search API endpoint",
+      "type": "Task",
+      "priority": "Medium",
+      "status": "To Do",
+      "description": "Create REST API endpoint for search queries",
+      "updated_at": "2026-04-22T10:00:00Z",
+      "fields": {
+        "issuetype": {"name": "Task"},
+        "summary": "Add search API endpoint",
+        "description": "Create REST API endpoint for search queries",
+        "status": {"name": "To Do"},
+        "priority": {"name": "Medium"},
+        "sprint": [
+          {
+            "id": 123,
+            "name": "Sprint 15",
+            "state": "active"
+          }
+        ],
+        "customfield_10001": [
+          {
+            "id": 123,
+            "name": "Sprint 15",
+            "state": "active"
+          }
+        ],
+        "parent": {
+          "key": "SSD-300",
+          "fields": {
+            "summary": "Search and Retrieval System",
+            "status": {"name": "In Progress"},
+            "issuetype": {"name": "Epic"}
+          }
+        }
+      }
+    }
+  ]
+}

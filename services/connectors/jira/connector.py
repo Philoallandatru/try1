@@ -138,16 +138,176 @@ def _resolve_issue_type(issue: dict) -> str:
     return ""
 
 
+def _extract_issue_links(issue: dict) -> list[dict]:
+    """Extract issue links from Jira issue."""
+    fields = issue.get("fields", {})
+    issue_links = fields.get("issuelinks", [])
+
+    links = []
+    for link in issue_links:
+        link_type = link.get("type", {})
+        link_name = link_type.get("name", "")
+
+        # Check for outward link (this issue -> other issue)
+        if "outwardIssue" in link:
+            target = link["outwardIssue"]
+            links.append({
+                "key": target.get("key", ""),
+                "summary": target.get("fields", {}).get("summary", ""),
+                "status": target.get("fields", {}).get("status", {}).get("name", ""),
+                "relationship": link_type.get("outward", link_name),
+                "direction": "outward",
+            })
+
+        # Check for inward link (other issue -> this issue)
+        if "inwardIssue" in link:
+            target = link["inwardIssue"]
+            links.append({
+                "key": target.get("key", ""),
+                "summary": target.get("fields", {}).get("summary", ""),
+                "status": target.get("fields", {}).get("status", {}).get("name", ""),
+                "relationship": link_type.get("inward", link_name),
+                "direction": "inward",
+            })
+
+    return links
+
+
+def _extract_subtasks(issue: dict) -> list[dict]:
+    """Extract subtasks from Jira issue."""
+    fields = issue.get("fields", {})
+    subtasks = fields.get("subtasks", [])
+
+    result = []
+    for subtask in subtasks:
+        result.append({
+            "key": subtask.get("key", ""),
+            "summary": subtask.get("fields", {}).get("summary", ""),
+            "status": subtask.get("fields", {}).get("status", {}).get("name", ""),
+        })
+
+    return result
+
+
+def _extract_sprint_info(issue: dict) -> list[dict]:
+    """Extract sprint information from Jira issue."""
+    fields = issue.get("fields", {})
+
+    # Try multiple common sprint field names
+    sprint_data = None
+    for field_name in ("sprint", "customfield_10001", "customfield_10020"):
+        sprint_data = fields.get(field_name)
+        if sprint_data:
+            break
+
+    if not sprint_data:
+        return []
+
+    # Handle both list and single sprint
+    if not isinstance(sprint_data, list):
+        sprint_data = [sprint_data]
+
+    sprints = []
+    for sprint in sprint_data:
+        if not isinstance(sprint, dict):
+            continue
+
+        sprint_info = {
+            "id": sprint.get("id"),
+            "name": sprint.get("name", ""),
+            "state": sprint.get("state", ""),
+        }
+
+        # Add optional fields if present
+        if "startDate" in sprint:
+            sprint_info["start_date"] = sprint["startDate"]
+        if "endDate" in sprint:
+            sprint_info["end_date"] = sprint["endDate"]
+        if "goal" in sprint:
+            sprint_info["goal"] = sprint["goal"]
+
+        if sprint_info["name"]:
+            sprints.append(sprint_info)
+
+    return sprints
+
+
+def _extract_epic_info(issue: dict) -> dict | None:
+    """Extract epic information from Jira issue."""
+    fields = issue.get("fields", {})
+
+    # Try parent field first (for issues in an epic)
+    parent = fields.get("parent")
+    if parent and isinstance(parent, dict):
+        parent_type = parent.get("fields", {}).get("issuetype", {}).get("name", "")
+        if parent_type == "Epic":
+            return {
+                "key": parent.get("key", ""),
+                "summary": parent.get("fields", {}).get("summary", ""),
+                "status": parent.get("fields", {}).get("status", {}).get("name", ""),
+            }
+
+    # Try epic field
+    epic = fields.get("epic")
+    if epic and isinstance(epic, dict):
+        return {
+            "key": epic.get("key", ""),
+            "summary": epic.get("summary", ""),
+            "status": epic.get("status", {}).get("name", ""),
+        }
+
+    # Try epic link custom field (older Jira versions)
+    for field_name in ("customfield_10002", "customfield_10014"):
+        epic_key = fields.get(field_name)
+        if epic_key and isinstance(epic_key, str):
+            return {
+                "key": epic_key,
+                "summary": "",
+                "status": "",
+            }
+
+    return None
+
+
+def _extract_comment_metadata(comment: dict) -> dict:
+    """Extract structured metadata from a Jira comment."""
+    if not isinstance(comment, dict):
+        return {}
+
+    author = comment.get("author") or {}
+    update_author = comment.get("updateAuthor") or author
+
+    return {
+        "id": comment.get("id"),
+        "author_name": _coerce_issue_field_value(author) or "Unknown",
+        "author_email": author.get("emailAddress"),
+        "author_id": author.get("accountId"),
+        "created": comment.get("created"),
+        "updated": comment.get("updated"),
+        "update_author_name": _coerce_issue_field_value(update_author),
+        "body": _coerce_jira_text(comment.get("body")),
+    }
+
+
 def _comment_to_markdown(comment: object) -> str:
     if not isinstance(comment, dict):
         return _markdown_escape(_coerce_jira_text(comment))
-    author = comment.get("author") or {}
-    author_name = _coerce_issue_field_value(author) or "Unknown"
-    created_at = _coerce_jira_text(comment.get("created"))
-    body = _coerce_jira_text(comment.get("body"))
+
+    metadata = _extract_comment_metadata(comment)
+    author_name = metadata.get("author_name", "Unknown")
+    created_at = metadata.get("created", "")
+    updated_at = metadata.get("updated")
+    body = metadata.get("body", "")
+
     prefix = author_name
     if created_at:
         prefix = f"{prefix} ({created_at})"
+
+    # Add edit indicator if comment was updated
+    if updated_at and updated_at != created_at:
+        update_author = metadata.get("update_author_name", author_name)
+        prefix = f"{prefix} [edited by {update_author}]"
+
     if body:
         return f"**{_markdown_escape(prefix)}**: {_markdown_escape(body)}"
     return _markdown_escape(prefix)
@@ -206,6 +366,31 @@ def _issue_to_markdown(
                 f"- **Route**: {_markdown_escape(issue_type_profile['issue_route'])}",
             ]
         )
+
+    # Add Sprint information
+    sprints = _extract_sprint_info(issue)
+    if sprints:
+        lines.extend(["", "## Sprint"])
+        for sprint in sprints:
+            sprint_line = f"- **{_markdown_escape(sprint['name'])}** ({_markdown_escape(sprint['state'])})"
+            if sprint.get("goal"):
+                sprint_line += f": {_markdown_escape(sprint['goal'])}"
+            lines.append(sprint_line)
+            if sprint.get("start_date") and sprint.get("end_date"):
+                lines.append(f"  - Duration: {sprint['start_date']} to {sprint['end_date']}")
+
+    # Add Epic information
+    epic = _extract_epic_info(issue)
+    if epic:
+        lines.extend(["", "## Epic"])
+        epic_key = _markdown_escape(epic['key'])
+        if epic.get('summary'):
+            epic_summary = _markdown_escape(epic['summary'])
+            epic_status = _markdown_escape(epic.get('status', ''))
+            lines.append(f"- [{epic_key}]({source_uri.rsplit('/browse/', 1)[0]}/browse/{epic['key']}): {epic_summary} ({epic_status})")
+        else:
+            lines.append(f"- {epic_key}")
+
     if issue_fields:
         lines.extend(["", "## Issue Fields"])
         lines.extend(f"- **{label}**: {_markdown_escape(value)}" for label, value in issue_fields.items())
@@ -219,6 +404,28 @@ def _issue_to_markdown(
     if comments:
         lines.extend(["", "## Comments"])
         lines.extend(f"- {comment}" for comment in comments)
+
+    # Add issue links
+    issue_links = _extract_issue_links(issue)
+    if issue_links:
+        lines.extend(["", "## Related Issues"])
+        for link in issue_links:
+            relationship = _markdown_escape(link["relationship"])
+            key = _markdown_escape(link["key"])
+            summary = _markdown_escape(link["summary"])
+            status = _markdown_escape(link["status"])
+            lines.append(f"- **{relationship}** [{key}]({source_uri}/browse/{link['key']}): {summary} ({status})")
+
+    # Add subtasks
+    subtasks = _extract_subtasks(issue)
+    if subtasks:
+        lines.extend(["", "## Subtasks"])
+        for subtask in subtasks:
+            key = _markdown_escape(subtask["key"])
+            summary = _markdown_escape(subtask["summary"])
+            status = _markdown_escape(subtask["status"])
+            lines.append(f"- [{key}]({source_uri}/browse/{subtask['key']}): {summary} ({status})")
+
     if attachments:
         lines.extend(["", "## Attachments"])
         lines.extend(
@@ -283,6 +490,25 @@ def _issue_to_document(
         append_content_block(document, issue_type_profile["issue_family"], section_heading="Issue Type")
         append_content_block(document, issue_type_profile["issue_route"], section_heading="Issue Type")
 
+    # Add Sprint information
+    sprints = _extract_sprint_info(issue)
+    if sprints:
+        append_section(document, "Sprint")
+        for sprint in sprints:
+            sprint_text = f"{sprint['name']} ({sprint['state']})"
+            if sprint.get("goal"):
+                sprint_text += f": {sprint['goal']}"
+            append_content_block(document, sprint_text, section="Sprint")
+
+    # Add Epic information
+    epic = _extract_epic_info(issue)
+    if epic:
+        append_section(document, "Epic")
+        epic_text = epic['key']
+        if epic.get('summary'):
+            epic_text += f": {epic['summary']} ({epic.get('status', '')})"
+        append_content_block(document, epic_text, section="Epic")
+
     append_section(document, "Issue Fields")
     for label, value in issue_fields.items():
         append_content_block(document, value, section_heading="Issue Fields", field_label=label)
@@ -303,19 +529,49 @@ def _issue_to_document(
         append_section(document, "Comments")
         for comment_body in comment_bodies:
             append_content_block(document, comment_body, section_heading="Comments")
+
+    # Add issue links
+    issue_links = _extract_issue_links(issue)
+    if issue_links:
+        append_section(document, "Related Issues")
+        for link in issue_links:
+            link_text = f"{link['relationship']} {link['key']}: {link['summary']} ({link['status']})"
+            append_content_block(document, link_text, section="Related Issues")
+
+    # Add subtasks
+    subtasks = _extract_subtasks(issue)
+    if subtasks:
+        append_section(document, "Subtasks")
+        for subtask in subtasks:
+            subtask_text = f"{subtask['key']}: {subtask['summary']} ({subtask['status']})"
+            append_content_block(document, subtask_text, section="Subtasks")
+
     if attachments:
         append_section(document, "Attachments")
+
+    # Extract structured comment metadata
+    comment_metadata = [_extract_comment_metadata(comment) for comment in comment_items if isinstance(comment, dict)]
+
     document["markdown"] = markdown
     document["comments"] = comment_items
     document["comment_bodies"] = comment_bodies
+    document["comment_metadata"] = comment_metadata
     document["attachments"] = attachments
     document["visual_assets"] = []
+    document["issue_links"] = issue_links
+    document["subtasks"] = subtasks
+    document["sprints"] = sprints
+    document["epic"] = epic
     document["metadata"] = {
         "project": project.get("key") or issue.get("project"),
         "incremental": incremental,
         "comment_count": len([comment for comment in document["comments"] if comment]),
         "attachment_count": len(attachments),
         "visual_asset_count": 0,
+        "issue_link_count": len(issue_links),
+        "subtask_count": len(subtasks),
+        "sprint_count": len(sprints),
+        "has_epic": epic is not None,
         "issue_fields": issue_fields,
         **issue_type_profile,
     }

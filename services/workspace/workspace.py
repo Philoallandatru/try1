@@ -1106,10 +1106,17 @@ def _load_normalized_documents(workspace_dir: str | Path) -> list[dict]:
         for document in _read_json(document_path).get("documents", []):
             documents_by_id[document["document_id"]] = document
     from services.workspace.spec_assets import load_latest_spec_asset_documents
+    from services.workspace.document_assets import load_document_asset_documents
 
     asset_documents, _asset_sources = load_latest_spec_asset_documents(workspace_dir)
     for document in asset_documents:
         documents_by_id[document["document_id"]] = document
+
+    # Load user-uploaded document assets
+    doc_asset_documents, _doc_asset_sources = load_document_asset_documents(workspace_dir)
+    for document in doc_asset_documents:
+        documents_by_id[document["document_id"]] = document
+
     return [documents_by_id[key] for key in sorted(documents_by_id)]
 
 
@@ -2291,6 +2298,7 @@ def build_workspace(
     _load_workspace_config(workspace_dir)
     paths = workspace_paths(workspace_dir)
     from services.workspace.spec_assets import load_latest_spec_asset_documents
+    from services.workspace.document_assets import load_document_asset_documents
 
     selected_source_names = set(selected_sources or [])
     for kind, payload_path in _payload_files(workspace_dir):
@@ -2302,11 +2310,12 @@ def build_workspace(
             _normalize_payload_file(workspace_dir, kind, payload_path)
 
     asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir, asset_ids=spec_asset_ids)
+    doc_asset_documents, doc_asset_sources = load_document_asset_documents(workspace_dir)
     normalized_paths = sorted(paths["normalize_root"].glob("*/documents.json"))
     if selected_source_names:
         normalized_paths = [path for path in normalized_paths if path.parent.name in selected_source_names]
-    if not normalized_paths and not asset_documents:
-        raise ValueError("No normalized workspace documents or spec assets found. Run fetch-source, rebuild, or ingest-spec-asset first.")
+    if not normalized_paths and not asset_documents and not doc_asset_documents:
+        raise ValueError("No normalized workspace documents, spec assets, or document assets found. Run fetch-source, rebuild, ingest-spec-asset, or upload documents first.")
 
     merged_documents: dict[str, dict] = {}
     sources: dict[str, dict] = {}
@@ -2333,6 +2342,19 @@ def build_workspace(
     for document in asset_documents:
         merged_documents[document["document_id"]] = document
     sources.update(asset_sources)
+
+    # Add user-uploaded document assets
+    for document in doc_asset_documents:
+        merged_documents[document["document_id"]] = document
+    for source in doc_asset_sources:
+        source_name = source["source_id"]
+        sources[source_name] = {
+            "cursor": None,
+            "last_sync": _utc_now(),
+            "sync_type": "document-asset",
+            "document_count": source["document_count"],
+            "document_type": source.get("document_type", "other"),
+        }
 
     target_snapshot_dir = Path(snapshot_dir) if snapshot_dir is not None else paths["snapshot_root"]
     existing_manifest = load_snapshot(target_snapshot_dir).get("manifest", {})

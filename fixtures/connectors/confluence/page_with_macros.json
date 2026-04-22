@@ -1,0 +1,30 @@
+{
+  "sync_type": "full",
+  "cursor": "confluence-macros-001",
+  "pages": [
+    {
+      "id": "98765",
+      "title": "API Documentation",
+      "space": {"key": "DEV"},
+      "version": {"number": 3, "when": "2026-04-22T10:00:00Z"},
+      "body": {
+        "storage": {
+          "value": "<h1>API Documentation</h1><p>This page contains API documentation and related Jira issues.</p><h2>Related Issues</h2><ac:structured-macro ac:name=\"jira\" ac:schema-version=\"1\"><ac:parameter ac:name=\"server\">Jira Server</ac:parameter><ac:parameter ac:name=\"serverId\">12345</ac:parameter><ac:parameter ac:name=\"key\">SSD-301</ac:parameter></ac:structured-macro><h2>Code Example</h2><ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\"><ac:parameter ac:name=\"language\">python</ac:parameter><ac:plain-text-body><![CDATA[def search_documents(query: str) -> list[dict]:\n    \"\"\"Search documents using BM25.\"\"\"\n    results = bm25_search(query)\n    return results]]></ac:plain-text-body></ac:structured-macro><h2>Status</h2><ac:structured-macro ac:name=\"status\" ac:schema-version=\"1\"><ac:parameter ac:name=\"colour\">Green</ac:parameter><ac:parameter ac:name=\"title\">COMPLETE</ac:parameter></ac:structured-macro><h2>Info Panel</h2><ac:structured-macro ac:name=\"info\" ac:schema-version=\"1\"><ac:rich-text-body><p>This API is currently in beta. Please report any issues to the development team.</p></ac:rich-text-body></ac:structured-macro><h2>Expand Section</h2><ac:structured-macro ac:name=\"expand\" ac:schema-version=\"1\"><ac:parameter ac:name=\"title\">Click to see details</ac:parameter><ac:rich-text-body><p>Additional implementation details and performance considerations.</p></ac:rich-text-body></ac:structured-macro>"
+        }
+      },
+      "attachments": []
+    },
+    {
+      "id": "98766",
+      "title": "Meeting Notes",
+      "space": {"key": "DEV"},
+      "version": {"number": 1, "when": "2026-04-22T11:00:00Z"},
+      "body": {
+        "storage": {
+          "value": "<h1>Meeting Notes - Sprint Planning</h1><p>Discussion about upcoming sprint.</p><h2>Action Items</h2><ac:task-list><ac:task><ac:task-id>1</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Review API documentation</ac:task-body></ac:task><ac:task><ac:task-id>2</ac:task-id><ac:task-status>complete</ac:task-status><ac:task-body>Update test coverage</ac:task-body></ac:task></ac:task-list><h2>Attendees</h2><ac:structured-macro ac:name=\"user-mention\" ac:schema-version=\"1\"><ac:parameter ac:name=\"accountId\">user123</ac:parameter><ac:parameter ac:name=\"displayName\">Bob Chen</ac:parameter></ac:structured-macro><ac:structured-macro ac:name=\"user-mention\" ac:schema-version=\"1\"><ac:parameter ac:name=\"accountId\">user456</ac:parameter><ac:parameter ac:name=\"displayName\">Alice Wang</ac:parameter></ac:structured-macro>"
+        }
+      },
+      "attachments": []
+    }
+  ]
+}

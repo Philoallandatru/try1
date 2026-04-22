@@ -56,11 +56,12 @@ class OpenAICompatibleBackend:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Answer using only the provided Jira and spec evidence.",
+                    "content": "你是一位SSD固件工程专家。请基于提供的Jira问题和规格证据进行深入分析，使用中文输出。",
                 },
                 {"role": "user", "content": prompt},
             ],
-            "temperature": 0,
+            "temperature": 0.3,
+            "max_tokens": 2000,
         }
         headers = {}
         if self.api_key:
@@ -126,5 +127,14 @@ def _post_json(
     request_headers = {"Content-Type": "application/json", **(headers or {})}
     encoded = json.dumps(payload).encode("utf-8")
     req = request.Request(url, data=encoded, headers=request_headers, method="POST")
-    with request.urlopen(req, timeout=timeout_seconds) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with request.urlopen(req, timeout=timeout_seconds) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except Exception as e:
+        print(f"\n请求失败:")
+        print(f"URL: {url}")
+        print(f"Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")
+        if hasattr(e, 'read'):
+            error_body = e.read().decode('utf-8')
+            print(f"错误响应: {error_body}")
+        raise
