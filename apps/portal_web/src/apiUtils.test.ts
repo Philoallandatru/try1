@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { z } from 'zod';
-import { fetchWithRetry, ApiError, tokenHeaders, apiJson } from './apiUtils';
+import { fetchWithRetry, ApiError, apiJson } from './apiUtils';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch as any;
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -205,29 +205,10 @@ describe('apiUtils', () => {
     });
   });
 
-  describe('tokenHeaders', () => {
-    it('returns empty object when no token', () => {
-      const headers = tokenHeaders();
-      expect(headers).toEqual({});
-    });
-
-    it('returns Authorization header when token exists', () => {
-      localStorageMock.setItem('ssdPortalToken', 'test-token');
-
-      const headers = tokenHeaders();
-
-      expect(headers).toEqual({
-        Authorization: 'Bearer test-token',
-      });
-    });
-  });
-
   describe('apiJson', () => {
     const testSchema = z.object({ data: z.string() });
 
-    it('includes token in headers', async () => {
-      localStorageMock.setItem('ssdPortalToken', 'test-token');
-
+    it('calls fetchWithRetry with correct parameters', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ data: 'test' }),
@@ -239,15 +220,13 @@ describe('apiUtils', () => {
         '/api/test',
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
           }),
         })
       );
     });
 
-    it('merges custom headers with token', async () => {
-      localStorageMock.setItem('ssdPortalToken', 'test-token');
-
+    it('merges custom headers', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ data: 'test' }),
@@ -261,7 +240,6 @@ describe('apiUtils', () => {
         '/api/test',
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: 'Bearer test-token',
             'X-Custom': 'value',
           }),
         })

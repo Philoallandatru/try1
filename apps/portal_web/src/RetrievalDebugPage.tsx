@@ -5,7 +5,7 @@ interface DebugResult {
   results: Array<{
     doc_id: string;
     content: string;
-    score: float;
+    score: number;
     metadata: Record<string, any>;
   }>;
   debug_info: {
