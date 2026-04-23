@@ -548,6 +548,8 @@ def add_workspace_source(
     policies: list[str] | None = None,
     include_comments: bool = True,
     include_attachments: bool = True,
+    jql: str | None = None,
+    cql: str | None = None,
 ) -> dict:
     _load_workspace_config(workspace_dir)
     kind = "jira" if connector_type.startswith("jira.") else "pdf" if connector_type.startswith("pdf.") else "confluence"
@@ -559,6 +561,10 @@ def add_workspace_source(
         config["base_url"] = base_url
     if path:
         config["path"] = path
+    if jql:
+        config["jql"] = jql
+    if cql:
+        config["cql"] = cql
     source = {
         "version": 1,
         "name": name,
@@ -608,6 +614,8 @@ def configure_workspace_source(
     base_url: str | None = None,
     auth_mode: str | None = None,
     path: str | None = None,
+    jql: str | None = None,
+    cql: str | None = None,
 ) -> dict:
     _load_workspace_config(workspace_dir)
     source = load_source(workspace_dir, name)
@@ -618,6 +626,10 @@ def configure_workspace_source(
         config["auth_mode"] = auth_mode
     if path is not None:
         config["path"] = path
+    if jql is not None:
+        config["jql"] = jql
+    if cql is not None:
+        config["cql"] = cql
     source["config"] = config
     output_path = write_source(workspace_dir, source)
     return {"workspace_dir": str(workspace_paths(workspace_dir)["root"]), "path": output_path, "source": load_source(workspace_dir, name)}
@@ -927,8 +939,66 @@ def _source_payload_cache_paths(workspace_dir: str | Path, kind: str, source_nam
     }
 
 
-def fetch_workspace_source(workspace_dir: str | Path, *, source_name: str, selector_profile: str) -> dict:
+def _create_default_jql_selector(workspace_dir: str | Path, source_name: str, jql: str) -> str:
+    """为 JQL 创建默认的 selector"""
+    selector_name = f"{source_name}_default"
+    selector = {
+        "version": 1,
+        "name": selector_name,
+        "source": source_name,
+        "selector": {
+            "type": "jql_query",
+            "jql": jql
+        }
+    }
+    write_selector_profile(workspace_dir, selector)
+    return selector_name
+
+
+def _create_default_cql_selector(workspace_dir: str | Path, source_name: str, cql: str | None, space_key: str | None) -> str:
+    """为 CQL 创建默认的 selector"""
+    selector_name = f"{source_name}_default"
+    selector = {
+        "version": 1,
+        "name": selector_name,
+        "source": source_name,
+        "selector": {
+            "type": "cql_query",
+        }
+    }
+    if cql:
+        selector["selector"]["cql"] = cql
+    if space_key:
+        selector["selector"]["space_key"] = space_key
+    write_selector_profile(workspace_dir, selector)
+    return selector_name
+
+
+
+def fetch_workspace_source(workspace_dir: str | Path, *, source_name: str, selector_profile: str | None = None) -> dict:
     _load_workspace_config(workspace_dir)
+
+    # 如果没有指定 selector_profile，使用 source 中的 JQL/CQL 创建默认 selector
+    if selector_profile is None:
+        source = load_source(workspace_dir, source_name)
+        config = source.get("config", {})
+
+        # 创建默认的 selector
+        if source["kind"] == "jira" and "jql" in config:
+            selector_profile = _create_default_jql_selector(workspace_dir, source_name, config["jql"])
+        elif source["kind"] == "confluence" and ("cql" in config or "space_key" in config):
+            selector_profile = _create_default_cql_selector(
+                workspace_dir,
+                source_name,
+                config.get("cql"),
+                config.get("space_key")
+            )
+        else:
+            raise ValueError(
+                f"No selector_profile specified and source '{source_name}' has no JQL/CQL configured. "
+                f"Either specify --selector-profile or configure JQL/CQL in the source."
+            )
+
     request = build_fetch_request(workspace_dir, source_name=source_name, selector_profile=selector_profile)
     source = request["source"]
     if source["kind"] == "pdf":
