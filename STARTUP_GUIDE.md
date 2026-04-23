@@ -4,9 +4,10 @@
 
 ## 前提条件
 
-1. Python 3.12+
-2. Node.js 18+
-3. 已安装项目依赖
+1. **Python 3.12+**
+2. **Node.js 18+** 和 npm
+3. **Git**
+4. 已克隆项目仓库
 
 ## 安装依赖
 
@@ -20,6 +21,15 @@
 pip install -e ".[portal-runner]"
 ```
 
+**核心依赖包括：**
+- `fastapi>=0.115` - Web 框架
+- `uvicorn>=0.34` - ASGI 服务器
+- `python-multipart>=0.0.9` - 文件上传支持
+- `httpx>=0.28` - HTTP 客户端
+- `atlassian-python-api>=3.41.16` - Jira/Confluence API
+- `pypdf>=4.0` - PDF 解析
+- `PyYAML>=6.0` - YAML 配置文件
+
 ### 前端依赖
 
 ```powershell
@@ -29,6 +39,15 @@ cd apps/portal_web
 # 安装依赖
 npm install
 ```
+
+**主要依赖包括：**
+- `react ^19.2.0` - UI 框架
+- `@tanstack/react-query ^5.90.10` - 数据获取和状态管理
+- `react-router-dom ^7.14.1` - 客户端路由
+- `vite ^7.2.4` - 开发服务器和构建工具
+- `typescript ^5.9.3` - TypeScript 编译器
+- `vitest ^4.1.5` - 单元测试框架
+- `@playwright/test ^1.59.1` - E2E 测试框架
 
 ## 启动方式
 
@@ -119,8 +138,17 @@ server: {
 **A:** 确保已安装 portal-runner 依赖：
 
 ```powershell
+# 激活虚拟环境
+.\.venv\Scripts\Activate.ps1
+
+# 安装完整依赖
 pip install -e ".[portal-runner]"
 ```
+
+如果仍然失败，检查：
+1. Python 版本是否 >= 3.12
+2. 虚拟环境是否已激活
+3. 是否在项目根目录执行命令
 
 ### Q: 前端无法连接后端
 
