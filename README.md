@@ -8,21 +8,54 @@
 
 ## 快速开始
 
+### 前提条件
+
+- **Python 3.12+**
+- **Node.js 18+** 和 npm
+- **Git**
+
 ### 1. 安装依赖
+
+**后端依赖：**
 
 ```powershell
 # 使用 uv（推荐）
 python -m pip install --upgrade uv
 uv venv --python 3.12
 .\.venv\Scripts\Activate.ps1
-uv pip install -e .
+uv pip install -e ".[portal-runner]"
 
 # 或使用标准 pip
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e .
+pip install -e ".[portal-runner]"
 ```
+
+这将安装以下核心依赖：
+- `fastapi>=0.115` - Web 框架
+- `uvicorn>=0.34` - ASGI 服务器
+- `python-multipart>=0.0.9` - 文件上传支持
+- `httpx>=0.28` - HTTP 客户端
+- `atlassian-python-api>=3.41.16` - Jira/Confluence 连接器
+- `pypdf>=4.0` - PDF 解析
+- `PyYAML>=6.0` - 配置文件解析
+
+**前端依赖：**
+
+```powershell
+cd apps/portal_web
+npm install
+```
+
+主要依赖：
+- `react ^19.2.0` - UI 框架
+- `@tanstack/react-query ^5.90.10` - 数据获取和缓存
+- `react-router-dom ^7.14.1` - 路由
+- `vite ^7.2.4` - 构建工具
+- `typescript ^5.9.3` - 类型检查
+- `vitest ^4.1.5` - 单元测试
+- `@playwright/test ^1.59.1` - E2E 测试
 
 ### 2. 启动 Portal Runner
 
