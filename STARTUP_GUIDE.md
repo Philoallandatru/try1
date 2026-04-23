@@ -125,8 +125,8 @@ pip install -e ".[portal-runner]"
 ### Q: 前端无法连接后端
 
 **A:** 检查：
-1. 后端是否在 8000 端口运行
-2. 前端 proxy 配置是否正确
+1. 后端是否在 8787 端口运行
+2. 前端 proxy 配置是否正确（应该指向 http://127.0.0.1:8787）
 3. 浏览器控制台是否有 CORS 错误
 
 ### Q: 如何修改端口？
@@ -156,10 +156,10 @@ npm run build
 
 ```powershell
 # 后端（不使用 --reload）
-python -m apps.portal_runner.server --host 0.0.0.0 --port 8000
+python -m apps.portal_runner.server --host 0.0.0.0 --port 8787
 
 # 或使用 uvicorn
-uvicorn apps.portal_runner.server:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn apps.portal_runner.server:app --host 0.0.0.0 --port 8787 --workers 4
 ```
 
 前端静态文件可以通过 nginx 或其他 web 服务器提供。

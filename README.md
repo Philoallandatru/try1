@@ -27,10 +27,14 @@ python -m pip install -e .
 ### 2. 启动 Portal Runner
 
 ```powershell
-python scripts/run_portal_runner.py
+# 启动后端服务器（端口 8787）
+python -m apps.portal_runner.server
+
+# 或指定主机和端口
+python -m apps.portal_runner.server --host 0.0.0.0 --port 8787
 ```
 
-浏览器自动打开 `http://localhost:3000`
+浏览器访问 `http://localhost:8787`
 
 ### 3. 配置数据源
 
@@ -206,40 +210,13 @@ python scripts/platform_cli.py eval --dataset eval/golden_queries.yaml
 
 ### 工作空间管理
 
-通过 CLI 进行高级操作（可选）：
+详细的启动和配置说明请参考 [STARTUP_GUIDE.md](STARTUP_GUIDE.md)。
 
-```powershell
-# 初始化工作空间
-python scripts/workspace_cli.py init .tmp\workspace
-
-# 添加数据源
-python scripts/workspace_cli.py source add .tmp\workspace jira_prod \
-  --connector-type jira.atlassian_api \
-  --base-url https://jira.example.com \
-  --credential-ref jira_token
-
-# 查询知识库
-python scripts/workspace_cli.py query .tmp\workspace "black screen issue"
-
-# 导出数据
-python scripts/workspace_cli.py export .tmp\workspace
-```
-
-### 端到端测试
-
-运行完整的浏览器自动化测试：
-
-```powershell
-python scripts/run_portal_web_e2e.py
-```
-
-测试覆盖：
-- Portal Runner 启动
-- 数据源配置（Jira/Confluence）
-- 连接测试和数据获取
-- PDF 上传和解析（MinerU）
-- 分析执行和结果验证
-- LM Studio 集成验证
+前端开发相关文档：
+- [前端 README](apps/portal_web/README.md)
+- [API 文档](apps/portal_web/API.md)
+- [性能监控](apps/portal_web/PERFORMANCE.md)
+- [工作空间管理](apps/portal_web/WORKSPACE_MANAGER.md)
 
 ---
 
@@ -281,7 +258,8 @@ $env:LM_STUDIO_MODEL = "qwen2.5-coder-7b-instruct"
 ```
 codex-try/
 ├── apps/                    # 应用层
-│   └── portal/             # Portal Runner API
+│   ├── portal_runner/      # Portal Runner 后端 API
+│   └── portal_web/         # Portal Web 前端
 ├── services/               # 服务层
 │   ├── connectors/         # Jira/Confluence 连接器
 │   ├── ingest/            # 文件解析（MinerU/pypdf）
@@ -291,11 +269,6 @@ codex-try/
 │   ├── schema/           # 数据模型
 │   ├── acl/              # 访问控制
 │   └── terminology/      # 术语管理
-├── scripts/              # CLI 工具
-│   ├── run_portal_runner.py      # Portal 启动脚本
-│   ├── workspace_cli.py          # 工作空间管理
-│   ├── platform_cli.py           # 平台级命令
-│   └── run_portal_web_e2e.py    # E2E 测试
 ├── fixtures/             # 测试数据
 ├── docs/                # 文档
 │   ├── redesign-2026-spec.md    # 2026 重新设计规范

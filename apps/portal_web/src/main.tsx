@@ -52,6 +52,9 @@ const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m =>
 const DailyReportPage = lazy(() => import("./DailyReportPage").then(m => ({ default: m.DailyReportPage })));
 const BatchAnalysisPage = lazy(() => import("./BatchAnalysisPage").then(m => ({ default: m.BatchAnalysisPage })));
 const DocumentManagementPage = lazy(() => import("./DocumentManagementPage").then(m => ({ default: m.DocumentManagementPage })));
+const RetrievalEvaluationPage = lazy(() => import("./RetrievalEvaluationPage").then(m => ({ default: m.RetrievalEvaluationPage })));
+const RetrievalDebugPage = lazy(() => import("./RetrievalDebugPage"));
+const StrategyComparisonPage = lazy(() => import("./StrategyComparisonPage"));
 
 const workspaceSchema = z.object({
   name: z.string().optional(),
@@ -437,6 +440,9 @@ function App() {
             { id: "/daily-report", label: "Daily Report", icon: Calendar },
             { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
             { id: "/documents", label: "Documents", icon: Upload },
+            { id: "/retrieval-eval", label: "Retrieval Eval", icon: BarChart3 },
+            { id: "/retrieval-debug", label: "Retrieval Debug", icon: Settings },
+            { id: "/strategy-comparison", label: "Strategy Compare", icon: BarChart3 },
             { id: "/sources", label: "Sources", icon: Database },
             { id: "/profiles", label: "Profiles", icon: Settings },
             { id: "/wiki", label: "Wiki", icon: FileText },
@@ -500,6 +506,9 @@ function App() {
               <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
               <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
               <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
+              <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
+              <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />
               <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
               <Route path="/profiles" element={
                 <ProfilesPage
