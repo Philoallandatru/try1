@@ -108,14 +108,14 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         return list_workspaces(config.workspace.root, demo_workspace=demo)
 
     @app.post("/api/workspaces")
-    async def workspace_create(request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_create(request: Request) -> dict:
         try:
             return create_workspace(config.workspace.root, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/status")
-    def workspace_status_endpoint(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_status_endpoint(workspace_dir: str) -> dict:
         try:
             return workspace_status(workspace_dir)
         except ValueError as exc:
@@ -129,56 +129,56 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/sources")
-    async def workspace_source_create(request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_source_create(request: Request) -> dict:
         try:
             return create_source(await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/sources/{source_name}")
-    def workspace_source_detail(source_name: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_source_detail(source_name: str, workspace_dir: str) -> dict:
         try:
             return source_detail_response(workspace_dir, source_name)
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.get("/api/workspace/selectors")
-    def workspace_selectors(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_selectors(workspace_dir: str) -> dict:
         try:
             return list_selectors_response(workspace_dir)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/selectors")
-    async def workspace_selector_create(request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_selector_create(request: Request) -> dict:
         try:
             return create_selector(await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/selectors/{selector_name}")
-    def workspace_selector_detail(selector_name: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_selector_detail(selector_name: str, workspace_dir: str) -> dict:
         try:
             return selector_detail_response(workspace_dir, selector_name)
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.patch("/api/workspace/sources/{source_name}")
-    async def workspace_source_update(source_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_source_update(source_name: str, request: Request) -> dict:
         try:
             return update_source(source_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/sources/{source_name}/test")
-    async def workspace_source_test(source_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_source_test(source_name: str, request: Request) -> dict:
         try:
             return test_source_response(source_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/sources/{source_name}/refresh")
-    async def workspace_source_refresh(source_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_source_refresh(source_name: str, request: Request) -> dict:
         try:
             return refresh_source_response(source_name, await request.json())
         except ValueError as exc:
@@ -192,77 +192,77 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/profiles")
-    async def workspace_profile_create(request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_profile_create(request: Request) -> dict:
         try:
             return create_profile(await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/profiles/{profile_name}")
-    def workspace_profile_detail(profile_name: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_profile_detail(profile_name: str, workspace_dir: str) -> dict:
         try:
             return profile_detail_response(workspace_dir, profile_name)
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.patch("/api/workspace/profiles/{profile_name}")
-    async def workspace_profile_update(profile_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_profile_update(profile_name: str, request: Request) -> dict:
         try:
             return update_profile(profile_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/profiles/{profile_name}/duplicate")
-    async def workspace_profile_duplicate(profile_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_profile_duplicate(profile_name: str, request: Request) -> dict:
         try:
             return duplicate_profile(profile_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/profiles/{profile_name}/validate")
-    async def workspace_profile_validate(profile_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_profile_validate(profile_name: str, request: Request) -> dict:
         try:
             return validate_profile_response(profile_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/profiles/{profile_name}/default")
-    async def workspace_profile_default(profile_name: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_profile_default(profile_name: str, request: Request) -> dict:
         try:
             return set_default_profile(profile_name, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/runs")
-    def workspace_runs(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_runs(workspace_dir: str) -> dict:
         try:
             return workspace_runs_response(workspace_dir)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/runs/{run_id}")
-    def workspace_run_detail(run_id: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_run_detail(run_id: str, workspace_dir: str) -> dict:
         try:
             return workspace_run_detail_response(workspace_dir, run_id)
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.get("/api/workspace/runs/{run_id}/artifacts/{artifact_type}")
-    def workspace_run_artifact(run_id: str, artifact_type: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_run_artifact(run_id: str, artifact_type: str, workspace_dir: str) -> dict:
         try:
             return workspace_artifact_response(workspace_dir, run_id, artifact_type)
         except ValueError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     @app.post("/api/workspace/runs/{run_id}/verify-llm")
-    async def workspace_run_verify_llm(run_id: str, request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_run_verify_llm(run_id: str, request: Request) -> dict:
         try:
             return verify_run_llm_response(run_id, await request.json())
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/spec-assets/{asset_id}/require-mineru")
-    def workspace_spec_asset_require_mineru(asset_id: str, workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_spec_asset_require_mineru(asset_id: str, workspace_dir: str) -> dict:
         try:
             return require_mineru_spec_asset(workspace_dir, asset_id)
         except ValueError as exc:
@@ -276,7 +276,7 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/workspace/spec-assets/ingest")
-    async def workspace_spec_asset_ingest(request: Request, _: None = Depends(require_auth)) -> dict:
+    async def workspace_spec_asset_ingest(request: Request) -> dict:
         try:
             return ingest_mineru_spec_asset(await request.json())
         except ValueError as exc:
@@ -285,7 +285,6 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     @app.post("/api/workspace/analyze-jira")
     async def workspace_analyze_jira(
         request: Request,
-        _: None = Depends(require_auth),
     ) -> dict:
         payload = await request.json()
         try:
