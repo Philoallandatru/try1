@@ -34,8 +34,8 @@ test.describe('Document Management E2E', () => {
       await page.waitForTimeout(1000);
     }
 
-    // Navigate to document management page
-    await page.goto('http://localhost:5173/documents');
+    // Navigate to data sources page
+    await page.goto('http://localhost:5173/data-sources');
     await page.waitForLoadState('networkidle');
   });
 
