@@ -52,7 +52,7 @@ import "./annotation.css";
 const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m => ({ default: m.AnalysisResultsPage })));
 const DailyReportPage = lazy(() => import("./DailyReportPage").then(m => ({ default: m.DailyReportPage })));
 const BatchAnalysisPage = lazy(() => import("./BatchAnalysisPage").then(m => ({ default: m.BatchAnalysisPage })));
-const DocumentManagementPage = lazy(() => import("./DocumentManagementPage").then(m => ({ default: m.DocumentManagementPage })));
+const DataSourcesPage = lazy(() => import("./DataSourcesPage"));
 const RetrievalEvaluationPage = lazy(() => import("./RetrievalEvaluationPage").then(m => ({ default: m.RetrievalEvaluationPage })));
 const RetrievalDebugPage = lazy(() => import("./RetrievalDebugPage"));
 const StrategyComparisonPage = lazy(() => import("./StrategyComparisonPage"));
@@ -268,19 +268,6 @@ type EvidenceCoverage = {
   missing: string[];
 };
 type RunTab = "summary" | "rca" | "spec_impact" | "decision_brief" | "evidence" | "verification" | "artifacts";
-type SourceWizardStep = 0 | 1 | 2 | 3 | 4;
-type SourceFormValues = {
-  kind: string;
-  name: string;
-  baseUrl: string;
-  token: string;
-  selectorName: string;
-  selectorValue: string;
-  filePath: string;
-  fileType: string;
-  parser: string;
-  originalFilename: string;
-};
 type ProfileFormValues = {
   name: string;
   jiraSource: string;
@@ -293,12 +280,6 @@ type ProfileFormValues = {
   llmBackend: string;
   llmModel: string;
   llmBaseUrl: string;
-};
-type SpecIngestValues = {
-  specPdf: string;
-  assetId: string;
-  displayName: string;
-  mineruPythonExe: string;
 };
 
 type Page = "analyze" | "runs" | "sources" | "profiles" | "wiki" | "reports" | "spec" | "search";
@@ -436,16 +417,14 @@ function App() {
             { id: "/analysis", label: "Analysis", icon: BarChart3 },
             { id: "/daily-report", label: "Daily Report", icon: Calendar },
             { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
-            { id: "/documents", label: "Documents", icon: Upload },
+            { id: "/data-sources", label: "Data Sources", icon: Database },
             { id: "/retrieval-eval", label: "Retrieval Eval", icon: BarChart3 },
             { id: "/retrieval-debug", label: "Retrieval Debug", icon: Settings },
             { id: "/strategy-comparison", label: "Strategy Compare", icon: BarChart3 },
-            { id: "/sources", label: "Sources", icon: Database },
             { id: "/profiles", label: "Profiles", icon: Settings },
             { id: "/model-config", label: "Model Config", icon: Sliders },
             { id: "/wiki", label: "Wiki", icon: FileText },
             { id: "/reports", label: "Reports", icon: BarChart3 },
-            { id: "/spec", label: "Spec Lab", icon: FileText },
           ].map(({ id, label, icon: Icon }) => (
             <Link
               to={id}
@@ -487,11 +466,10 @@ function App() {
             <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
             <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
             <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
-            <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/data-sources" element={<DataSourcesPage />} />
             <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
             <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
             <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />
-            <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
             <Route path="/profiles" element={
               <ProfilesPage
                 workspaceDir={selectedWorkspace}
@@ -501,7 +479,6 @@ function App() {
               />
             } />
             <Route path="/model-config" element={<ModelConfigPage />} />
-            <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
             <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
             <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
           </Routes>
@@ -712,347 +689,6 @@ function WizardActions({
         {primaryLabel}
       </button>
     </div>
-  );
-}
-
-function SourcesPage({ workspaceDir }: { workspaceDir: string }) {
-  const queryClient = useQueryClient();
-  const [wizardStep, setWizardStep] = useState<SourceWizardStep>(0);
-  const form = useForm<SourceFormValues>({
-    defaultValues: {
-      kind: "jira",
-      name: "",
-      baseUrl: "",
-      token: "",
-      selectorName: "",
-      selectorValue: "",
-      filePath: "",
-      fileType: "pdf",
-      parser: "auto",
-      originalFilename: "",
-    },
-  });
-  const sources = useQuery({
-    queryKey: ["sources", workspaceDir],
-    queryFn: () => apiJson(`/api/workspace/sources?workspace_dir=${encodeURIComponent(workspaceDir)}`, sourcesSchema),
-    enabled: Boolean(workspaceDir),
-  });
-  const watchedKind = form.watch("kind");
-  const watchedName = form.watch("name");
-  const watchedBaseUrl = form.watch("baseUrl");
-  const watchedFilePath = form.watch("filePath");
-  const watchedSelectorValue = form.watch("selectorValue");
-  const isFileUpload = watchedKind === "file_upload";
-  const sourceCreated = Boolean((sources.data?.sources || []).some((source) => source.name === watchedName));
-  const selectedSource = (sources.data?.sources || []).find((source) => source.name === watchedName);
-  const sourceTested = Boolean(selectedSource && selectedSource.status !== "stale");
-  const sourceFetched = Boolean(selectedSource && (selectedSource.document_count || 0) > 0);
-  const sourceSteps = isFileUpload
-    ? [
-        { label: "File Details", ok: Boolean(watchedKind && watchedName && watchedFilePath) },
-        { label: "Test", ok: sourceTested },
-        { label: "Parse", ok: sourceFetched },
-      ]
-    : [
-        { label: "Source Details", ok: Boolean(watchedKind && watchedName && watchedBaseUrl) },
-        { label: "Authentication", ok: true },
-        { label: "Selector", ok: Boolean(watchedSelectorValue) },
-        { label: "Test", ok: sourceTested },
-        { label: "Fetch", ok: sourceFetched },
-      ];
-  const currentSelector = selectedSource?.selector || sources.data?.selectors.find((row) => row.source === watchedName);
-  const canAdvanceDetails = isFileUpload
-    ? Boolean(watchedKind && watchedName && watchedFilePath)
-    : Boolean(watchedKind && watchedName && watchedBaseUrl);
-  const canAdvanceSelector = Boolean(watchedSelectorValue);
-  const resetSourceWizard = () => {
-    form.reset({
-      kind: "jira",
-      name: "",
-      baseUrl: "",
-      token: "",
-      selectorName: "",
-      selectorValue: "",
-      filePath: "",
-      fileType: "pdf",
-      parser: "auto",
-      originalFilename: "",
-    });
-    setWizardStep(0);
-  };
-  const createSource = useMutation({
-    mutationFn: (values: SourceFormValues) => {
-      if (values.kind === "file_upload") {
-        // File Upload source
-        return apiJson(
-          "/api/workspace/sources",
-          z.unknown(),
-          {
-            method: "POST",
-            body: JSON.stringify({
-              workspace_dir: workspaceDir,
-              name: values.name,
-              connector_type: "file_upload.local",
-              file_path: values.filePath,
-              file_type: values.fileType,
-              parser: values.parser,
-              original_filename: values.originalFilename || values.filePath.split(/[/\\]/).pop(),
-            }),
-          },
-        );
-      } else {
-        // Jira or Confluence source
-        const isJira = values.kind === "jira";
-        return apiJson(
-          "/api/workspace/sources",
-          z.unknown(),
-          {
-            method: "POST",
-            body: JSON.stringify({
-              workspace_dir: workspaceDir,
-              name: values.name,
-              connector_type: isJira ? "jira.atlassian_api" : "confluence.atlassian_api",
-              base_url: values.baseUrl,
-              token: values.token,
-              defaults: { fetch_backend: "native", include_comments: true, include_attachments: true },
-              selector: isJira
-                ? { name: values.selectorName || `${values.name}_issue`, type: "issue", issue_key: values.selectorValue }
-                : { name: values.selectorName || `${values.name}_space`, type: "space_slice", space_key: values.selectorValue },
-            }),
-          },
-        );
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sources", workspaceDir] });
-      setWizardStep(3);
-    },
-  });
-  const refresh = useMutation({
-    mutationFn: ({ name, selector }: { name: string; selector: string }) =>
-      apiJson(
-        `/api/workspace/sources/${name}/refresh`,
-        z.unknown(),
-        {
-          method: "POST",
-          body: JSON.stringify({ workspace_dir: workspaceDir, selector_profile: selector }),
-        },
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sources", workspaceDir] });
-      setWizardStep(4);
-    },
-  });
-  const testSource = useMutation({
-    mutationFn: ({ name, selector }: { name: string; selector: string }) =>
-      apiJson(
-        `/api/workspace/sources/${name}/test`,
-        z.unknown(),
-        {
-          method: "POST",
-          body: JSON.stringify({ workspace_dir: workspaceDir, selector_profile: selector }),
-        },
-      ),
-    onSuccess: () => setWizardStep(4),
-  });
-
-  return (
-    <section className="page-grid">
-      <div className="primary-surface">
-        <div className="section-heading">
-          <p className="eyebrow">Sources</p>
-          <h2>Connect Data Sources</h2>
-          <p>Add Jira, Confluence, or File Upload sources, test them, then refresh data into the workspace.</p>
-        </div>
-        <Stepper steps={sourceSteps} />
-        <form className="stack-form" onSubmit={form.handleSubmit((values) => createSource.mutate(values))}>
-          {wizardStep === 0 && (
-            <>
-              <label>
-                Source type
-                <select {...form.register("kind")}>
-                  <option value="jira">Jira</option>
-                  <option value="confluence">Confluence</option>
-                  <option value="file_upload">File Upload</option>
-                </select>
-              </label>
-              <label>
-                Source name
-                <input {...form.register("name", { required: true })} placeholder={watchedKind === "file_upload" ? "nvme_spec" : "ssd_jira"} />
-              </label>
-              {watchedKind === "file_upload" ? (
-                <>
-                  <label>
-                    File path
-                    <input {...form.register("filePath", { required: true })} placeholder="D:\specs\nvme.pdf" />
-                  </label>
-                  <label>
-                    File type
-                    <select {...form.register("fileType")}>
-                      <option value="pdf">PDF</option>
-                      <option value="docx">DOCX</option>
-                      <option value="xlsx">XLSX</option>
-                      <option value="pptx">PPTX</option>
-                      <option value="image">Image</option>
-                    </select>
-                  </label>
-                  <label>
-                    Parser
-                    <select {...form.register("parser")}>
-                      <option value="auto">Auto (MinerU + fallback)</option>
-                      <option value="mineru">MinerU</option>
-                      <option value="pypdf">PyPDF</option>
-                    </select>
-                  </label>
-                </>
-              ) : (
-                <label>
-                  Base URL
-                  <input {...form.register("baseUrl", { required: true })} placeholder="https://jira.example.com" />
-                </label>
-              )}
-              <WizardActions
-                primaryLabel={watchedKind === "file_upload" ? "Next: Test File" : "Next: Authentication"}
-                primaryDisabled={!canAdvanceDetails}
-                onPrimary={() => setWizardStep(watchedKind === "file_upload" ? 3 : 1)}
-              />
-            </>
-          )}
-          {wizardStep === 1 && (
-            <>
-              <label>
-                Token
-                <input {...form.register("token")} type="password" placeholder="Stored locally and redacted" />
-              </label>
-              <p className="form-hint">Inline bearer tokens are stored only in the workspace `.local/credentials.yaml` and are redacted from API responses.</p>
-              <WizardActions
-                backLabel="Back"
-                onBack={() => setWizardStep(0)}
-                primaryLabel="Next: Selector"
-                onPrimary={() => setWizardStep(2)}
-              />
-            </>
-          )}
-          {wizardStep === 2 && (
-            <>
-              <label>
-                Selector name
-                <input {...form.register("selectorName")} placeholder="ssd_issue_selector" />
-              </label>
-              <label>
-                {watchedKind === "jira" ? "Issue key" : "Space key"}
-                <input {...form.register("selectorValue", { required: true })} placeholder={watchedKind === "jira" ? "SSD-DEMO-A" : "SSDENG"} />
-              </label>
-              <WizardActions
-                backLabel="Back"
-                onBack={() => setWizardStep(1)}
-                primaryLabel={createSource.isPending ? "Saving..." : "Save source and selector"}
-                primaryDisabled={!canAdvanceSelector || createSource.isPending}
-                submit
-              />
-            </>
-          )}
-          {wizardStep === 3 && (
-            <>
-              <div className="notice">
-                {isFileUpload
-                  ? "File source saved. Test file accessibility before parsing."
-                  : "Source saved. Test the configured connector before fetching data."}
-              </div>
-              <WizardActions
-                backLabel="Back"
-                onBack={() => setWizardStep(isFileUpload ? 0 : 2)}
-                primaryLabel={testSource.isPending ? "Testing..." : (isFileUpload ? "Test File" : "Test Connection")}
-                primaryDisabled={isFileUpload ? testSource.isPending : (!currentSelector || testSource.isPending)}
-                onPrimary={() => {
-                  if (isFileUpload) {
-                    testSource.mutate({ name: watchedName, selector: "" });
-                  } else if (currentSelector) {
-                    testSource.mutate({ name: watchedName, selector: currentSelector.name });
-                  }
-                }}
-              />
-            </>
-          )}
-          {wizardStep === 4 && (
-            <>
-              <div className={sourceFetched ? "notice" : "advanced-grid"}>
-                {sourceFetched
-                  ? `${selectedSource?.document_count || 0} documents ${isFileUpload ? "parsed" : "fetched"}.`
-                  : isFileUpload
-                  ? "File is accessible. Parse the file into the workspace."
-                  : "Connection is ready. Fetch data into the workspace."}
-              </div>
-              <WizardActions
-                backLabel="Back"
-                onBack={() => setWizardStep(3)}
-                primaryLabel={refresh.isPending ? (isFileUpload ? "Parsing..." : "Fetching...") : (isFileUpload ? "Parse File" : "Fetch Data")}
-                primaryDisabled={isFileUpload ? refresh.isPending : (!currentSelector || refresh.isPending)}
-                onPrimary={() => {
-                  if (isFileUpload) {
-                    refresh.mutate({ name: watchedName, selector: "" });
-                  } else if (currentSelector) {
-                    refresh.mutate({ name: watchedName, selector: currentSelector.name });
-                  }
-                }}
-              />
-              <button className="secondary-action" onClick={resetSourceWizard} type="button">
-                <Plus size={16} /> Add another source
-              </button>
-            </>
-          )}
-        </form>
-      </div>
-
-      <ListPanel title="Sync Status Dashboard">
-        {(sources.data?.sources || []).map((source) => {
-          const selector = source.selector || sources.data?.selectors.find((row) => row.source === source.name);
-          const statusIcon = source.status === "ready" ? <CheckCircle2 size={16} className="status-icon-success" /> :
-                            source.status === "error" ? <XCircle size={16} className="status-icon-error" /> :
-                            source.status === "syncing" ? <Loader2 size={16} className="spin status-icon-pending" /> :
-                            <AlertCircle size={16} className="status-icon-warning" />;
-          return (
-          <div className="list-row sync-status-row" key={source.name}>
-            <div className="sync-status-header">
-              <strong>{source.name}</strong>
-              <span className="sync-status-badge">{statusIcon} {source.status || "not synced"}</span>
-            </div>
-            <div className="sync-status-details">
-              <span><Database size={14} /> {source.kind} / {source.connector_type}</span>
-              <span><FileText size={14} /> {source.document_count ?? 0} documents</span>
-              <span><Clock size={14} /> Last sync: {source.last_refresh || "Never"}</span>
-              <span><Settings size={14} /> Selector: {selector?.name || "not set"}</span>
-              <span className={source.enabled === false ? "status-disabled" : "status-enabled"}>
-                {source.enabled === false ? "Disabled" : "Enabled"}
-              </span>
-            </div>
-            {source.status_reason && (
-              <div className="sync-status-reason">
-                <AlertTriangle size={14} /> {source.status_reason}
-              </div>
-            )}
-            <div className="row-actions">
-              <button disabled={!selector || testSource.isPending} type="button" onClick={() => selector && testSource.mutate({ name: source.name, selector: selector.name })}>
-                {testSource.isPending ? <Loader2 size={14} className="spin" /> : <Play size={14} />} Test
-              </button>
-              <button disabled={!selector || refresh.isPending} type="button" onClick={() => selector && refresh.mutate({ name: source.name, selector: selector.name })}>
-                {refresh.isPending ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />} Sync
-              </button>
-            </div>
-          </div>
-          );
-        })}
-        {(sources.data?.sources || []).length === 0 && (
-          <div className="empty-state">
-            <Database size={48} />
-            <p>No data sources configured yet</p>
-            <p className="empty-state-hint">Use the wizard above to add your first source</p>
-          </div>
-        )}
-        {testSource.error && <div className="error"><XCircle size={16} /> Test failed: {String(testSource.error.message)}</div>}
-        {refresh.error && <div className="error"><XCircle size={16} /> Sync failed: {String(refresh.error.message)}</div>}
-      </ListPanel>
-    </section>
   );
 }
 
@@ -1566,106 +1202,6 @@ function sectionText(section: unknown): string {
   }
   const answer = (section as { answer?: { text?: string } }).answer;
   return answer?.text || "No section answer available.";
-}
-
-function SpecLabPage({ workspaceDir }: { workspaceDir: string }) {
-  const form = useForm<SpecIngestValues>({
-    defaultValues: {
-      specPdf: "",
-      assetId: "nvme-spec-mineru",
-      displayName: "File Asset",
-      mineruPythonExe: "",
-    },
-  });
-  const gate = useQuery({
-    queryKey: ["mineru-spec", workspaceDir],
-    queryFn: () =>
-      apiJson(
-        `/api/workspace/spec-assets/nvme-spec-mineru/require-mineru?workspace_dir=${encodeURIComponent(workspaceDir)}`,
-        z.unknown(),
-      ),
-    enabled: Boolean(workspaceDir),
-    retry: false,
-  });
-  const assets = useQuery({
-    queryKey: ["workspace-spec-assets", workspaceDir],
-    queryFn: () => apiJson(`/api/workspace/spec-assets?workspace_dir=${encodeURIComponent(workspaceDir)}`, specAssetsSchema),
-    enabled: Boolean(workspaceDir),
-  });
-  const queryClient = useQueryClient();
-  const ingest = useMutation({
-    mutationFn: (values: SpecIngestValues) =>
-      apiJson(
-        "/api/workspace/spec-assets/ingest",
-        z.unknown(),
-        {
-          method: "POST",
-          body: JSON.stringify({
-            workspace_dir: workspaceDir,
-            spec_pdf: values.specPdf,
-            asset_id: values.assetId,
-            display_name: values.displayName,
-            mineru_python_exe: values.mineruPythonExe || undefined,
-          }),
-        },
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mineru-spec", workspaceDir] });
-      queryClient.invalidateQueries({ queryKey: ["workspace-spec-assets", workspaceDir] });
-    },
-  });
-
-  return (
-    <section className="page-grid">
-      <div className="primary-surface">
-        <div className="section-heading">
-          <p className="eyebrow">Spec Lab</p>
-          <h2>File Assets</h2>
-          <p>Parse and manage file assets (specs, policies, documents) for citation-grade evidence.</p>
-        </div>
-        {gate.isSuccess ? (
-          <div className="notice">nvme-spec-mineru is ready and parsed with MinerU.</div>
-        ) : (
-          <div className="notice">Parse files once with MinerU, then reuse the asset in profiles.</div>
-        )}
-        <form className="stack-form" onSubmit={form.handleSubmit((values) => ingest.mutate(values))}>
-          <label>
-            File PDF path
-            <input {...form.register("specPdf", { required: true })} placeholder="D:\\specs\\nvme.pdf or D:\\policies\\firmware.pdf" />
-          </label>
-          <label>
-            Asset ID
-            <input {...form.register("assetId", { required: true })} />
-          </label>
-          <label>
-            Display name
-            <input {...form.register("displayName", { required: true })} />
-          </label>
-          <label>
-            MinerU Python executable
-            <input {...form.register("mineruPythonExe")} placeholder="Optional if mineru is on PATH" />
-          </label>
-          <button disabled={ingest.isPending} type="submit">
-            {ingest.isPending ? <><Loader2 size={16} className="spin" /> Parsing...</> : <><Upload size={16} /> Parse Once With MinerU</>}
-          </button>
-        </form>
-        {gate.error && <div className="error">{String(gate.error.message)}</div>}
-        {ingest.error && <div className="error">{String(ingest.error.message)}</div>}
-      </div>
-      <ListPanel title="Spec Assets">
-        {(assets.data?.assets || []).map((asset: SpecAsset) => (
-          <div className="list-row" key={`${asset.asset_id}:${asset.version || ""}`}>
-            <strong>{asset.asset_id}</strong>
-            <span>{asset.display_name || "Unnamed spec"}</span>
-            <span>parser: {asset.parser_used || "unknown"}</span>
-            <span>document: {asset.document_id || "-"}</span>
-            <span>version: {asset.version || "-"}</span>
-          </div>
-        ))}
-        {!assets.data?.assets.length && <p>No spec assets registered in this workspace.</p>}
-      </ListPanel>
-    </section>
-  );
 }
 
 // Highlight matching text in search results
