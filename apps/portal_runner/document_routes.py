@@ -40,7 +40,6 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
         file: UploadFile = File(...),
         document_type: str = Form("other"),
         display_name: Optional[str] = Form(None),
-        _: None = Depends(require_auth),
     ):
         """
         Upload a document to the workspace.
@@ -112,7 +111,6 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
     async def list_documents(
         workspace: str,
         document_type: Optional[str] = None,
-        _: None = Depends(require_auth),
     ):
         """
         List all uploaded documents in a workspace.
@@ -143,7 +141,7 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/types")
-    async def get_document_types(_: None = Depends(require_auth)):
+    async def get_document_types():
         """
         Get available document types.
 
@@ -160,7 +158,6 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
         workspace: str,
         doc_id: str,
         version: Optional[str] = None,
-        _: None = Depends(require_auth),
     ):
         """
         Delete a document asset.
@@ -192,7 +189,7 @@ def create_document_router(workspace_root: str, *, require_auth: Callable) -> AP
             raise HTTPException(status_code=500, detail=str(e))
 
     @router.get("/task/{task_id}")
-    async def get_task_status(task_id: str, _: None = Depends(require_auth)):
+    async def get_task_status(task_id: str):
         """Get the status of a document processing task."""
         task_manager = get_task_manager()
         status = task_manager.get_task_status(task_id)

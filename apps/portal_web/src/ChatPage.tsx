@@ -5,13 +5,7 @@ import { apiJson } from './apiUtils';
 import { Send, Loader2 } from 'lucide-react';
 
 const workspacesSchema = z.object({
-  workspaces: z.array(z.object({
-    name: z.string(),
-    sources: z.array(z.object({
-      name: z.string(),
-      kind: z.string(),
-    })),
-  })),
+  workspaces: z.array(z.record(z.unknown())),
 });
 
 const chatResponseSchema = z.object({
@@ -37,7 +31,12 @@ export function ChatPage() {
 
   const workspacesQuery = useQuery({
     queryKey: ['workspaces'],
-    queryFn: () => apiJson('/api/workspaces', workspacesSchema),
+    queryFn: async () => {
+      const response = await fetch('/api/workspaces');
+      const data = await response.json();
+      console.log('RAW API RESPONSE:', JSON.stringify(data, null, 2));
+      return data;
+    },
   });
 
   const chatMutation = useMutation({
@@ -68,9 +67,20 @@ export function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const allSources = workspacesQuery.data?.workspaces.flatMap((ws) =>
-    ws.sources.map((s) => ({ workspace: ws.name, ...s }))
-  ) || [];
+  const allSources = workspacesQuery.data?.workspaces
+    .filter((ws) => ws.spec_asset)
+    .map((ws) => ({
+      workspace: ws.name,
+      name: ws.spec_asset!.display_name,
+      kind: 'spec',
+    })) || [];
+
+  // Debug logging
+  console.log('ChatPage - workspacesQuery.data:', workspacesQuery.data);
+  console.log('ChatPage - workspaces detail:', JSON.stringify(workspacesQuery.data?.workspaces, null, 2));
+  console.log('ChatPage - allSources:', allSources);
+  console.log('ChatPage - isLoading:', workspacesQuery.isLoading);
+  console.log('ChatPage - error:', workspacesQuery.error);
 
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>

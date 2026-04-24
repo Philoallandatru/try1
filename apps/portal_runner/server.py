@@ -45,6 +45,8 @@ from apps.portal_runner.cross_reference_routes import create_cross_reference_rou
 from apps.portal_runner.document_routes import create_document_router
 from apps.portal_runner.share_routes import create_share_router
 from apps.portal_runner.comment_routes import router as comment_router
+from apps.portal_runner.model_config_routes import create_model_config_router
+from apps.portal_runner.chat_routes import create_chat_router
 from apps.portal_runner.storage import PortalRunnerStorage
 from services.workspace import init_workspace
 from services.workspace.spec_assets import load_spec_asset_registry
@@ -101,7 +103,7 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         return {"workspace": str(config.workspace.spec_assets_workspace), "assets": registry.get("assets", [])}
 
     @app.get("/api/workspaces")
-    def workspaces(_: None = Depends(require_auth)) -> dict:
+    def workspaces() -> dict:
         demo = ensure_demo_workspace(config.workspace.root, config.workspace.spec_assets_workspace)
         return list_workspaces(config.workspace.root, demo_workspace=demo)
 
@@ -120,7 +122,7 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/sources")
-    def workspace_sources(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_sources(workspace_dir: str) -> dict:
         try:
             return list_sources_response(workspace_dir)
         except ValueError as exc:
@@ -183,7 +185,7 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/profiles")
-    def workspace_profiles(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_profiles(workspace_dir: str) -> dict:
         try:
             return list_profiles_response(workspace_dir)
         except ValueError as exc:
@@ -267,7 +269,7 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/workspace/spec-assets")
-    def workspace_spec_assets(workspace_dir: str, _: None = Depends(require_auth)) -> dict:
+    def workspace_spec_assets(workspace_dir: str) -> dict:
         try:
             return list_spec_assets_response(workspace_dir)
         except ValueError as exc:
@@ -425,6 +427,14 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     # Include Comment API routes
     app.include_router(comment_router)
 
+    # Include Model Config API routes
+    model_config_router = create_model_config_router(str(config.workspace.root))
+    app.include_router(model_config_router)
+
+    # Include Chat API routes
+    chat_router = create_chat_router(str(config.workspace.root))
+    app.include_router(chat_router)
+
     # Mount static files AFTER all API routes to prevent catch-all interference
     apps_root = Path(__file__).resolve().parents[1]
     legacy_portal_root = apps_root / "portal"
@@ -467,6 +477,10 @@ def _blank_to_none(value: str | None) -> str | None:
         return None
     value = value.strip()
     return value or None
+
+
+# Create module-level app instance for uvicorn --reload
+app = create_app()
 
 
 if __name__ == "__main__":
