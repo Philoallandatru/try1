@@ -447,6 +447,22 @@ function App() {
               <strong>SSD Knowledge Workspace</strong>
             </div>
           </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label htmlFor="workspace-selector" style={{ fontSize: '14px', color: '#666' }}>Workspace:</label>
+            <select
+              id="workspace-selector"
+              data-testid="workspace-selector"
+              value={selectedWorkspace}
+              onChange={(e) => setWorkspaceDir(e.target.value)}
+              style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ddd' }}
+            >
+              {workspaces.data?.workspaces.map((ws) => (
+                <option key={ws.workspace_dir} value={ws.workspace_dir}>
+                  {ws.name || ws.workspace_dir}
+                </option>
+              ))}
+            </select>
+          </div>
         </header>
 
         <Suspense fallback={<SkeletonPage />}>
