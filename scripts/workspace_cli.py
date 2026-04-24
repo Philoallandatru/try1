@@ -161,6 +161,8 @@ def main() -> int:
     source_add.add_argument("--policy", action="append")
     source_add.add_argument("--include-comments", action="store_true", default=True)
     source_add.add_argument("--include-attachments", action="store_true", default=True)
+    source_add.add_argument("--jql", help="JQL query for Jira sources")
+    source_add.add_argument("--cql", help="CQL query for Confluence sources")
     source_list = source_subparsers.add_parser("list")
     source_list.add_argument("workspace")
     source_show = source_subparsers.add_parser("show")
@@ -172,6 +174,8 @@ def main() -> int:
     source_configure.add_argument("--base-url")
     source_configure.add_argument("--auth-mode")
     source_configure.add_argument("--path")
+    source_configure.add_argument("--jql", help="Update JQL query for Jira sources")
+    source_configure.add_argument("--cql", help="Update CQL query for Confluence sources")
     source_credential = source_subparsers.add_parser("set-credential")
     source_credential.add_argument("workspace")
     source_credential.add_argument("name")
@@ -205,6 +209,9 @@ def main() -> int:
     source_refresh.add_argument("workspace")
     source_refresh.add_argument("name")
     source_refresh.add_argument("--selector-profile", required=True)
+    source_fetch = source_subparsers.add_parser("fetch")
+    source_fetch.add_argument("workspace")
+    source_fetch.add_argument("name")
 
     selector_parser = subparsers.add_parser("selector")
     selector_subparsers = selector_parser.add_subparsers(dest="selector_command", required=True)
@@ -284,7 +291,7 @@ def main() -> int:
     fetch_source_parser = subparsers.add_parser("fetch-source")
     fetch_source_parser.add_argument("workspace")
     fetch_source_parser.add_argument("--source", required=True)
-    fetch_source_parser.add_argument("--selector-profile", required=True)
+    fetch_source_parser.add_argument("--selector-profile", help="Optional: use specific selector profile instead of source's JQL/CQL")
 
     refresh_parser = subparsers.add_parser("refresh")
     refresh_parser.add_argument("workspace")
@@ -495,6 +502,8 @@ def main() -> int:
                         policies=args.policy,
                         include_comments=args.include_comments,
                         include_attachments=args.include_attachments,
+                        jql=args.jql,
+                        cql=args.cql,
                     )
                 )
             if args.source_command == "list":
@@ -509,6 +518,8 @@ def main() -> int:
                         base_url=args.base_url,
                         auth_mode=args.auth_mode,
                         path=args.path,
+                        jql=args.jql,
+                        cql=args.cql,
                     )
                 )
             if args.source_command == "set-credential":
@@ -558,6 +569,14 @@ def main() -> int:
                         args.workspace,
                         args.name,
                         selector_profile=args.selector_profile,
+                    )
+                )
+            if args.source_command == "fetch":
+                return _print_json(
+                    fetch_workspace_source(
+                        args.workspace,
+                        source_name=args.name,
+                        selector_profile=None,
                     )
                 )
         except ValueError as error:

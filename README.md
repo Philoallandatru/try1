@@ -319,6 +319,13 @@ codex-try/
 - [平台 CLI 指南](docs/platform-cli-guide.zh.md) - 命令行工具使用
 - [工作空间 CLI 指南](docs/workspace-cli-guide.md) - 工作空间管理
 
+### 性能优化文档 🆕
+- [性能解决方案总结](docs/PERFORMANCE_SOLUTION_SUMMARY.md) - 完整方案概览
+- [性能诊断指南](docs/PERFORMANCE_DIAGNOSIS_GUIDE.md) - 详细诊断和优化指南
+- [Mock 服务器指南](docs/MOCK_SERVER_GUIDE.md) - 模拟 Jira/Confluence 服务器
+- [完整测试流程](docs/PERFORMANCE_TEST_WORKFLOW.md) - 端到端测试流程
+- [快速参考](docs/PERFORMANCE_QUICK_REFERENCE.md) - 一页纸速查表
+
 ### 技术文档
 - [2026 重新设计规范](docs/redesign-2026-spec.md) - 最新架构设计
 - [架构概览](docs/architecture-overview.md) - 系统架构
@@ -333,6 +340,19 @@ codex-try/
 ---
 
 ## 开发
+
+### 性能诊断和优化 🆕
+
+```powershell
+# 1. 启动模拟服务器（用于性能测试）
+python scripts/mock_atlassian_server.py --jira-issues 10000
+
+# 2. 运行性能诊断
+python scripts/diagnose_performance.py <workspace> <source_name> --limit 1000
+
+# 3. 查看详细指南
+# 参考 docs/PERFORMANCE_SOLUTION_SUMMARY.md
+```
 
 ### 运行测试
 

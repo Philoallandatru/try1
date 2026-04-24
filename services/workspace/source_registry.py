@@ -380,7 +380,10 @@ def build_fetch_request(
 
     selector_type = merged_selector.get("type")
     if source["kind"] == "jira":
-        if selector_type == "issue":
+        if selector_type == "jql_query":
+            # 直接使用 JQL 查询
+            kwargs["jql"] = merged_selector.get("jql", "order by updated asc")
+        elif selector_type == "issue":
             kwargs["issue_key"] = merged_selector.get("issue_key")
         else:
             kwargs["project_key"] = merged_selector.get("project_key")
@@ -392,7 +395,13 @@ def build_fetch_request(
             kwargs["updated_to"] = merged_selector.get("updated_to")
 
     if source["kind"] == "confluence":
-        if selector_type == "page":
+        if selector_type == "cql_query":
+            # 直接使用 CQL 查询
+            if merged_selector.get("cql"):
+                kwargs["cql"] = merged_selector.get("cql")
+            if merged_selector.get("space_key"):
+                kwargs["space_key"] = merged_selector.get("space_key")
+        elif selector_type == "page":
             kwargs["page_id"] = merged_selector.get("page_id")
         elif selector_type == "page_tree":
             kwargs["root_page_id"] = merged_selector.get("root_page_id")

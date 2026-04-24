@@ -10,7 +10,6 @@ import { apiJson } from "./apiUtils";
 import { SkeletonPage } from "./SkeletonLoader";
 import { performanceMonitor } from "./performanceMonitor";
 import { PerformancePanel } from "./PerformancePanel";
-import { WorkspaceManager } from "./WorkspaceManager";
 import { PermissionProvider } from "./PermissionContext";
 import {
   CheckCircle2,
@@ -39,6 +38,8 @@ import {
   FileCheck,
   Calendar,
   Layers,
+  MessageSquare,
+  Sliders,
 } from "lucide-react";
 import "./styles.css";
 import "./workspace-manager.css";
@@ -55,6 +56,8 @@ const DocumentManagementPage = lazy(() => import("./DocumentManagementPage").the
 const RetrievalEvaluationPage = lazy(() => import("./RetrievalEvaluationPage").then(m => ({ default: m.RetrievalEvaluationPage })));
 const RetrievalDebugPage = lazy(() => import("./RetrievalDebugPage"));
 const StrategyComparisonPage = lazy(() => import("./StrategyComparisonPage"));
+const ModelConfigPage = lazy(() => import("./ModelConfigPage").then(m => ({ default: m.ModelConfigPage })));
+const ChatPage = lazy(() => import("./ChatPage").then(m => ({ default: m.ChatPage })));
 
 const workspaceSchema = z.object({
   name: z.string().optional(),
@@ -363,7 +366,6 @@ function readRecent(key: string): string[] {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("ssdPortalToken") || "");
   const [workspaceDir, setWorkspaceDir] = useState("");
   const [workspaceName, setWorkspaceName] = useState("real-workspace");
   const [latestResult, setLatestResult] = useState<AnalyzeResult | null>(null);
@@ -386,27 +388,21 @@ function App() {
   }, []);
 
   const workspaces = useQuery({
-    queryKey: ["workspaces", token],
+    queryKey: ["workspaces"],
     queryFn: () => apiJson("/api/workspaces", workspacesSchema),
-    enabled: Boolean(token),
   });
 
   const selectedWorkspace = workspaceDir || workspaces.data?.workspaces[0]?.workspace_dir || "";
   const profiles = useQuery({
     queryKey: ["profiles", selectedWorkspace],
     queryFn: () => apiJson(`/api/workspace/profiles?workspace_dir=${encodeURIComponent(selectedWorkspace)}`, profilesSchema),
-    enabled: Boolean(token && selectedWorkspace),
+    enabled: Boolean(selectedWorkspace),
   });
   const sources = useQuery({
     queryKey: ["sources", selectedWorkspace],
     queryFn: () => apiJson(`/api/workspace/sources?workspace_dir=${encodeURIComponent(selectedWorkspace)}`, sourcesSchema),
-    enabled: Boolean(token && selectedWorkspace),
+    enabled: Boolean(selectedWorkspace),
   });
-
-  function saveToken() {
-    localStorage.setItem("ssdPortalToken", token);
-    queryClient.invalidateQueries();
-  }
 
   const createWorkspace = useMutation({
     mutationFn: (name: string) =>
@@ -435,6 +431,7 @@ function App() {
           {[
             { id: "/", label: "Analyze", icon: Search },
             { id: "/search", label: "Search", icon: FileText },
+            { id: "/chat", label: "Chat", icon: MessageSquare },
             { id: "/runs", label: "Runs", icon: Clock },
             { id: "/analysis", label: "Analysis", icon: BarChart3 },
             { id: "/daily-report", label: "Daily Report", icon: Calendar },
@@ -445,6 +442,7 @@ function App() {
             { id: "/strategy-comparison", label: "Strategy Compare", icon: BarChart3 },
             { id: "/sources", label: "Sources", icon: Database },
             { id: "/profiles", label: "Profiles", icon: Settings },
+            { id: "/model-config", label: "Model Config", icon: Sliders },
             { id: "/wiki", label: "Wiki", icon: FileText },
             { id: "/reports", label: "Reports", icon: BarChart3 },
             { id: "/spec", label: "Spec Lab", icon: FileText },
@@ -459,10 +457,6 @@ function App() {
           ))}
           <a href="/admin/"><ExternalLink size={18} /> Admin</a>
         </nav>
-        <div className="nav-footer">
-          <span className="status-dot" aria-hidden="true" />
-          <span>{token ? "Runner connected" : "Runner waiting"}</span>
-        </div>
       </aside>
 
       <main className="workspace">
@@ -470,60 +464,48 @@ function App() {
           <div className="toolbar-title">
             <span className="toolbar-dot" aria-hidden="true" />
             <div>
-              <p className="eyebrow">Local Runner</p>
-              <strong>{selectedWorkspace ? "SSD Knowledge Workspace" : "Connect Runner"}</strong>
+              <p className="eyebrow">SSD Platform</p>
+              <strong>SSD Knowledge Workspace</strong>
             </div>
-          </div>
-          <div className="toolbar-controls" aria-label="Runner controls">
-            <label>
-              Token
-              <input value={token} onChange={(event) => setToken(event.target.value)} onBlur={saveToken} placeholder="change-me" />
-            </label>
-            <WorkspaceManager
-              currentWorkspace={selectedWorkspace}
-              onWorkspaceChange={setWorkspaceDir}
-            />
           </div>
         </header>
 
-        {!token ? (
-          <EmptyState title="Connect the runner" body="Enter the local runner token to load workspaces, sources, profiles, and runs." />
-        ) : (
-          <Suspense fallback={<SkeletonPage />}>
-            <Routes>
-              <Route path="/" element={
-                <AnalyzePage
-                  workspaceDir={selectedWorkspace}
-                  profiles={profiles.data?.profiles || []}
-                  sources={sources.data?.sources || []}
-                  latestResult={latestResult}
-                  onResult={setLatestResult}
-                />
-              } />
-              <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
-              <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
-              <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
-              <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />
-              <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/profiles" element={
-                <ProfilesPage
-                  workspaceDir={selectedWorkspace}
-                  profiles={profiles.data?.profiles || []}
-                  sources={sources.data?.sources || []}
-                  selectors={sources.data?.selectors || []}
-                />
-              } />
-              <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
-              <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
-              <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
-            </Routes>
-          </Suspense>
-        )}
+        <Suspense fallback={<SkeletonPage />}>
+          <Routes>
+            <Route path="/" element={
+              <AnalyzePage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                latestResult={latestResult}
+                onResult={setLatestResult}
+              />
+            } />
+            <Route path="/search" element={<SearchPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/runs" element={<RunsPage workspaceDir={selectedWorkspace} onRerun={(result) => setLatestResult(result)} />} />
+            <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
+            <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
+            <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />
+            <Route path="/sources" element={<SourcesPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/profiles" element={
+              <ProfilesPage
+                workspaceDir={selectedWorkspace}
+                profiles={profiles.data?.profiles || []}
+                sources={sources.data?.sources || []}
+                selectors={sources.data?.selectors || []}
+              />
+            } />
+            <Route path="/model-config" element={<ModelConfigPage />} />
+            <Route path="/spec" element={<SpecLabPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/wiki" element={<ModulePlaceholder page="wiki" latestResult={latestResult} />} />
+            <Route path="/reports" element={<ModulePlaceholder page="reports" latestResult={latestResult} />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

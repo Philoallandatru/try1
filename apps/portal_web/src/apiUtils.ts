@@ -167,11 +167,6 @@ export async function fetchWithRetry<T>(
   throw new Error(friendlyMessage);
 }
 
-export function tokenHeaders(): HeadersInit {
-  const token = localStorage.getItem("ssdPortalToken") || "";
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export async function apiJson<T>(
   path: string,
   schema: z.ZodType<T>,
@@ -181,13 +176,7 @@ export async function apiJson<T>(
   return fetchWithRetry(
     path,
     schema,
-    {
-      ...init,
-      headers: {
-        ...tokenHeaders(),
-        ...(init.headers || {}),
-      },
-    },
+    init,
     retryConfig,
   );
 }
