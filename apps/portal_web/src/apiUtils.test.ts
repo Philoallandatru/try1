@@ -219,6 +219,25 @@ describe('apiUtils', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         '/api/test',
         expect.objectContaining({
+          headers: {},
+        })
+      );
+    });
+
+    it('adds Content-Type header when body is present', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: 'test' }),
+      });
+
+      await apiJson('/api/test', testSchema, {
+        method: 'POST',
+        body: JSON.stringify({ test: 'data' }),
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/test',
+        expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
