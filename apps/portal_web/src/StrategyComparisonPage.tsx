@@ -84,62 +84,53 @@ export default function StrategyComparisonPage() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1>多策略检索对比</h1>
+    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <header className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>多策略检索对比</h1>
+        <p className="page-description" style={{ fontSize: '1rem', color: '#6b7280' }}>对比不同检索策略的性能和结果</p>
+      </header>
 
-      <div style={{ marginBottom: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             查询内容
           </label>
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="输入要对比的查询..."
-            style={{
-              width: '100%',
-              minHeight: '80px',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
+            className="w-full min-h-[80px] px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             选择策略 (至少选择2个)
           </label>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="flex gap-3 flex-wrap">
             {availableStrategies.map(strategy => (
               <label
                 key={strategy.value}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: selectedStrategies.includes(strategy.value) ? '#007bff' : 'white',
-                  color: selectedStrategies.includes(strategy.value) ? 'white' : 'black',
-                }}
+                className={`flex items-center px-4 py-2 border-2 rounded-lg cursor-pointer transition-all ${
+                  selectedStrategies.includes(strategy.value)
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={selectedStrategies.includes(strategy.value)}
                   onChange={() => handleStrategyToggle(strategy.value)}
-                  style={{ marginRight: '8px' }}
+                  className="mr-2 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                 />
-                {strategy.label}
+                <span className="font-medium">{strategy.label}</span>
               </label>
             ))}
           </div>
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             返回结果数
           </label>
           <input
@@ -148,112 +139,80 @@ export default function StrategyComparisonPage() {
             onChange={(e) => setTopK(parseInt(e.target.value) || 5)}
             min="1"
             max="20"
-            style={{
-              width: '200px',
-              padding: '8px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
+            className="w-48 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <button
           onClick={handleCompare}
           disabled={loading}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
+          className={`px-6 py-3 text-base font-semibold rounded-lg transition-all ${
+            loading
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+          }`}
         >
           {loading ? '对比中...' : '开始对比'}
         </button>
       </div>
 
       {error && (
-        <div style={{
-          padding: '15px',
-          marginBottom: '20px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          border: '1px solid #f5c6cb',
-          borderRadius: '4px',
-        }}>
-          错误: {error}
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+          <span className="font-semibold">错误:</span> {error}
         </div>
       )}
 
       {result && (
         <div>
-          <div style={{
-            padding: '15px',
-            marginBottom: '20px',
-            backgroundColor: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-          }}>
-            <h3 style={{ marginTop: 0 }}>对比指标</h3>
-            <p><strong>结果重叠率:</strong> {(result.comparison_metrics.overlap_rate * 100).toFixed(1)}%</p>
-            <p><strong>平均分数差异:</strong> {result.comparison_metrics.avg_score_diff.toFixed(4)}</p>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">对比指标</h3>
+            <div className="space-y-2 text-sm">
+              <p className="text-gray-700">
+                <span className="font-semibold">结果重叠率:</span> {(result.comparison_metrics.overlap_rate * 100).toFixed(1)}%
+              </p>
+              <p className="text-gray-700">
+                <span className="font-semibold">平均分数差异:</span> {result.comparison_metrics.avg_score_diff.toFixed(4)}
+              </p>
+            </div>
           </div>
 
-          <h2>策略对比结果</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px' }}>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">策略对比结果</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {result.strategies.map((strategyResult) => (
               <div
                 key={strategyResult.strategy}
-                style={{
-                  padding: '15px',
-                  border: '2px solid #007bff',
-                  borderRadius: '8px',
-                  backgroundColor: '#f8f9fa',
-                }}
+                className="bg-white border-2 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
               >
-                <h3 style={{ marginTop: 0, color: '#007bff' }}>
+                <h3 className="text-lg font-bold text-blue-600 mb-4">
                   {availableStrategies.find(s => s.value === strategyResult.strategy)?.label || strategyResult.strategy}
                 </h3>
 
-                <div style={{ marginBottom: '15px', fontSize: '14px', color: '#666' }}>
-                  <p><strong>检索时间:</strong> {strategyResult.metrics.retrieval_time_ms.toFixed(2)} ms</p>
-                  <p><strong>结果数量:</strong> {strategyResult.metrics.total_results}</p>
+                <div className="mb-4 space-y-1 text-sm text-gray-600">
+                  <p>
+                    <span className="font-semibold">检索时间:</span> {strategyResult.metrics.retrieval_time_ms.toFixed(2)} ms
+                  </p>
+                  <p>
+                    <span className="font-semibold">结果数量:</span> {strategyResult.metrics.total_results}
+                  </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="space-y-3">
                   {strategyResult.results.map((doc, index) => (
                     <div
                       key={doc.doc_id}
-                      style={{
-                        padding: '10px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        backgroundColor: 'white',
-                      }}
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors"
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm font-semibold text-gray-900">
                           #{index + 1} - {doc.doc_id}
                         </span>
-                        <span style={{
-                          padding: '2px 6px',
-                          backgroundColor: doc.score > 0.8 ? '#28a745' : doc.score > 0.5 ? '#ffc107' : '#dc3545',
-                          color: 'white',
-                          borderRadius: '3px',
-                          fontSize: '12px',
-                        }}>
+                        <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
+                          doc.score > 0.8 ? 'bg-green-500' : doc.score > 0.5 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}>
                           {doc.score.toFixed(3)}
                         </span>
                       </div>
-                      <p style={{
-                        margin: 0,
-                        fontSize: '13px',
-                        lineHeight: '1.5',
-                        color: '#333',
-                      }}>
+                      <p className="text-sm text-gray-700 leading-relaxed">
                         {doc.content.length > 150 ? doc.content.substring(0, 150) + '...' : doc.content}
                       </p>
                     </div>

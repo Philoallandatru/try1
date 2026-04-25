@@ -58,44 +58,34 @@ export default function RetrievalDebugPage() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>检索调试工具</h1>
+    <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <header className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>检索调试工具</h1>
+        <p className="page-description" style={{ fontSize: '1rem', color: '#6b7280' }}>深入分析检索过程和结果质量</p>
+      </header>
 
-      <div style={{ marginBottom: '20px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             查询内容
           </label>
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="输入要调试的查询..."
-            style={{
-              width: '100%',
-              minHeight: '80px',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
+            className="w-full min-h-[80px] px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               检索策略
             </label>
             <select
               value={strategy}
               onChange={(e) => setStrategy(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                fontSize: '14px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-              }}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="hybrid">混合检索</option>
               <option value="semantic">语义检索</option>
@@ -104,8 +94,8 @@ export default function RetrievalDebugPage() {
             </select>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               返回结果数
             </label>
             <input
@@ -114,13 +104,7 @@ export default function RetrievalDebugPage() {
               onChange={(e) => setTopK(parseInt(e.target.value) || 5)}
               min="1"
               max="20"
-              style={{
-                width: '100%',
-                padding: '8px',
-                fontSize: '14px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-              }}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -128,106 +112,81 @@ export default function RetrievalDebugPage() {
         <button
           onClick={handleDebug}
           disabled={loading}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
+          className={`px-6 py-3 text-base font-semibold rounded-lg transition-all ${
+            loading
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md'
+          }`}
         >
           {loading ? '调试中...' : '开始调试'}
         </button>
       </div>
 
       {error && (
-        <div style={{
-          padding: '15px',
-          marginBottom: '20px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          border: '1px solid #f5c6cb',
-          borderRadius: '4px',
-        }}>
-          错误: {error}
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+          <span className="font-semibold">错误:</span> {error}
         </div>
       )}
 
       {result && (
         <div>
-          <div style={{
-            padding: '15px',
-            marginBottom: '20px',
-            backgroundColor: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-          }}>
-            <h3 style={{ marginTop: 0 }}>调试信息</h3>
-            <p><strong>策略:</strong> {result.debug_info.strategy}</p>
-            <p><strong>检索时间:</strong> {result.debug_info.retrieval_time_ms.toFixed(2)} ms</p>
-            <p><strong>文档总数:</strong> {result.debug_info.total_docs}</p>
-            <p><strong>返回结果:</strong> {result.results.length}</p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">调试信息</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600 mb-1">策略</p>
+                <p className="font-semibold text-gray-900">{result.debug_info.strategy}</p>
+              </div>
+              <div>
+                <p className="text-gray-600 mb-1">检索时间</p>
+                <p className="font-semibold text-gray-900">{result.debug_info.retrieval_time_ms.toFixed(2)} ms</p>
+              </div>
+              <div>
+                <p className="text-gray-600 mb-1">文档总数</p>
+                <p className="font-semibold text-gray-900">{result.debug_info.total_docs}</p>
+              </div>
+              <div>
+                <p className="text-gray-600 mb-1">返回结果</p>
+                <p className="font-semibold text-gray-900">{result.results.length}</p>
+              </div>
+            </div>
           </div>
 
-          <h2>检索结果</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">检索结果</h2>
           {result.results.length === 0 ? (
-            <p style={{ color: '#666' }}>未找到相关结果</p>
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-500">未找到相关结果</p>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div className="space-y-4">
               {result.results.map((doc, index) => (
                 <div
                   key={doc.doc_id}
-                  style={{
-                    padding: '15px',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    backgroundColor: '#f9f9f9',
-                  }}
+                  className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow"
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px' }}>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-base font-semibold text-gray-900">
                       #{index + 1} - {doc.doc_id}
                     </h3>
-                    <span style={{
-                      padding: '4px 8px',
-                      backgroundColor: doc.score > 0.8 ? '#28a745' : doc.score > 0.5 ? '#ffc107' : '#dc3545',
-                      color: 'white',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}>
+                    <span className={`px-3 py-1 rounded-lg text-sm font-bold text-white ${
+                      doc.score > 0.8 ? 'bg-green-500' : doc.score > 0.5 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}>
                       {doc.score.toFixed(4)}
                     </span>
                   </div>
 
-                  <p style={{
-                    margin: '10px 0',
-                    padding: '10px',
-                    backgroundColor: 'white',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    lineHeight: '1.6',
-                  }}>
-                    {doc.content}
-                  </p>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {doc.content}
+                    </p>
+                  </div>
 
                   {Object.keys(doc.metadata).length > 0 && (
-                    <details style={{ marginTop: '10px' }}>
-                      <summary style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+                    <details className="mt-3">
+                      <summary className="cursor-pointer font-semibold text-sm text-gray-700 hover:text-gray-900">
                         元数据
                       </summary>
-                      <pre style={{
-                        marginTop: '10px',
-                        padding: '10px',
-                        backgroundColor: '#f5f5f5',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        overflow: 'auto',
-                      }}>
+                      <pre className="mt-2 p-3 bg-gray-100 border border-gray-200 rounded-lg text-xs overflow-auto">
                         {JSON.stringify(doc.metadata, null, 2)}
                       </pre>
                     </details>
