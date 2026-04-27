@@ -47,12 +47,14 @@ import "./permissions.css";
 import "./share.css";
 import "./comment.css";
 import "./annotation.css";
+import "./configuration.css";
 
 // Lazy load page components for code splitting
 const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m => ({ default: m.AnalysisResultsPage })));
 const DailyReportPage = lazy(() => import("./DailyReportPage").then(m => ({ default: m.DailyReportPage })));
 const BatchAnalysisPage = lazy(() => import("./BatchAnalysisPage").then(m => ({ default: m.BatchAnalysisPage })));
 const DataSourcesPage = lazy(() => import("./DataSourcesPage"));
+const ConfigurationPage = lazy(() => import("./ConfigurationPage"));
 const RetrievalEvaluationPage = lazy(() => import("./RetrievalEvaluationPage").then(m => ({ default: m.RetrievalEvaluationPage })));
 const RetrievalDebugPage = lazy(() => import("./RetrievalDebugPage"));
 const StrategyComparisonPage = lazy(() => import("./StrategyComparisonPage"));
@@ -417,6 +419,7 @@ function App() {
             { id: "/analysis", label: "Analysis", icon: BarChart3 },
             { id: "/daily-report", label: "Daily Report", icon: Calendar },
             { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
+            { id: "/configuration", label: "Configuration", icon: Settings },
             { id: "/data-sources", label: "Data Sources", icon: Database },
             { id: "/retrieval-eval", label: "Retrieval Eval", icon: BarChart3 },
             { id: "/retrieval-debug", label: "Retrieval Debug", icon: Settings },
@@ -482,7 +485,8 @@ function App() {
             <Route path="/analysis" element={<AnalysisResultsPage workspaceDir={selectedWorkspace} />} />
             <Route path="/daily-report" element={<DailyReportPage workspaceDir={selectedWorkspace} />} />
             <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
-            <Route path="/data-sources" element={<DataSourcesPage />} />
+            <Route path="/configuration" element={<ConfigurationPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/data-sources" element={<DataSourcesPage workspaceDir={selectedWorkspace} />} />
             <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
             <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
             <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />

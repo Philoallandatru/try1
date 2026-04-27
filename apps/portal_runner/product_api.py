@@ -186,6 +186,36 @@ def create_selector(payload: dict) -> dict:
     return _redact(result)
 
 
+def delete_source(workspace_dir: str | Path, source_name: str) -> dict:
+    """Delete a source from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    source_path = registry_paths(workspace_dir)["sources"] / f"{source_name}.yaml"
+    if not source_path.exists():
+        raise ValueError(f"Source not found: {source_name}")
+    source_path.unlink()
+    return {"status": "deleted", "source_name": source_name}
+
+
+def delete_selector(workspace_dir: str | Path, selector_name: str) -> dict:
+    """Delete a selector from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    selector_path = registry_paths(workspace_dir)["selectors"] / f"{selector_name}.yaml"
+    if not selector_path.exists():
+        raise ValueError(f"Selector not found: {selector_name}")
+    selector_path.unlink()
+    return {"status": "deleted", "selector_name": selector_name}
+
+
+def delete_profile(workspace_dir: str | Path, profile_name: str) -> dict:
+    """Delete a profile from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    profile_path = registry_paths(workspace_dir)["profiles"] / f"{profile_name}.yaml"
+    if not profile_path.exists():
+        raise ValueError(f"Profile not found: {profile_name}")
+    profile_path.unlink()
+    return {"status": "deleted", "profile_name": profile_name}
+
+
 def update_source(source_name: str, payload: dict) -> dict:
     workspace_dir = _required(payload, "workspace_dir")
     result = configure_workspace_source(
