@@ -2361,6 +2361,7 @@ def build_workspace(
     workspace_dir: str | Path,
     *,
     spec_asset_ids: list[str] | None = None,
+    document_asset_ids: list[str] | None = None,
     selected_sources: list[str] | None = None,
     snapshot_dir: str | Path | None = None,
     write_index_artifacts: bool = True,
@@ -2380,7 +2381,7 @@ def build_workspace(
             _normalize_payload_file(workspace_dir, kind, payload_path)
 
     asset_documents, asset_sources = load_latest_spec_asset_documents(workspace_dir, asset_ids=spec_asset_ids)
-    doc_asset_documents, doc_asset_sources = load_document_asset_documents(workspace_dir)
+    doc_asset_documents, doc_asset_sources = load_document_asset_documents(workspace_dir, doc_ids=document_asset_ids)
     normalized_paths = sorted(paths["normalize_root"].glob("*/documents.json"))
     if selected_source_names:
         normalized_paths = [path for path in normalized_paths if path.parent.name in selected_source_names]

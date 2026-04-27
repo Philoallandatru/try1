@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "id": "123456",
+      "type": "page",
+      "status": "current",
+      "title": "Mock Confluence Page 1",
+      "space": {
+        "key": "TEST",
+        "name": "Test Space"
+      },
+      "body": {
+        "storage": {
+          "value": "<p>This is a mock Confluence page for testing</p>",
+          "representation": "storage"
+        }
+      },
+      "version": {
+        "when": "2024-01-01T00:00:00.000Z",
+        "number": 1
+      }
+    },
+    {
+      "id": "123457",
+      "type": "page",
+      "status": "current",
+      "title": "Mock Confluence Page 2",
+      "space": {
+        "key": "TEST",
+        "name": "Test Space"
+      },
+      "body": {
+        "storage": {
+          "value": "<p>Another mock Confluence page</p>",
+          "representation": "storage"
+        }
+      },
+      "version": {
+        "when": "2024-01-02T00:00:00.000Z",
+        "number": 1
+      }
+    }
+  ],
+  "size": 2,
+  "start": 0,
+  "limit": 25
+}

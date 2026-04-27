@@ -29,6 +29,7 @@ from services.workspace import (
     verify_workspace_run_with_llm,
 )
 from services.workspace.spec_assets import ingest_spec_asset, load_spec_asset_registry
+from services.workspace.document_assets import list_document_assets
 from services.workspace.source_registry import (
     fetch_cache_status,
     load_source,
@@ -186,6 +187,36 @@ def create_selector(payload: dict) -> dict:
     return _redact(result)
 
 
+def delete_source(workspace_dir: str | Path, source_name: str) -> dict:
+    """Delete a source from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    source_path = registry_paths(workspace_dir)["sources"] / f"{source_name}.yaml"
+    if not source_path.exists():
+        raise ValueError(f"Source not found: {source_name}")
+    source_path.unlink()
+    return {"status": "deleted", "source_name": source_name}
+
+
+def delete_selector(workspace_dir: str | Path, selector_name: str) -> dict:
+    """Delete a selector from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    selector_path = registry_paths(workspace_dir)["selectors"] / f"{selector_name}.yaml"
+    if not selector_path.exists():
+        raise ValueError(f"Selector not found: {selector_name}")
+    selector_path.unlink()
+    return {"status": "deleted", "selector_name": selector_name}
+
+
+def delete_profile(workspace_dir: str | Path, profile_name: str) -> dict:
+    """Delete a profile from the workspace."""
+    from services.workspace.source_registry import registry_paths
+    profile_path = registry_paths(workspace_dir)["profiles"] / f"{profile_name}.yaml"
+    if not profile_path.exists():
+        raise ValueError(f"Profile not found: {profile_name}")
+    profile_path.unlink()
+    return {"status": "deleted", "profile_name": profile_name}
+
+
 def update_source(source_name: str, payload: dict) -> dict:
     workspace_dir = _required(payload, "workspace_dir")
     result = configure_workspace_source(
@@ -232,6 +263,8 @@ def create_profile(payload: dict) -> dict:
     inputs = dict(payload.get("inputs") or {})
     if payload.get("spec_asset_ids") is not None:
         inputs["spec_assets"] = list(payload.get("spec_asset_ids") or [])
+    if payload.get("document_asset_ids") is not None:
+        inputs["document_assets"] = list(payload.get("document_asset_ids") or [])
     profile = {
         "version": 1,
         "name": profile_name,
@@ -394,6 +427,25 @@ def require_mineru_spec_asset(workspace_dir: str | Path, asset_id: str) -> dict:
 def list_spec_assets_response(workspace_dir: str | Path) -> dict:
     registry = load_spec_asset_registry(workspace_dir)
     return {"workspace_dir": str(Path(workspace_dir)), "assets": registry.get("assets", [])}
+
+
+def list_document_assets_response(workspace_dir: str | Path) -> dict:
+    """List uploaded document assets that can be used in profiles."""
+    documents = list_document_assets(workspace_dir)
+    # Convert to asset format for consistency with spec_assets
+    assets = [
+        {
+            "asset_id": doc["doc_id"],
+            "display_name": doc.get("display_name", doc["doc_id"]),
+            "document_type": doc.get("document_type", "other"),
+            "version": doc.get("version", "1.0"),
+            "parser_used": "mineru",  # All uploaded docs use mineru
+            "document_id": doc.get("document_id"),
+        }
+        for doc in documents
+    ]
+    return {"workspace_dir": str(Path(workspace_dir)), "assets": assets}
+
 
 
 def ingest_mineru_spec_asset(payload: dict) -> dict:

@@ -1,0 +1,39 @@
+{
+  "issues": [
+    {
+      "id": "10001",
+      "key": "TEST-1",
+      "fields": {
+        "summary": "Mock Jira Issue 1",
+        "description": "This is a mock Jira issue for testing",
+        "status": {
+          "name": "In Progress"
+        },
+        "priority": {
+          "name": "High"
+        },
+        "created": "2024-01-01T00:00:00.000Z",
+        "updated": "2024-01-02T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "10002",
+      "key": "TEST-2",
+      "fields": {
+        "summary": "Mock Jira Issue 2",
+        "description": "Another mock Jira issue",
+        "status": {
+          "name": "To Do"
+        },
+        "priority": {
+          "name": "Medium"
+        },
+        "created": "2024-01-03T00:00:00.000Z",
+        "updated": "2024-01-04T00:00:00.000Z"
+      }
+    }
+  ],
+  "total": 2,
+  "maxResults": 50,
+  "startAt": 0
+}

@@ -10,6 +10,9 @@ from apps.portal_runner.product_api import (
     create_selector,
     create_source,
     create_workspace,
+    delete_profile,
+    delete_selector,
+    delete_source,
     duplicate_profile,
     list_profiles_response,
     list_sources_response,
@@ -18,6 +21,7 @@ from apps.portal_runner.product_api import (
     ingest_mineru_spec_asset,
     list_selectors_response,
     list_spec_assets_response,
+    list_document_assets_response,
     require_mineru_spec_asset,
     set_default_profile,
     profile_detail_response,
@@ -219,6 +223,39 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    @app.delete("/api/workspace/sources/{source_name}")
+    async def workspace_source_delete(source_name: str, request: Request) -> dict:
+        try:
+            payload = await request.json()
+            workspace_dir = payload.get("workspace_dir")
+            if not workspace_dir:
+                raise ValueError("workspace_dir is required")
+            return delete_source(workspace_dir, source_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.delete("/api/workspace/selectors/{selector_name}")
+    async def workspace_selector_delete(selector_name: str, request: Request) -> dict:
+        try:
+            payload = await request.json()
+            workspace_dir = payload.get("workspace_dir")
+            if not workspace_dir:
+                raise ValueError("workspace_dir is required")
+            return delete_selector(workspace_dir, selector_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.delete("/api/workspace/profiles/{profile_name}")
+    async def workspace_profile_delete(profile_name: str, request: Request) -> dict:
+        try:
+            payload = await request.json()
+            workspace_dir = payload.get("workspace_dir")
+            if not workspace_dir:
+                raise ValueError("workspace_dir is required")
+            return delete_profile(workspace_dir, profile_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     @app.post("/api/workspace/profiles/{profile_name}/validate")
     async def workspace_profile_validate(profile_name: str, request: Request) -> dict:
         try:
@@ -272,6 +309,13 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     def workspace_spec_assets(workspace_dir: str) -> dict:
         try:
             return list_spec_assets_response(workspace_dir)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get("/api/workspace/document-assets")
+    def workspace_document_assets(workspace_dir: str) -> dict:
+        try:
+            return list_document_assets_response(workspace_dir)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
