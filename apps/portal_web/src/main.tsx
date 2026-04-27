@@ -60,6 +60,7 @@ const RetrievalDebugPage = lazy(() => import("./RetrievalDebugPage"));
 const StrategyComparisonPage = lazy(() => import("./StrategyComparisonPage"));
 const ModelConfigPage = lazy(() => import("./ModelConfigPage").then(m => ({ default: m.ModelConfigPage })));
 const ChatPage = lazy(() => import("./ChatPage").then(m => ({ default: m.ChatPage })));
+const DocumentManagementPage = lazy(() => import("./DocumentManagementPage").then(m => ({ default: m.DocumentManagementPage })));
 
 const workspaceSchema = z.object({
   name: z.string().optional(),
@@ -277,6 +278,7 @@ type ProfileFormValues = {
   evidenceSource: string;
   evidenceSelector: string;
   specAssetId: string;
+  documentAssetIds: string[];
   topK: number;
   promptMode: string;
   llmBackend: string;
@@ -421,6 +423,7 @@ function App() {
             { id: "/batch-analysis", label: "Batch Analysis", icon: Layers },
             { id: "/configuration", label: "Configuration", icon: Settings },
             { id: "/data-sources", label: "Data Sources", icon: Database },
+            { id: "/documents", label: "Documents", icon: Upload },
             { id: "/retrieval-eval", label: "Retrieval Eval", icon: BarChart3 },
             { id: "/retrieval-debug", label: "Retrieval Debug", icon: Settings },
             { id: "/strategy-comparison", label: "Strategy Compare", icon: BarChart3 },
@@ -487,6 +490,7 @@ function App() {
             <Route path="/batch-analysis" element={<BatchAnalysisPage />} />
             <Route path="/configuration" element={<ConfigurationPage workspaceDir={selectedWorkspace} />} />
             <Route path="/data-sources" element={<DataSourcesPage workspaceDir={selectedWorkspace} />} />
+            <Route path="/documents" element={<DocumentManagementPage workspaceDir={selectedWorkspace} />} />
             <Route path="/retrieval-eval" element={<RetrievalEvaluationPage workspaceDir={selectedWorkspace} />} />
             <Route path="/retrieval-debug" element={<RetrievalDebugPage />} />
             <Route path="/strategy-comparison" element={<StrategyComparisonPage />} />
@@ -729,6 +733,11 @@ function ProfilesPage({
     queryFn: () => apiJson(`/api/workspace/spec-assets?workspace_dir=${encodeURIComponent(workspaceDir)}`, specAssetsSchema),
     enabled: Boolean(workspaceDir),
   });
+  const documentAssets = useQuery({
+    queryKey: ["workspace-document-assets", workspaceDir],
+    queryFn: () => apiJson(`/api/workspace/document-assets?workspace_dir=${encodeURIComponent(workspaceDir)}`, specAssetsSchema),
+    enabled: Boolean(workspaceDir),
+  });
   const form = useForm<ProfileFormValues>({
     defaultValues: {
       name: "",
@@ -737,6 +746,7 @@ function ProfilesPage({
       evidenceSource: sources.find((source) => source.kind === "confluence")?.name || "",
       evidenceSelector: "",
       specAssetId: "nvme-spec-mineru",
+      documentAssetIds: [],
       topK: 5,
       promptMode: "strict",
       llmBackend: "openai-compatible",
@@ -759,6 +769,7 @@ function ProfilesPage({
               evidence: { source: values.evidenceSource, selector_profile: values.evidenceSelector },
             },
             spec_asset_ids: values.specAssetId ? [values.specAssetId] : [],
+            document_asset_ids: values.documentAssetIds || [],
             analysis: {
               top_k: Number(values.topK),
               llm_backend: values.llmBackend,
@@ -857,6 +868,25 @@ function ProfilesPage({
                 <option value="nvme-spec-mineru">nvme-spec-mineru / pending</option>
               )}
             </select>
+          </label>
+          <label>
+            Document assets (uploaded files)
+            <div style={{ maxHeight: "150px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "4px", padding: "8px" }}>
+              {(documentAssets.data?.assets || []).length === 0 ? (
+                <p style={{ margin: 0, color: "var(--text-secondary)" }}>No uploaded documents available</p>
+              ) : (
+                (documentAssets.data?.assets || []).map((asset: SpecAsset) => (
+                  <label key={asset.asset_id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
+                    <input
+                      type="checkbox"
+                      value={asset.asset_id}
+                      {...form.register("documentAssetIds")}
+                    />
+                    <span>{asset.asset_id}</span>
+                  </label>
+                ))
+              )}
+            </div>
           </label>
           <label>
             Top K

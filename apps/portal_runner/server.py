@@ -21,6 +21,7 @@ from apps.portal_runner.product_api import (
     ingest_mineru_spec_asset,
     list_selectors_response,
     list_spec_assets_response,
+    list_document_assets_response,
     require_mineru_spec_asset,
     set_default_profile,
     profile_detail_response,
@@ -308,6 +309,13 @@ def create_app(config_path: str | Path = DEFAULT_CONFIG_PATH, *, host: str = "12
     def workspace_spec_assets(workspace_dir: str) -> dict:
         try:
             return list_spec_assets_response(workspace_dir)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.get("/api/workspace/document-assets")
+    def workspace_document_assets(workspace_dir: str) -> dict:
+        try:
+            return list_document_assets_response(workspace_dir)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

@@ -426,9 +426,11 @@ class PortalPipelineRunner:
 
             profile = load_run_profile(context["workspace_dir"], profile_name)
             spec_asset_ids = profile.get("inputs", {}).get("spec_assets")
+            document_asset_ids = profile.get("inputs", {}).get("document_assets")
             build_workspace(
                 context["workspace_dir"],
                 spec_asset_ids=list(spec_asset_ids) if isinstance(spec_asset_ids, list) else None,
+                document_asset_ids=list(document_asset_ids) if isinstance(document_asset_ids, list) else None,
             )
             result = query_workspace(
                 context["workspace_dir"],
