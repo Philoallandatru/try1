@@ -205,6 +205,11 @@ def validate_run_profile(workspace_dir: str | Path, run_profile: dict) -> dict:
             if unknown_asset_ids:
                 raise ValueError(f"Unknown spec asset ids: {', '.join(unknown_asset_ids)}")
             continue
+        if input_name == "document_assets":
+            if not isinstance(input_config, list) or any(not isinstance(doc_id, str) or not doc_id.strip() for doc_id in input_config):
+                raise ValueError("profile.inputs.document_assets must be a list of document ids")
+            # Document assets are validated at runtime when building workspace
+            continue
         if not isinstance(input_config, dict):
             raise ValueError("profile.inputs entries must be named objects")
         source_name = _validate_name(input_config.get("source"), f"profile.inputs.{input_name}.source")
