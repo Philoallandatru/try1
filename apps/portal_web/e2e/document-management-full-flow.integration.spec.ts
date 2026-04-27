@@ -42,9 +42,8 @@ test.describe('Document Management Full Integration Flow', () => {
   test('Step 1: Navigate to Document Management and verify UI', async ({ page }) => {
     console.log('\n=== Step 1: Navigate to Document Management ===');
 
-    // Note: Document management might be integrated into data-sources or a separate route
-    // Checking both possibilities
-    await page.goto('http://localhost:5173/data-sources');
+    // Navigate to the documents page
+    await page.goto('http://localhost:5173/documents');
     await page.waitForLoadState('networkidle');
 
     // Look for document-related UI elements

@@ -52,7 +52,7 @@ test.describe('Data Source Setup - From Scratch', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify page loaded
-    const heading = page.locator('h1:has-text("数据源管理")');
+    const heading = page.locator('h2:has-text("数据源管理")');
     await expect(heading).toBeVisible({ timeout: 5000 });
 
     console.log('✓ Data Sources page loaded successfully');

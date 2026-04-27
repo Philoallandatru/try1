@@ -86,12 +86,12 @@ test.describe('Jira/Confluence Full Integration Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Open add source modal
-    const addButton = page.locator('button:has-text("添加数据源")');
+    const addButton = page.locator('button:has-text("添加 Jira")');
     await addButton.click();
     await page.waitForTimeout(500);
 
     // Verify modal opened
-    const modalTitle = page.locator('h2:has-text("添加数据源")');
+    const modalTitle = page.locator('h3:has-text("添加 Jira 数据源")');
     await expect(modalTitle).toBeVisible({ timeout: 5000 });
     console.log('✓ Add source modal opened');
 

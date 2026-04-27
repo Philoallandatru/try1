@@ -187,6 +187,18 @@ function SourcesPanel({ workspaceDir, sources, onRefresh }: {
     },
   });
 
+  const updateSource = useMutation({
+    mutationFn: ({ name, data }: { name: string; data: Partial<Source> }) =>
+      apiJson(`/api/workspace/sources/${name}`, z.unknown(), {
+        method: 'PATCH',
+        body: JSON.stringify({ workspace_dir: workspaceDir, ...data }),
+      }),
+    onSuccess: () => {
+      onRefresh();
+      setEditingSource(null);
+    },
+  });
+
   const deleteSource = useMutation({
     mutationFn: (name: string) =>
       apiJson(`/api/workspace/sources/${name}`, z.unknown(), {
@@ -260,8 +272,8 @@ function SourcesPanel({ workspaceDir, sources, onRefresh }: {
           workspaceDir={workspaceDir}
           source={editingSource}
           onClose={() => setEditingSource(null)}
-          onSubmit={(source) => createSource.mutate(source)}
-          isSubmitting={createSource.isPending}
+          onSubmit={(source) => updateSource.mutate({ name: editingSource.name, data: source })}
+          isSubmitting={updateSource.isPending}
         />
       )}
     </div>
@@ -490,16 +502,20 @@ function SourceFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const payload: any = {
       name: formData.name,
       kind: formData.kind,
       mode: formData.mode,
       connector_type: formData.connector_type,
       enabled: formData.enabled,
-      config: formData.config_path ? { path: formData.config_path } : {},
+      config: {},
       policies: formData.policies.split(',').map(p => p.trim()).filter(Boolean),
       metadata: { description: `${formData.kind} source` },
-    } as any);
+    };
+    if (formData.config_path) {
+      payload.path = formData.config_path;
+    }
+    onSubmit(payload);
   };
 
   return (
