@@ -1,0 +1,3526 @@
+npm warn Unknown user config "python". This will stop working in the next major version of npm.
+npm warn Unknown user config "msvs_version". This will stop working in the next major version of npm.
+
+Running 110 tests using 10 workers
+
+[1A[2K[1/110] [chromium] › e2e\analysis.spec.ts:50:3 › Analysis Page E2E Tests › should handle Chinese content in analysis results
+[1A[2K[2/110] [chromium] › e2e\analysis.spec.ts:9:3 › Analysis Page E2E Tests › should display analysis page with correct UI elements
+[1A[2K[3/110] [chromium] › e2e\analysis.spec.ts:17:3 › Analysis Page E2E Tests › should trigger deep analysis for a Jira issue
+[1A[2K[4/110] [chromium] › e2e\analysis.spec.ts:66:3 › Analysis Page E2E Tests › should display analysis sections correctly
+[1A[2K[5/110] [chromium] › e2e\analysis.spec.ts:34:3 › Analysis Page E2E Tests › should display Markdown content correctly
+[1A[2K[6/110] [chromium] › e2e\analysis.spec.ts:87:3 › Analysis Page E2E Tests › should render code blocks in analysis results
+[1A[2K[7/110] [chromium] › e2e\analysis.spec.ts:104:3 › Analysis Page E2E Tests › should render lists in analysis results
+[1A[2K[8/110] [chromium] › e2e\analysis.spec.ts:156:3 › Analysis Page E2E Tests › should display error message on API failure
+[1A[2K[9/110] [chromium] › e2e\analysis.spec.ts:119:3 › Analysis Page E2E Tests › should render tables in analysis results
+[1A[2K[10/110] [chromium] › e2e\analysis.spec.ts:137:3 › Analysis Page E2E Tests › should handle loading state during analysis
+[1A[2K[11/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:9:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace
+[1A[2K[12/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:27:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available
+[1A[2K[13/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:44:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button
+[1A[2K[14/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:143:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available
+[1A[2K[15/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:59:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data
+[1A[2K[16/110] [chromium] › e2e\analyze-demo-workspace.spec.ts:181:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run
+[1A[2K[17/110] [chromium] › e2e\analyze-page.spec.ts:13:3 › Analyze Page E2E Tests › should display Analyze page with correct UI elements
+[1A[2K[18/110] [chromium] › e2e\analyze-page.spec.ts:27:3 › Analyze Page E2E Tests › should show setup checklist status
+[1A[2K[19/110] [chromium] › e2e\analyze-page.spec.ts:44:3 › Analyze Page E2E Tests › should have Run Analysis button
+[1A[2K  1) [chromium] › e2e\analysis.spec.ts:9:3 › Analysis Page E2E Tests › should display analysis page with correct UI elements 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1, h2').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1, h2').first()[22m
+
+
+      12 |
+      13 |     // Check for page title or heading
+    > 14 |     await expect(page.locator('h1, h2').first()).toBeVisible();
+         |                                                  ^
+      15 |   });
+      16 |
+      17 |   test('should trigger deep analysis for a Jira issue', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analysis.spec.ts:14:50
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analysis-Analysis-Page-E2E-1bd74-ge-with-correct-UI-elements-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analysis-Analysis-Page-E2E-1bd74-ge-with-correct-UI-elements-chromium\error-context.md
+
+
+[1A[2K[20/110] [chromium] › e2e\analyze-page.spec.ts:51:3 › Analyze Page E2E Tests › should trigger analysis when form is submitted
+[1A[2K  2) [chromium] › e2e\analyze-page.spec.ts:13:3 › Analyze Page E2E Tests › should display Analyze page with correct UI elements 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h2:has-text("Deep Jira Analysis")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h2:has-text("Deep Jira Analysis")')[22m
+
+
+      15 |
+      16 |     // Check for page heading
+    > 17 |     await expect(page.locator('h2:has-text("Deep Jira Analysis")')).toBeVisible();
+         |                                                                     ^
+      18 |
+      19 |     // Check for setup checklist
+      20 |     await expect(page.locator('text=Setup Checklist')).toBeVisible();
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:17:69
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--ee0cb-ge-with-correct-UI-elements-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--ee0cb-ge-with-correct-UI-elements-chromium\error-context.md
+
+
+[1A[2K  3) [chromium] › e2e\analyze-page.spec.ts:44:3 › Analyze Page E2E Tests › should have Run Analysis button 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("Run Analysis")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button:has-text("Run Analysis")')[22m
+
+
+      46 |
+      47 |     const runButton = page.locator('button:has-text("Run Analysis")');
+    > 48 |     await expect(runButton).toBeVisible();
+         |                             ^
+      49 |   });
+      50 |
+      51 |   test('should trigger analysis when form is submitted', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:48:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--5270b-ld-have-Run-Analysis-button-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--5270b-ld-have-Run-Analysis-button-chromium\error-context.md
+
+
+[1A[2K[21/110] [chromium] › e2e\analyze-page.spec.ts:106:3 › Analyze Page E2E Tests › should display error message when API fails
+[1A[2K[22/110] [chromium] › e2e\analyze-page.spec.ts:137:3 › Analyze Page E2E Tests › should show recent issues in datalist
+[1A[2K[23/110] [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis
+[1A[2K  4) [chromium] › e2e\analyze-demo-workspace.spec.ts:143:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-9dd5f-r-when-LLM-is-not-available-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-9dd5f-r-when-LLM-is-not-available-chromium\error-context.md
+
+
+[1A[2K  5) [chromium] › e2e\analyze-demo-workspace.spec.ts:59:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-82d56-y-run-analysis-on-demo-data-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-82d56-y-run-analysis-on-demo-data-chromium\error-context.md
+
+
+[1A[2K  6) [chromium] › e2e\analyze-demo-workspace.spec.ts:27:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-fe856-uld-have-profiles-available-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-fe856-uld-have-profiles-available-chromium\error-context.md
+
+
+[1A[2K  7) [chromium] › e2e\analyze-demo-workspace.spec.ts:9:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-4e519-4-ready-with-demo-workspace-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-4e519-4-ready-with-demo-workspace-chromium\error-context.md
+
+
+[1A[2K  8) [chromium] › e2e\analyze-demo-workspace.spec.ts:181:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-6f850-o-Runs-page-and-see-the-run-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-6f850-o-Runs-page-and-see-the-run-chromium\error-context.md
+
+
+[1A[2K  9) [chromium] › e2e\analyze-demo-workspace.spec.ts:44:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-demo-workspace.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-demo-workspace-Ana-06706--enable-Run-Analysis-button-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-demo-workspace-Ana-06706--enable-Run-Analysis-button-chromium\error-context.md
+
+
+[1A[2K  10) [chromium] › e2e\analyze-page.spec.ts:27:3 › Analyze Page E2E Tests › should show setup checklist status 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.setup-checklist') to be visible[22m
+
+
+      29 |
+      30 |     // Wait for setup checklist to load
+    > 31 |     await page.waitForSelector('.setup-checklist', { timeout: 10000 });
+         |                ^
+      32 |
+      33 |     // Check for setup items
+      34 |     const setupItems = page.locator('.setup-item');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:31:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--8100d-show-setup-checklist-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--8100d-show-setup-checklist-status-chromium\error-context.md
+
+
+[1A[2K[24/110] [chromium] › e2e\analyze-page.spec.ts:164:3 › Analyze Page E2E Tests › should handle workspace selection
+[1A[2K[25/110] [chromium] › e2e\analyze-page.spec.ts:179:3 › Analyze Page E2E Tests › should show advanced options when clicked
+[1A[2K[26/110] [chromium] › e2e\analyze-page.spec.ts:198:3 › Analyze Page E2E Tests › should navigate to other pages from sidebar
+[1A[2K[27/110] [chromium] › e2e\analyze-page.spec.ts:214:3 › Analyze Page E2E Tests › should check backend connectivity
+[1A[2K[28/110] [chromium] › e2e\analyze-page.spec.ts:225:3 › Analyze Page E2E Tests › should validate form inputs
+[1A[2K[29/110] [chromium] › e2e\analyze-page.spec.ts:239:3 › Analyze Page E2E Tests › should display setup checklist items correctly
+[1A[2K[30/110] [chromium] › e2e\analyze-page.spec.ts:255:3 › Analyze Page E2E Tests › should handle setup item navigation
+[1A[2K[31/110] [chromium] › e2e\complete-flow.spec.ts:46:3 › Complete End-to-End Flow › Complete Flow: Add Data Sources → Build Index → Search
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:46:3 › Complete End-to-End Flow › Complete Flow: Add Data Sources → Build Index → Search
+
+=== E2E Test Setup ===
+
+[1A[2K[32/110] [chromium] › e2e\complete-flow.spec.ts:284:3 › Complete End-to-End Flow › Flow: Data Sources → Retrieval Debug
+[1A[2K  11) [chromium] › e2e\analyze-page.spec.ts:51:3 › Analyze Page E2E Tests › should trigger analysis when form is submitted 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder*="SSD-DEMO-A"]') to be visible[22m
+
+
+      53 |
+      54 |     // Wait for page to load
+    > 55 |     await page.waitForSelector('input[placeholder*="SSD-DEMO-A"]', { timeout: 10000 });
+         |                ^
+      56 |
+      57 |     // Fill in issue key
+      58 |     const issueInput = page.locator('input[placeholder*="SSD-DEMO-A"]');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:55:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--55eb2-ysis-when-form-is-submitted-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--55eb2-ysis-when-form-is-submitted-chromium\error-context.md
+
+
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:284:3 › Complete End-to-End Flow › Flow: Data Sources → Retrieval Debug
+
+=== E2E Test Setup ===
+
+[1A[2K[33/110] [chromium] › e2e\complete-flow.spec.ts:307:3 › Complete End-to-End Flow › Flow: Data Sources → Strategy Comparison
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:307:3 › Complete End-to-End Flow › Flow: Data Sources → Strategy Comparison
+
+=== E2E Test Setup ===
+
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:46:3 › Complete End-to-End Flow › Complete Flow: Add Data Sources → Build Index → Search
+✓ Setup complete
+
+
+[1A[2K
+=== STEP 1: Navigate to Data Sources ===
+
+[1A[2K  12) [chromium] › e2e\analyze-page.spec.ts:198:3 › Analyze Page E2E Tests › should navigate to other pages from sidebar 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('nav a:has-text("Search")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('nav a:has-text("Search")')[22m
+
+
+      201 |     // Check sidebar navigation
+      202 |     const searchLink = page.locator('nav a:has-text("Search")');
+    > 203 |     await expect(searchLink).toBeVisible();
+          |                              ^
+      204 |
+      205 |     await searchLink.click();
+      206 |     await expect(page).toHaveURL('http://localhost:5173/search');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:203:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--e5a3f-to-other-pages-from-sidebar-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--e5a3f-to-other-pages-from-sidebar-chromium\error-context.md
+
+
+[1A[2K  13) [chromium] › e2e\analyze-page.spec.ts:106:3 › Analyze Page E2E Tests › should display error message when API fails 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder*="SSD-DEMO-A"]') to be visible[22m
+
+
+      117 |
+      118 |     // Wait for form
+    > 119 |     await page.waitForSelector('input[placeholder*="SSD-DEMO-A"]', { timeout: 10000 });
+          |                ^
+      120 |
+      121 |     // Fill in issue key
+      122 |     await page.locator('input[placeholder*="SSD-DEMO-A"]').fill('SSD-TEST-ERROR');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:119:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--67ced-rror-message-when-API-fails-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--67ced-rror-message-when-API-fails-chromium\error-context.md
+
+
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:284:3 › Complete End-to-End Flow › Flow: Data Sources → Retrieval Debug
+✓ Setup complete
+
+
+[1A[2K
+=== Flow: Data Sources → Retrieval Debug ===
+
+[1A[2K[34/110] [chromium] › e2e\complete-flow.spec.ts:326:3 › Complete End-to-End Flow › Flow: Search → Analyze → Runs
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:307:3 › Complete End-to-End Flow › Flow: Data Sources → Strategy Comparison
+✓ Setup complete
+
+
+[1A[2K
+=== Flow: Data Sources → Strategy Comparison ===
+
+[1A[2K[35/110] [chromium] › e2e\data-sources-page.spec.ts:9:3 › Data Sources Page › should display page title and description
+[1A[2K[chromium] › e2e\complete-flow.spec.ts:326:3 › Complete End-to-End Flow › Flow: Search → Analyze → Runs
+
+=== E2E Test Setup ===
+
+[1A[2K  14) [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.analyze-grid') to be visible[22m
+
+
+      155 |
+      156 |     // Wait for page load
+    > 157 |     await page.waitForSelector('.analyze-grid', { timeout: 10000 });
+          |                ^
+      158 |
+      159 |     // Check if result surface exists (might be empty initially)
+      160 |     const resultSurface = page.locator('.result-surface');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:157:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--4c3c0-w-after-successful-analysis-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--4c3c0-w-after-successful-analysis-chromium\error-context.md
+
+
+[1A[2K[36/110] [chromium] › e2e\data-sources-page.spec.ts:14:3 › Data Sources Page › should show add data source buttons
+[1A[2K[37/110] [chromium] › e2e\data-sources-page.spec.ts:19:3 › Data Sources Page › should open Jira modal when clicking add Jira button
+[1A[2K  15) [chromium] › e2e\analyze-page.spec.ts:214:3 › Analyze Page E2E Tests › should check backend connectivity 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=/Runner connected|Runner waiting/')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=/Runner connected|Runner waiting/')[22m
+
+
+      220 |     // Check for connection status
+      221 |     const statusIndicator = page.locator('text=/Runner connected|Runner waiting/');
+    > 222 |     await expect(statusIndicator).toBeVisible();
+          |                                   ^
+      223 |   });
+      224 |
+      225 |   test('should validate form inputs', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:222:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--3eeed--check-backend-connectivity-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--3eeed--check-backend-connectivity-chromium\error-context.md
+
+
+[1A[2K[38/110] [chromium] › e2e\data-sources-page.spec.ts:29:3 › Data Sources Page › should open Confluence modal when clicking add Confluence button
+[1A[2K[39/110] [chromium] › e2e\data-sources-page.spec.ts:39:3 › Data Sources Page › should validate required fields in Jira form
+[1A[2K[40/110] [chromium] › e2e\data-sources-page.spec.ts:54:3 › Data Sources Page › should add a Jira data source successfully
+[1A[2K✓ Setup complete
+
+
+[1A[2K
+=== Flow: Search → Analyze → Runs ===
+
+[1A[2K[41/110] [chromium] › e2e\data-sources-page.spec.ts:76:3 › Data Sources Page › should add a Confluence data source successfully
+[1A[2K  16) [chromium] › e2e\analyze-page.spec.ts:239:3 › Analyze Page E2E Tests › should display setup checklist items correctly 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.setup-checklist') to be visible[22m
+
+
+      240 |     await page.goto('http://localhost:5173/');
+      241 |
+    > 242 |     await page.waitForSelector('.setup-checklist', { timeout: 10000 });
+          |                ^
+      243 |
+      244 |     // Check for specific setup items
+      245 |     const expectedItems = ['Jira Source', 'Confluence Source', 'File Asset', 'Analysis Profile'];
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:242:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--baec2-p-checklist-items-correctly-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--baec2-p-checklist-items-correctly-chromium\error-context.md
+
+
+[1A[2K  17) [chromium] › e2e\analyze-page.spec.ts:255:3 › Analyze Page E2E Tests › should handle setup item navigation 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.setup-checklist') to be visible[22m
+
+
+      256 |     await page.goto('http://localhost:5173/');
+      257 |
+    > 258 |     await page.waitForSelector('.setup-checklist', { timeout: 10000 });
+          |                ^
+      259 |
+      260 |     // Click on a setup item (e.g., Sources)
+      261 |     const sourcesItem = page.locator('.setup-item:has-text("Jira Source")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:258:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--4a4c2-andle-setup-item-navigation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--4a4c2-andle-setup-item-navigation-chromium\error-context.md
+
+
+[1A[2K[42/110] [chromium] › e2e\data-sources-page.spec.ts:98:3 › Data Sources Page › should close modal when clicking cancel
+[1A[2K[43/110] [chromium] › e2e\data-sources-page.spec.ts:109:3 › Data Sources Page › should display empty state when no data sources exist
+[1A[2K[44/110] [chromium] › e2e\data-sources-page.spec.ts:121:3 › Data Sources Page › should show delete button for existing data sources
+[1A[2K[45/110] [chromium] › e2e\data-sources-page.spec.ts:138:3 › Data Sources Page › should group data sources by type
+[1A[2K[46/110] [chromium] › e2e\data-sources-page.spec.ts:143:3 › Data Sources Page › should show help text for Mock Server
+[1A[2K[47/110] [chromium] › e2e\data-sources-page.spec.ts:147:3 › Data Sources Page › should display data source details
+[1A[2K  18) [chromium] › e2e\data-sources-page.spec.ts:39:3 › Data Sources Page › should validate required fields in Jira form 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText('名称不能为空')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText('名称不能为空')[22m
+
+
+      49 |
+      50 |     // Form should show validation errors
+    > 51 |     await expect(page.getByText('名称不能为空')).toBeVisible();
+         |                                            ^
+      52 |   });
+      53 |
+      54 |   test('should add a Jira data source successfully', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-sources-page.spec.ts:51:44
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-sources-page-Data-Sou-675cf-equired-fields-in-Jira-form-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-sources-page-Data-Sou-675cf-equired-fields-in-Jira-form-chromium\error-context.md
+
+
+[1A[2K[48/110] [chromium] › e2e\document-management.spec.ts:42:3 › Document Management E2E › should load document types
+[1A[2K  19) [chromium] › e2e\data-sources-page.spec.ts:54:3 › Data Sources Page › should add a Jira data source successfully 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).not.[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  getByRole('heading', { name: '添加 Jira 数据源' })
+    Expected: not visible
+    Received: visible
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "not toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: '添加 Jira 数据源' })[22m
+    [2m    9 × locator resolved to <h3>添加 Jira 数据源</h3>[22m
+    [2m      - unexpected value "visible"[22m
+
+
+      68 |
+      69 |     // Modal should close
+    > 70 |     await expect(page.getByRole('heading', { name: '添加 Jira 数据源' })).not.toBeVisible();
+         |                                                                          ^
+      71 |
+      72 |     // New data source should appear in the list
+      73 |     await expect(page.getByText(uniqueName)).toBeVisible();
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-sources-page.spec.ts:70:74
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-sources-page-Data-Sou-3fb2e-ra-data-source-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-sources-page-Data-Sou-3fb2e-ra-data-source-successfully-chromium\error-context.md
+
+
+[1A[2K[49/110] [chromium] › e2e\document-management.spec.ts:62:3 › Document Management E2E › should list existing documents
+[1A[2K  20) [chromium] › e2e\data-sources-page.spec.ts:76:3 › Data Sources Page › should add a Confluence data source successfully 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).not.[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  getByRole('heading', { name: '添加 Confluence 数据源' })
+    Expected: not visible
+    Received: visible
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "not toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: '添加 Confluence 数据源' })[22m
+    [2m    9 × locator resolved to <h3>添加 Confluence 数据源</h3>[22m
+    [2m      - unexpected value "visible"[22m
+
+
+      90 |
+      91 |     // Modal should close
+    > 92 |     await expect(page.getByRole('heading', { name: '添加 Confluence 数据源' })).not.toBeVisible();
+         |                                                                                ^
+      93 |
+      94 |     // New data source should appear in the list
+      95 |     await expect(page.getByText(uniqueName)).toBeVisible();
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-sources-page.spec.ts:92:80
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-sources-page-Data-Sou-6f087-ce-data-source-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-sources-page-Data-Sou-6f087-ce-data-source-successfully-chromium\error-context.md
+
+
+[1A[2K[50/110] [chromium] › e2e\document-management.spec.ts:77:3 › Document Management E2E › should filter documents by type
+[1A[2K[chromium] › e2e\document-management.spec.ts:62:3 › Document Management E2E › should list existing documents
+Found 0 documents in the list
+
+[1A[2K[51/110] [chromium] › e2e\document-management.spec.ts:97:3 › Document Management E2E › should upload a new document
+[1A[2K[52/110] [chromium] › e2e\document-management.spec.ts:126:3 › Document Management E2E › should search uploaded documents
+[1A[2K  21) [chromium] › e2e\document-management.spec.ts:97:3 › Document Management E2E › should upload a new document 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeAttached[2m([22m[2m)[22m failed
+
+    Locator: locator('input[type="file"]')
+    Expected: attached
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeAttached" with timeout 5000ms[22m
+    [2m  - waiting for locator('input[type="file"]')[22m
+
+
+       98 |     // Find file input
+       99 |     const fileInput = page.locator('input[type="file"]');
+    > 100 |     await expect(fileInput).toBeAttached();
+          |                             ^
+      101 |
+      102 |     // Upload file
+      103 |     await fileInput.setInputFiles(testPdfPath);
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\document-management.spec.ts:100:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\document-management-Docume-bf6e8-hould-upload-a-new-document-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\document-management-Docume-bf6e8-hould-upload-a-new-document-chromium\error-context.md
+
+
+[1A[2K[53/110] [chromium] › e2e\document-management.spec.ts:155:3 › Document Management E2E › should verify document appears in search with correct metadata
+[1A[2K  22) [chromium] › e2e\document-management.spec.ts:155:3 › Document Management E2E › should verify document appears in search with correct metadata 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED ::1:8787
+    Call log:
+    [2m  - → POST http://localhost:8787/api/retrieval/search[22m
+    [2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+    [2m    - accept: */*[22m
+    [2m    - accept-encoding: gzip,deflate,br[22m
+    [2m    - content-type: application/json[22m
+    [2m    - content-length: 61[22m
+
+        at apiRequestContext.post: connect ECONNREFUSED ::1:8787
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\document-management.spec.ts:157:41
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\document-management-Docume-ee609-earch-with-correct-metadata-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\document-management-Docume-ee609-earch-with-correct-metadata-chromium\error-context.md
+
+
+[1A[2K[54/110] [chromium] › e2e\index-management.spec.ts:8:3 › Index Management E2E Tests › should display home page with correct branding
+[1A[2K  23) [chromium] › e2e\index-management.spec.ts:8:3 › Index Management E2E Tests › should display home page with correct branding 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('h1')
+    Expected substring: [32m"SSD Quality Wiki"[39m
+    Received string:    [31m"How can I help you today?"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1')[22m
+    [2m    9 × locator resolved to <h1 class="empty-state-title">How can I help you today?</h1>[22m
+    [2m      - unexpected value "How can I help you today?"[22m
+
+
+       8 |   test('should display home page with correct branding', async ({ page }) => {
+       9 |     // Check page title matches actual branding
+    > 10 |     await expect(page.locator('h1')).toContainText('SSD Quality Wiki');
+         |                                      ^
+      11 |   });
+      12 |
+      13 |   test('should show index build button in search page', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:10:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-e3644--page-with-correct-branding-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-e3644--page-with-correct-branding-chromium\error-context.md
+
+
+[1A[2K[55/110] [chromium] › e2e\index-management.spec.ts:13:3 › Index Management E2E Tests › should show index build button in search page
+[1A[2K  24) [chromium] › e2e\index-management.spec.ts:13:3 › Index Management E2E Tests › should show index build button in search page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="rebuild-index-button"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="rebuild-index-button"]')[22m
+
+
+      17 |     // Look for rebuild index button
+      18 |     const rebuildButton = page.locator('[data-testid="rebuild-index-button"]');
+    > 19 |     await expect(rebuildButton).toBeVisible();
+         |                                 ^
+      20 |   });
+      21 |
+      22 |   test('should navigate to search page', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:19:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-913f2-build-button-in-search-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-913f2-build-button-in-search-page-chromium\error-context.md
+
+
+[1A[2K[56/110] [chromium] › e2e\index-management.spec.ts:22:3 › Index Management E2E Tests › should navigate to search page
+[1A[2K  25) [chromium] › e2e\index-management.spec.ts:22:3 › Index Management E2E Tests › should navigate to search page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('a').filter({ hasText: 'Search' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('a').filter({ hasText: 'Search' })[22m
+
+
+      24 |     const searchLink = page.locator('a').filter({ hasText: 'Search' });
+      25 |
+    > 26 |     await expect(searchLink).toBeVisible();
+         |                              ^
+      27 |     await searchLink.click();
+      28 |
+      29 |     // Verify navigation by checking URL and content
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:26:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-d5a28-uld-navigate-to-search-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-d5a28-uld-navigate-to-search-page-chromium\error-context.md
+
+
+[1A[2K[57/110] [chromium] › e2e\index-management.spec.ts:34:3 › Index Management E2E Tests › should display document count in search page
+[1A[2K  26) [chromium] › e2e\index-management.spec.ts:34:3 › Index Management E2E Tests › should display document count in search page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="document-count"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="document-count"]')[22m
+
+
+      38 |     // Look for document count display
+      39 |     const docCount = page.locator('[data-testid="document-count"]');
+    > 40 |     await expect(docCount).toBeVisible();
+         |                            ^
+      41 |   });
+      42 |
+      43 |   test('should handle index rebuild if available', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:40:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-2085e-cument-count-in-search-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-2085e-cument-count-in-search-page-chromium\error-context.md
+
+
+[1A[2K[58/110] [chromium] › e2e\index-management.spec.ts:43:3 › Index Management E2E Tests › should handle index rebuild if available
+[1A[2K  27) [chromium] › e2e\analyze-page.spec.ts:225:3 › Analyze Page E2E Tests › should validate form inputs 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder*="SSD-DEMO-A"]')[22m
+
+
+      231 |     // Button should be disabled if setup is not complete or form is invalid
+      232 |     const issueInput = page.locator('input[placeholder*="SSD-DEMO-A"]');
+    > 233 |     await issueInput.fill('');
+          |                      ^
+      234 |
+      235 |     // Check button state after clearing input
+      236 |     await page.waitForTimeout(500);
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-page.spec.ts:233:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-page-Analyze-Page--16c6d-should-validate-form-inputs-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-page-Analyze-Page--16c6d-should-validate-form-inputs-chromium\error-context.md
+
+
+[1A[2K[59/110] [chromium] › e2e\index-management.spec.ts:61:3 › Index Management E2E Tests › should show index statistics in search page
+[1A[2K  28) [chromium] › e2e\complete-flow.spec.ts:46:3 › Complete End-to-End Flow › Complete Flow: Add Data Sources → Build Index → Search 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      48 |
+      49 |     // Navigate to Data Sources page
+    > 50 |     await page.click('aside.nav a[href="/data-sources"]');
+         |                ^
+      51 |     await page.waitForLoadState('networkidle');
+      52 |
+      53 |     const heading = page.locator('h1:has-text("数据源管理")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\complete-flow.spec.ts:50:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\complete-flow-Complete-End-a9204-rces-→-Build-Index-→-Search-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\complete-flow-Complete-End-a9204-rces-→-Build-Index-→-Search-chromium\error-context.md
+
+
+[1A[2K  29) [chromium] › e2e\complete-flow.spec.ts:284:3 › Complete End-to-End Flow › Flow: Data Sources → Retrieval Debug 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      286 |
+      287 |     // Navigate to Data Sources
+    > 288 |     await page.click('aside.nav a[href="/data-sources"]');
+          |                ^
+      289 |     await page.waitForLoadState('networkidle');
+      290 |     console.log('✓ On Data Sources page');
+      291 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\complete-flow.spec.ts:288:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\complete-flow-Complete-End-67425-a-Sources-→-Retrieval-Debug-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\complete-flow-Complete-End-67425-a-Sources-→-Retrieval-Debug-chromium\error-context.md
+
+
+[1A[2K[60/110] [chromium] › e2e\index-management.spec.ts:75:3 › Index Management E2E Tests › should handle API errors gracefully
+[1A[2K[61/110] [chromium] › e2e\index-management.spec.ts:96:3 › Index Management E2E Tests › should maintain responsive layout
+[1A[2K  30) [chromium] › e2e\complete-flow.spec.ts:307:3 › Complete End-to-End Flow › Flow: Data Sources → Strategy Comparison 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      309 |
+      310 |     // Navigate to Data Sources
+    > 311 |     await page.click('aside.nav a[href="/data-sources"]');
+          |                ^
+      312 |     await page.waitForLoadState('networkidle');
+      313 |     console.log('✓ On Data Sources page');
+      314 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\complete-flow.spec.ts:311:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\complete-flow-Complete-End-70909-urces-→-Strategy-Comparison-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\complete-flow-Complete-End-70909-urces-→-Strategy-Comparison-chromium\error-context.md
+
+
+[1A[2K[62/110] [chromium] › e2e\search.spec.ts:9:3 › Search Page E2E Tests › should display search page with all UI elements
+[1A[2K[63/110] [chromium] › e2e\search.spec.ts:23:3 › Search Page E2E Tests › should perform search and display results
+[1A[2K  31) [chromium] › e2e\complete-flow.spec.ts:326:3 › Complete End-to-End Flow › Flow: Search → Analyze → Runs 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/search"]')[22m
+
+
+      328 |
+      329 |     // Step 1: Search
+    > 330 |     await page.click('aside.nav a[href="/search"]');
+          |                ^
+      331 |     await page.waitForLoadState('networkidle');
+      332 |     console.log('✓ Search page loaded');
+      333 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\complete-flow.spec.ts:330:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\complete-flow-Complete-End-05652-low-Search-→-Analyze-→-Runs-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\complete-flow-Complete-End-05652-low-Search-→-Analyze-→-Runs-chromium\error-context.md
+
+
+[1A[2K[64/110] [chromium] › e2e\search.spec.ts:49:3 › Search Page E2E Tests › should handle empty search query
+[1A[2K  32) [chromium] › e2e\search.spec.ts:9:3 › Search Page E2E Tests › should display search page with all UI elements 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="search-input"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      10 |     // Check search input exists
+      11 |     const searchInput = page.locator('[data-testid="search-input"]');
+    > 12 |     await expect(searchInput).toBeVisible();
+         |                               ^
+      13 |
+      14 |     // Check search button exists
+      15 |     const searchButton = page.locator('[data-testid="search-button"]');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:12:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-ab7dd-h-page-with-all-UI-elements-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-ab7dd-h-page-with-all-UI-elements-chromium\error-context.md
+
+
+[1A[2K  33) [chromium] › e2e\index-management.spec.ts:61:3 › Index Management E2E Tests › should show index statistics in search page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="index-status-card"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="index-status-card"]')[22m
+
+
+      66 |     // Look for index status card
+      67 |     const indexCard = page.locator('[data-testid="index-status-card"]');
+    > 68 |     await expect(indexCard).toBeVisible();
+         |                             ^
+      69 |
+      70 |     // Should show document count
+      71 |     const docCount = page.locator('[data-testid="document-count"]');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:68:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-3532c-x-statistics-in-search-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-3532c-x-statistics-in-search-page-chromium\error-context.md
+
+
+[1A[2K[65/110] [chromium] › e2e\search.spec.ts:57:3 › Search Page E2E Tests › should display search results with highlights
+[1A[2K[66/110] [chromium] › e2e\search.spec.ts:82:3 › Search Page E2E Tests › should show loading state during search
+[1A[2K  34) [chromium] › e2e\data-sources-page.spec.ts:121:3 › Data Sources Page › should show delete button for existing data sources 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder="test@example.com"]')[22m
+
+
+      125 |     await page.locator('input[placeholder="my_jira"]').fill(uniqueName);
+      126 |     await page.locator('input[placeholder="http://localhost:8888"]').fill('http://localhost:8888');
+    > 127 |     await page.locator('input[placeholder="mock-token"]').fill('mock-token');
+          |                                                                 ^
+      128 |     await page.getByRole('button', { name: '创建数据源' }).click();
+      129 |     await page.waitForTimeout(2000);
+      130 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-sources-page.spec.ts:127:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-sources-page-Data-Sou-2f32a-n-for-existing-data-sources-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-sources-page-Data-Sou-2f32a-n-for-existing-data-sources-chromium\error-context.md
+
+
+[1A[2K[67/110] [chromium] › e2e\search.spec.ts:103:3 › Search Page E2E Tests › should handle Chinese search queries
+[1A[2K  35) [chromium] › e2e\data-sources-page.spec.ts:147:3 › Data Sources Page › should display data source details 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder="test@example.com"]')[22m
+
+
+      151 |     await page.locator('input[placeholder="mock-token"]').fill('mock-token');
+      152 |     await page.getByRole('button', { name: '创建数据源' }).click();
+    > 153 |     await page.waitForTimeout(2000);
+          |                                                                 ^
+      154 |
+      155 |     // Check if details are displayed
+      156 |     const card = page.locator('.config-item').filter({ hasText: uniqueName });
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-sources-page.spec.ts:153:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-sources-page-Data-Sou-8ab08-display-data-source-details-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-sources-page-Data-Sou-8ab08-display-data-source-details-chromium\error-context.md
+
+
+[1A[2K[68/110] [chromium] › e2e\search.spec.ts:120:3 › Search Page E2E Tests › should navigate back to home page
+[1A[2K  36) [chromium] › e2e\document-management.spec.ts:42:3 › Document Management E2E › should load document types 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.setInputFiles: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[type="file"]')[22m
+
+
+      43 |     // First select a file to make the upload form visible
+      44 |     const fileInput = page.locator('input[type="file"]');
+    > 45 |     await fileInput.setInputFiles(testPdfPath);
+         |     ^
+      46 |
+      47 |     // Wait for form to appear
+      48 |     await page.waitForTimeout(500);
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\document-management.spec.ts:45:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\document-management-Docume-b788b--should-load-document-types-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\document-management-Docume-b788b--should-load-document-types-chromium\error-context.md
+
+
+[1A[2K  37) [chromium] › e2e\search.spec.ts:49:3 › Search Page E2E Tests › should handle empty search query 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('h2')
+    Expected substring: [32m"Knowledge Retrieval"[39m
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 5000ms[22m
+    [2m  - waiting for locator('h2')[22m
+
+
+      52 |
+      53 |     // Verify page doesn't crash
+    > 54 |     await expect(page.locator('h2')).toContainText('Knowledge Retrieval');
+         |                                      ^
+      55 |   });
+      56 |
+      57 |   test('should display search results with highlights', async ({ page }) => {
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:54:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-6509e-d-handle-empty-search-query-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-6509e-d-handle-empty-search-query-chromium\error-context.md
+
+
+[1A[2K[69/110] [chromium] › e2e\search.spec.ts:130:3 › Search Page E2E Tests › should display document count
+[1A[2K[70/110] [chromium] › e2e\sidebar-navigation.spec.ts:58:3 › Sidebar Navigation Tests › should display all sidebar navigation links
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:58:3 › Sidebar Navigation Tests › should display all sidebar navigation links
+
+=== Setup ===
+
+[1A[2K✓ Setup complete
+
+
+[1A[2K
+=== Testing Sidebar Links ===
+
+[1A[2K  38) [chromium] › e2e\document-management.spec.ts:126:3 › Document Management E2E › should search uploaded documents 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button').filter({ hasText: /Search|Analyze|Submit/ }).first()[22m
+
+
+      137 |       // Click search button
+      138 |       const searchButton = page.locator('button').filter({ hasText: /Search|Analyze|Submit/ }).first();
+    > 139 |       await searchButton.click();
+          |                          ^
+      140 |
+      141 |       // Wait for results
+      142 |       await page.waitForTimeout(2000);
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\document-management.spec.ts:139:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\document-management-Docume-498e9-d-search-uploaded-documents-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\document-management-Docume-498e9-d-search-uploaded-documents-chromium\error-context.md
+
+
+[1A[2K  39) [chromium] › e2e\search.spec.ts:130:3 › Search Page E2E Tests › should display document count 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="document-count"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="document-count"]')[22m
+
+
+      131 |     // Look for document count display
+      132 |     const docCount = page.locator('[data-testid="document-count"]');
+    > 133 |     await expect(docCount).toBeVisible();
+          |                            ^
+      134 |   });
+      135 | });
+      136 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:133:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tests-should-display-document-count-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tests-should-display-document-count-chromium\error-context.md
+
+
+[1A[2K[71/110] [chromium] › e2e\sidebar-navigation.spec.ts:70:3 › Sidebar Navigation Tests › should navigate to Analyze page
+[1A[2K[72/110] [chromium] › e2e\sidebar-navigation.spec.ts:86:3 › Sidebar Navigation Tests › should navigate to Search page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:70:3 › Sidebar Navigation Tests › should navigate to Analyze page
+
+=== Setup ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:86:3 › Sidebar Navigation Tests › should navigate to Search page
+
+=== Setup ===
+
+[1A[2K  40) [chromium] › e2e\sidebar-navigation.spec.ts:58:3 › Sidebar Navigation Tests › should display all sidebar navigation links 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('aside.nav a[href="/"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('aside.nav a[href="/"]')[22m
+
+
+      61 |     for (const route of routes) {
+      62 |       const link = page.locator(`aside.nav a[href="${route.path}"]`);
+    > 63 |       await expect(link).toBeVisible({ timeout: 5000 });
+         |                          ^
+      64 |       console.log(`✓ Link found: ${route.label}`);
+      65 |     }
+      66 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:63:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-e9bd3-ll-sidebar-navigation-links-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-e9bd3-ll-sidebar-navigation-links-chromium\error-context.md
+
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:70:3 › Sidebar Navigation Tests › should navigate to Analyze page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Analyze Page ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:86:3 › Sidebar Navigation Tests › should navigate to Search page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Search Page ===
+
+[1A[2K[73/110] [chromium] › e2e\sidebar-navigation.spec.ts:106:3 › Sidebar Navigation Tests › should navigate to Chat page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:106:3 › Sidebar Navigation Tests › should navigate to Chat page
+
+=== Setup ===
+
+[1A[2K✓ Setup complete
+
+
+[1A[2K
+=== Testing Chat Page ===
+
+[1A[2K  41) [chromium] › e2e\index-management.spec.ts:43:3 › Index Management E2E Tests › should handle index rebuild if available 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isEnabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="rebuild-index-button"]')[22m
+
+
+      48 |     const rebuildButton = page.locator('[data-testid="rebuild-index-button"]');
+      49 |
+    > 50 |     if (await rebuildButton.isEnabled()) {
+         |                             ^
+      51 |       await rebuildButton.click();
+      52 |
+      53 |       // Wait for rebuild to complete or show progress
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:50:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-dc9de--index-rebuild-if-available-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-dc9de--index-rebuild-if-available-chromium\error-context.md
+
+
+[1A[2K[74/110] [chromium] › e2e\sidebar-navigation.spec.ts:119:3 › Sidebar Navigation Tests › should navigate to Data Sources page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:119:3 › Sidebar Navigation Tests › should navigate to Data Sources page
+
+=== Setup ===
+
+[1A[2K✓ Setup complete
+
+
+[1A[2K
+=== Testing Data Sources Page ===
+
+[1A[2K  42) [chromium] › e2e\index-management.spec.ts:75:3 › Index Management E2E Tests › should handle API errors gracefully 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isDisabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      79 |     // Perform action that triggers API call
+      80 |     const searchInput = page.locator('[data-testid="search-input"]');
+    > 81 |     const isDisabled = await searchInput.isDisabled();
+         |                                          ^
+      82 |
+      83 |     if (!isDisabled) {
+      84 |       await searchInput.fill('test query');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\index-management.spec.ts:81:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\index-management-Index-Man-5fd34-andle-API-errors-gracefully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\index-management-Index-Man-5fd34-andle-API-errors-gracefully-chromium\error-context.md
+
+
+[1A[2K[75/110] [chromium] › e2e\sidebar-navigation.spec.ts:142:3 › Sidebar Navigation Tests › should navigate to Retrieval Debug page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:142:3 › Sidebar Navigation Tests › should navigate to Retrieval Debug page
+
+=== Setup ===
+
+[1A[2K  43) [chromium] › e2e\search.spec.ts:23:3 › Search Page E2E Tests › should perform search and display results 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isDisabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      26 |
+      27 |     // Check if input is enabled (index is ready)
+    > 28 |     const isDisabled = await searchInput.isDisabled();
+         |                                          ^
+      29 |
+      30 |     if (!isDisabled) {
+      31 |       // Enter search query
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:28:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-7cf1b--search-and-display-results-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-7cf1b--search-and-display-results-chromium\error-context.md
+
+
+[1A[2K[76/110] [chromium] › e2e\sidebar-navigation.spec.ts:154:3 › Sidebar Navigation Tests › should navigate to Strategy Comparison page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:154:3 › Sidebar Navigation Tests › should navigate to Strategy Comparison page
+
+=== Setup ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:142:3 › Sidebar Navigation Tests › should navigate to Retrieval Debug page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Retrieval Debug Page ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:154:3 › Sidebar Navigation Tests › should navigate to Strategy Comparison page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Strategy Comparison Page ===
+
+[1A[2K  44) [chromium] › e2e\search.spec.ts:57:3 › Search Page E2E Tests › should display search results with highlights 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isDisabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      57 |   test('should display search results with highlights', async ({ page }) => {
+      58 |     const searchInput = page.locator('[data-testid="search-input"]');
+    > 59 |     const isDisabled = await searchInput.isDisabled();
+         |                                          ^
+      60 |
+      61 |     if (!isDisabled) {
+      62 |       // Perform search
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:59:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-5738d-rch-results-with-highlights-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-5738d-rch-results-with-highlights-chromium\error-context.md
+
+
+[1A[2K  45) [chromium] › e2e\search.spec.ts:82:3 › Search Page E2E Tests › should show loading state during search 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isDisabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      82 |   test('should show loading state during search', async ({ page }) => {
+      83 |     const searchInput = page.locator('[data-testid="search-input"]');
+    > 84 |     const isDisabled = await searchInput.isDisabled();
+         |                                          ^
+      85 |
+      86 |     if (!isDisabled) {
+      87 |       await searchInput.fill('query');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:84:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-e705b-loading-state-during-search-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-e705b-loading-state-during-search-chromium\error-context.md
+
+
+[1A[2K[77/110] [chromium] › e2e\sidebar-navigation.spec.ts:167:3 › Sidebar Navigation Tests › should navigate to Profiles page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:167:3 › Sidebar Navigation Tests › should navigate to Profiles page
+
+=== Setup ===
+
+[1A[2K[78/110] [chromium] › e2e\sidebar-navigation.spec.ts:179:3 › Sidebar Navigation Tests › should navigate to Runs page
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:179:3 › Sidebar Navigation Tests › should navigate to Runs page
+
+=== Setup ===
+
+[1A[2K  46) [chromium] › e2e\search.spec.ts:103:3 › Search Page E2E Tests › should handle Chinese search queries 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.isDisabled: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="search-input"]')[22m
+
+
+      103 |   test('should handle Chinese search queries', async ({ page }) => {
+      104 |     const searchInput = page.locator('[data-testid="search-input"]');
+    > 105 |     const isDisabled = await searchInput.isDisabled();
+          |                                          ^
+      106 |
+      107 |     if (!isDisabled) {
+      108 |       await searchInput.fill('机器学习');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:105:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-e9b40-ndle-Chinese-search-queries-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-e9b40-ndle-Chinese-search-queries-chromium\error-context.md
+
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:167:3 › Sidebar Navigation Tests › should navigate to Profiles page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Profiles Page ===
+
+[1A[2K[79/110] [chromium] › e2e\sidebar-navigation.spec.ts:192:3 › Sidebar Navigation Tests › should highlight active navigation link
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:192:3 › Sidebar Navigation Tests › should highlight active navigation link
+
+=== Setup ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:179:3 › Sidebar Navigation Tests › should navigate to Runs page
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Runs Page ===
+
+[1A[2K  47) [chromium] › e2e\search.spec.ts:120:3 › Search Page E2E Tests › should navigate back to home page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('a').filter({ hasText: 'Analyze' })[22m
+
+
+      121 |     // Click on Analyze link in navigation
+      122 |     const analyzeLink = page.locator('a').filter({ hasText: 'Analyze' });
+    > 123 |     await analyzeLink.click();
+          |                       ^
+      124 |
+      125 |     // Should navigate to home page
+      126 |     await expect(page).toHaveURL('/');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\search.spec.ts:123:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\search-Search-Page-E2E-Tes-db9e7--navigate-back-to-home-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\search-Search-Page-E2E-Tes-db9e7--navigate-back-to-home-page-chromium\error-context.md
+
+
+[1A[2K[80/110] [chromium] › e2e\sidebar-navigation.spec.ts:220:3 › Sidebar Navigation Tests › should navigate through multiple pages sequentially
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:220:3 › Sidebar Navigation Tests › should navigate through multiple pages sequentially
+
+=== Setup ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:192:3 › Sidebar Navigation Tests › should highlight active navigation link
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Active Link Highlighting ===
+
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:220:3 › Sidebar Navigation Tests › should navigate through multiple pages sequentially
+✓ Setup complete
+
+
+[1A[2K
+=== Testing Sequential Navigation ===
+
+[1A[2KNavigating to /data-sources...
+
+[1A[2K  48) [chromium] › e2e\sidebar-navigation.spec.ts:70:3 › Sidebar Navigation Tests › should navigate to Analyze page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/"]')[22m
+
+
+      71 |     console.log('\n=== Testing Analyze Page ===');
+      72 |
+    > 73 |     await page.click('aside.nav a[href="/"]');
+         |                ^
+      74 |     await page.waitForLoadState('networkidle');
+      75 |
+      76 |     const heading = page.locator('h2:has-text("Deep Jira Analysis")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:73:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-2c5d8-ld-navigate-to-Analyze-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-2c5d8-ld-navigate-to-Analyze-page-chromium\error-context.md
+
+
+[1A[2K  49) [chromium] › e2e\sidebar-navigation.spec.ts:86:3 › Sidebar Navigation Tests › should navigate to Search page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/search"]')[22m
+
+
+      87 |     console.log('\n=== Testing Search Page ===');
+      88 |
+    > 89 |     await page.click('aside.nav a[href="/search"]');
+         |                ^
+      90 |     await page.waitForLoadState('networkidle');
+      91 |
+      92 |     const heading = page.locator('h2:has-text("Knowledge Retrieval")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:89:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-a4de7-uld-navigate-to-Search-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-a4de7-uld-navigate-to-Search-page-chromium\error-context.md
+
+
+[1A[2K[81/110] [chromium] › e2e\sidebar-navigation.spec.ts:245:3 › Sidebar Navigation Tests › should maintain workspace selection across navigation
+[1A[2K[82/110] [chromium] › e2e\test-chinese-output.spec.ts:5:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model
+[1A[2K[chromium] › e2e\sidebar-navigation.spec.ts:245:3 › Sidebar Navigation Tests › should maintain workspace selection across navigation
+
+=== Setup ===
+
+[1A[2K  50) [chromium] › e2e\sidebar-navigation.spec.ts:106:3 › Sidebar Navigation Tests › should navigate to Chat page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/chat"]')[22m
+
+
+      107 |     console.log('\n=== Testing Chat Page ===');
+      108 |
+    > 109 |     await page.click('aside.nav a[href="/chat"]');
+          |                ^
+      110 |     await page.waitForLoadState('networkidle');
+      111 |
+      112 |     // Chat page should load (check for any content)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:109:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-317b5-hould-navigate-to-Chat-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-317b5-hould-navigate-to-Chat-page-chromium\error-context.md
+
+
+[1A[2K[83/110] [chromium] › e2e\test-markdown-rendering.spec.ts:9:3 › Markdown Rendering Test › should render markdown in Runs page
+[1A[2K✓ Setup complete
+
+
+[1A[2K
+=== Testing Workspace Persistence ===
+
+[1A[2K  51) [chromium] › e2e\test-chinese-output.spec.ts:5:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-chinese-output.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-chinese-output-Chines-3b486-analysis-with-qwen-9b-model-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-chinese-output-Chines-3b486-analysis-with-qwen-9b-model-chromium\error-context.md
+
+
+[1A[2K[84/110] [chromium] › e2e\test-markdown-rendering.spec.ts:66:3 › Markdown Rendering Test › should check all section tabs for markdown rendering
+[1A[2K  52) [chromium] › e2e\test-markdown-rendering.spec.ts:9:3 › Markdown Rendering Test › should render markdown in Runs page 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-markdown-rendering-Ma-4c183-ender-markdown-in-Runs-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-markdown-rendering-Ma-4c183-ender-markdown-in-Runs-page-chromium\error-context.md
+
+
+[1A[2K[85/110] [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering
+[1A[2K  53) [chromium] › e2e\test-markdown-rendering.spec.ts:66:3 › Markdown Rendering Test › should check all section tabs for markdown rendering 
+
+    TimeoutError: locator.waitFor: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-testid="workspace-selector"]') to be visible[22m
+
+
+       at test-helpers.ts:26
+
+      24 |   // Wait for workspace selector to be visible
+      25 |   const workspaceSelect = page.locator('[data-testid="workspace-selector"]');
+    > 26 |   await workspaceSelect.waitFor({ state: 'visible', timeout: 10000 });
+         |                         ^
+      27 |
+      28 |   // Wait for options to load
+      29 |   await page.waitForFunction(
+        at selectWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:26:25)
+        at setupAuthAndWorkspace (C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-helpers.ts:74:16)
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\test-markdown-rendering.spec.ts:6:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\test-markdown-rendering-Ma-0ff66-tabs-for-markdown-rendering-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\test-markdown-rendering-Ma-0ff66-tabs-for-markdown-rendering-chromium\error-context.md
+
+
+[1A[2K[86/110] [integration] › e2e\analyze-real-backend.integration.spec.ts:13:3 › Analyze Page - Real Backend Integration › should load workspace and profiles from backend
+[1A[2K  54) [chromium] › e2e\sidebar-navigation.spec.ts:119:3 › Sidebar Navigation Tests › should navigate to Data Sources page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      120 |     console.log('\n=== Testing Data Sources Page ===');
+      121 |
+    > 122 |     await page.click('aside.nav a[href="/data-sources"]');
+          |                ^
+      123 |     await page.waitForLoadState('networkidle');
+      124 |
+      125 |     const heading = page.locator('h1:has-text("数据源管理")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:122:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-c7d60-vigate-to-Data-Sources-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-c7d60-vigate-to-Data-Sources-page-chromium\error-context.md
+
+
+[1A[2K  55) [integration] › e2e\analyze-real-backend.integration.spec.ts:13:3 › Analyze Page - Real Backend Integration › should load workspace and profiles from backend 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('label:has-text("Workspace") select')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+
+
+      19 |     // Check if workspace selector has loaded
+      20 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 21 |     await expect(workspaceSelect).toBeVisible({ timeout: 10000 });
+         |                                   ^
+      22 |
+      23 |     // Check if it has options (should have at least one workspace)
+      24 |     const options = await workspaceSelect.locator('option').count();
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-real-backend.integration.spec.ts:21:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-real-backend.integ-3c8d6-e-and-profiles-from-backend-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-real-backend.integ-3c8d6-e-and-profiles-from-backend-integration\error-context.md
+
+
+[1A[2K[87/110] [integration] › e2e\analyze-real-backend.integration.spec.ts:32:3 › Analyze Page - Real Backend Integration › should display setup checklist with real backend status
+[1A[2K[88/110] [integration] › e2e\analyze-real-backend.integration.spec.ts:56:3 › Analyze Page - Real Backend Integration › should attempt real analysis and capture response
+[1A[2K  56) [integration] › e2e\analyze-real-backend.integration.spec.ts:32:3 › Analyze Page - Real Backend Integration › should display setup checklist with real backend status 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.setup-checklist') to be visible[22m
+
+
+      33 |     await page.goto('http://localhost:5173/');
+      34 |
+    > 35 |     await page.waitForSelector('.setup-checklist', { timeout: 10000 });
+         |                ^
+      36 |
+      37 |     // Get setup status
+      38 |     const setupHeader = page.locator('.setup-header strong');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-real-backend.integration.spec.ts:35:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-real-backend.integ-1175c-st-with-real-backend-status-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-real-backend.integ-1175c-st-with-real-backend-status-integration\error-context.md
+
+
+[1A[2K[89/110] [integration] › e2e\analyze-real-backend.integration.spec.ts:160:3 › Analyze Page - Real Backend Integration › should check backend API endpoints directly
+[1A[2K  57) [integration] › e2e\analyze-real-backend.integration.spec.ts:56:3 › Analyze Page - Real Backend Integration › should attempt real analysis and capture response 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[placeholder*="SSD-DEMO-A"]') to be visible[22m
+
+
+      58 |
+      59 |     // Wait for page to load
+    > 60 |     await page.waitForSelector('input[placeholder*="SSD-DEMO-A"]', { timeout: 10000 });
+         |                ^
+      61 |
+      62 |     // Check if profiles are available
+      63 |     const profileSelect = page.locator('label:has-text("Profile") select');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\analyze-real-backend.integration.spec.ts:60:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\analyze-real-backend.integ-1cd29-alysis-and-capture-response-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\analyze-real-backend.integ-1cd29-alysis-and-capture-response-integration\error-context.md
+
+
+[1A[2K[90/110] [integration] › e2e\analyze-real-backend.integration.spec.ts:243:3 › Analyze Page - Real Backend Integration › should test analyze-jira endpoint with mock data
+[1A[2K[integration] › e2e\analyze-real-backend.integration.spec.ts:160:3 › Analyze Page - Real Backend Integration › should check backend API endpoints directly
+Workspaces API: [33m200[39m
+
+[1A[2KWorkspaces: {
+  "workspaces": [
+    {
+      "name": "demo",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+      "mode": "demo",
+      "setup_required": false,
+      "missing_spec_asset": null,
+      "spec_asset": {
+        "asset_id": "nvme-spec-mineru",
+        "display_name": "NVMe Spec",
+        "version": "v1",
+        "document_id": "NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified",
+        "created_at": "2026-04-19T04:07:33Z",
+        "source_pdf": "C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf",
+        "parser_used": "mineru",
+        "asset_root": ".tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1"
+      }
+    },
+    {
+      "name": "real-workspace",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\real-workspace",
+      "mode": "real",
+      "setup_required": false
+    }
+  ]
+}
+
+[1A[2KProfiles API: [33m200[39m
+
+[1A[2KProfiles: {
+  "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+  "profiles": [
+    {
+      "version": 1,
+      "name": "default",
+      "inputs": {
+        "jira": {
+          "source": "demo_jira",
+          "selector_profile": "demo_jira_project"
+        },
+        "evidence": {
+          "source": "demo_confluence",
+          "selector_profile": "demo_confluence_space"
+        },
+        "spec_assets": [
+          "nvme-spec-mineru"
+        ]
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "openai-compatible",
+        "llm_prompt_mode": "strict",
+        "llm_model": "qwen-9b",
+        "llm_base_url": "http://127.0.0.1:1234/v1",
+        "llm_timeout_seconds": 1800
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_jira_confluence_default",
+      "inputs": {
+        "evidence": {
+          "selector_profile": "demo_confluence_space",
+          "source": "demo_confluence"
+        },
+        "jira": {
+          "selector_profile": "demo_jira_project",
+          "source": "demo_jira"
+        }
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "none",
+        "llm_prompt_mode": "strict"
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_nvme_default",
+      "inputs": {
+        "jira": {
+          "source": "demo_jira",
+          "selector_profile": "demo_jira_project"
+        },
+        "evidence": {
+          "source": "demo_confluence",
+          "selector_profile": "demo_confluence_space"
+        },
+        "spec_assets": [
+          "nvme-spec-mineru"
+        ]
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "none",
+        "llm_prompt_mode": "strict"
+      }
+    }
+  ]
+}
+
+[1A[2KSources API: [33m200[39m
+
+[1A[2KSources: {
+  "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+  "sources": [
+    {
+      "version": 1,
+      "name": "demo_confluence",
+      "kind": "confluence",
+      "mode": "fixture",
+      "connector_type": "confluence.atlassian_api",
+      "config": {
+        "path": "fixtures/demo/confluence/nvme_demo_pages.json",
+        "auth_mode": "auto"
+      },
+      "defaults": {
+        "fetch_backend": "atlassian-api",
+        "include_attachments": true
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {
+        "description": "Demo Confluence evidence pages for NVMe analysis"
+      },
+      "enabled": true,
+      "status": "fresh",
+      "status_reason": "config_hash_matches",
+      "last_refresh": "2026-04-20T14:15:02Z",
+      "document_count": 4,
+      "selector": {
+        "version": 1,
+        "name": "demo_confluence_space",
+        "source": "demo_confluence",
+        "selector": {
+          "type": "space_slice",
+          "space_key": "SSDENG"
+        }
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_jira",
+      "kind": "jira",
+      "mode": "fixture",
+      "connector_type": "jira.atlassian_api",
+      "config": {
+        "path": "fixtures/demo/jira/nvme_demo_sync.json",
+        "auth_mode": "auto"
+      },
+      "defaults": {
+        "fetch_backend": "atlassian-api",
+        "include_comments": true,
+        "include_attachments": true
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {
+        "description": "Demo Jira issues for NVMe analysis"
+      },
+      "enabled": true,
+      "status": "fresh",
+      "status_reason": "config_hash_matches",
+      "last_refresh": "2026-04-20T14:15:11Z",
+      "document_count": 7,
+      "selector": {
+        "version": 1,
+        "name": "demo_jira_project",
+        "source": "demo_jira",
+        "selector": {
+          "type": "project_slice",
+          "project_key": "SSD"
+        }
+      }
+    },
+    {
+      "version": 1,
+      "name": "pw_jira_source",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "pw_jira_source_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://127.0.0.1:8797"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "native"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": {
+        "version": 1,
+        "name": "pw_jira_selector",
+        "source": "pw_jira_source",
+        "selector": {
+          "type": "issue",
+          "issue_key": "SSD-DEMO-A"
+        }
+      }
+    },
+    {
+      "version": 1,
+      "name": "test_confluence_1777262532341",
+      "kind": "confluence",
+      "mode": "live",
+      "connector_type": "confluence.atlassian_api",
+      "credential_ref": "test_confluence_1777262532341_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_confluence_1777262630574",
+      "kind": "confluence",
+      "mode": "live",
+      "connector_type": "confluence.atlassian_api",
+      "credential_ref": "test_confluence_1777262630574_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_confluence_1777262991921",
+      "kind": "confluence",
+      "mode": "live",
+      "connector_type": "confluence.atlassian_api",
+      "credential_ref": "test_confluence_1777262991921_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_confluence_1777263059855",
+      "kind": "confluence",
+      "mode": "live",
+      "connector_type": "confluence.atlassian_api",
+      "credential_ref": "test_confluence_1777263059855_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_delete_1777262535241",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_delete_1777262535241_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_delete_1777262630206",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_delete_1777262630206_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_delete_1777262998739",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_delete_1777262998739_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_delete_1777263065907",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_delete_1777263065907_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_details_1777262535824",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_details_1777262535824_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_details_1777262632024",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_details_1777262632024_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_details_1777263004108",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_details_1777263004108_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_details_1777263071557",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_details_1777263071557_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_jira_1777262533106",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_jira_1777262533106_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_jira_1777262629519",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_jira_1777262629519_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_jira_1777262988537",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_jira_1777262988537_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    },
+    {
+      "version": 1,
+      "name": "test_jira_1777263056390",
+      "kind": "jira",
+      "mode": "live",
+      "connector_type": "jira.atlassian_api",
+      "credential_ref": "test_jira_1777263056390_token",
+      "config": {
+        "auth_mode": "auto",
+        "base_url": "http://localhost:8888"
+      },
+      "defaults": {
+        "include_comments": true,
+        "include_attachments": true,
+        "include_image_metadata": true,
+        "download_images": false,
+        "fetch_backend": "atlassian-api"
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {},
+      "enabled": true,
+      "status": "stale",
+      "status_reason": "missing_fetch_manifest",
+      "last_refresh": null,
+      "document_count": 0,
+      "selector": null
+    }
+  ],
+  "selectors": [
+    {
+      "version": 1,
+      "name": "demo_confluence_space",
+      "source": "demo_confluence",
+      "selector": {
+        "type": "space_slice",
+        "space_key": "SSDENG"
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_jira_project",
+      "source": "demo_jira",
+      "selector": {
+        "type": "project_slice",
+        "project_key": "SSD"
+      }
+    },
+    {
+      "version": 1,
+      "name": "pw_jira_selector",
+      "source": "pw_jira_source",
+      "selector": {
+        "type": "issue",
+        "issue_key": "SSD-DEMO-A"
+      }
+    }
+  ]
+}
+
+[1A[2K[91/110] [integration] › e2e\data-source-setup.integration.spec.ts:49:3 › Data Source Setup - From Scratch › should navigate to Data Sources page
+[1A[2K[integration] › e2e\analyze-real-backend.integration.spec.ts:243:3 › Analyze Page - Real Backend Integration › should test analyze-jira endpoint with mock data
+Testing analyze-jira with workspace: .tmp\portal-runner\workspaces\demo, profile: default
+
+[1A[2KAnalyze API failed: apiRequestContext.post: Timeout 60000ms exceeded.
+Call log:
+[2m  - → POST http://localhost:8000/api/workspace/analyze-jira[22m
+[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36[22m
+[2m    - accept: */*[22m
+[2m    - accept-encoding: gzip,deflate,br[22m
+[2m    - Authorization: Bearer change-me[22m
+[2m    - Content-Type: application/json[22m
+[2m    - content-length: 104[22m
+
+    at [90mC:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\[39me2e\analyze-real-backend.integration.spec.ts:285:45 {
+  name: [32m'TimeoutError'[39m,
+  [32mSymbol(step)[39m: {
+    location: {
+      file: [32m'C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.integration.spec.ts'[39m,
+      line: [33m285[39m,
+      column: [33m45[39m
+    },
+    category: [32m'pw:api'[39m,
+    title: [32m'POST "/api/workspace/analyze-jira"'[39m,
+    apiName: [32m'apiRequestContext.post'[39m,
+    params: {
+      url: [32m'http://localhost:8000/api/workspace/analyze-jira'[39m,
+      params: [90mundefined[39m,
+      encodedParams: [90mundefined[39m,
+      method: [32m'POST'[39m,
+      headers: [36m[Array][39m,
+      postData: [90mundefined[39m,
+      jsonData: [32m'{"workspace_dir":".tmp\\\\portal-runner\\\\workspaces\\\\demo","issue_key":"SSD-SAMPLE-1","profile":"default"}'[39m,
+      formData: [90mundefined[39m,
+      multipartData: [90mundefined[39m,
+      timeout: [33m60000[39m,
+      failOnStatusCode: [90mundefined[39m,
+      ignoreHTTPSErrors: [90mundefined[39m,
+      maxRedirects: [90mundefined[39m,
+      maxRetries: [90mundefined[39m,
+      __testHookLookup: [90mundefined[39m
+    },
+    group: [90mundefined[39m,
+    stepId: [32m'pw:api@42'[39m,
+    boxedStack: [90mundefined[39m,
+    steps: [],
+    attachmentIndices: [],
+    info: TestStepInfoImpl {
+      annotations: [],
+      _testInfo: [36m[TestInfoImpl][39m,
+      _stepId: [32m'pw:api@42'[39m,
+      _title: [32m'POST "/api/workspace/analyze-jira"'[39m,
+      _parentStep: [90mundefined[39m,
+      skip: [36m[Function (anonymous)][39m
+    },
+    complete: [36m[Function: complete][39m,
+    endWallTime: [33m1777264049808[39m,
+    error: {
+      message: [32m'TimeoutError: apiRequestContext.post: Timeout 60000ms exceeded.\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → POST http://localhost:8000/api/workspace/analyze-jira\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Content-Type: application/json\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - content-length: 104\x1B[22m\n'[39m,
+      stack: [32m'TimeoutError: apiRequestContext.post: Timeout 60000ms exceeded.\n'[39m +
+        [32m'Call log:\n'[39m +
+        [32m'\x1B[2m  - → POST http://localhost:8000/api/workspace/analyze-jira\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Safari/537.36\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept: */*\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - accept-encoding: gzip,deflate,br\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Authorization: Bearer change-me\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - Content-Type: application/json\x1B[22m\n'[39m +
+        [32m'\x1B[2m    - content-length: 104\x1B[22m\n'[39m +
+        [32m'\n'[39m +
+        [32m'    at C:\\Users\\10259\\Documents\\code\\codex\\codex-try\\apps\\portal_web\\e2e\\analyze-real-backend.integration.spec.ts:285:45'[39m,
+      cause: [90mundefined[39m
+    }
+  }
+}
+
+[1A[2K[92/110] [integration] › e2e\data-source-setup.integration.spec.ts:61:3 › Data Source Setup - From Scratch › should add Jira source with mock server
+[1A[2K  58) [integration] › e2e\data-source-setup.integration.spec.ts:49:3 › Data Source Setup - From Scratch › should navigate to Data Sources page 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1:has-text("数据源管理")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1:has-text("数据源管理")')[22m
+
+
+      54 |     // Verify page loaded
+      55 |     const heading = page.locator('h1:has-text("数据源管理")');
+    > 56 |     await expect(heading).toBeVisible({ timeout: 5000 });
+         |                           ^
+      57 |
+      58 |     console.log('✓ Data Sources page loaded successfully');
+      59 |   });
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-source-setup.integration.spec.ts:56:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-source-setup.integrat-ed1fd-vigate-to-Data-Sources-page-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-source-setup.integrat-ed1fd-vigate-to-Data-Sources-page-integration\error-context.md
+
+
+[1A[2K  59) [integration] › e2e\data-source-setup.integration.spec.ts:61:3 › Data Source Setup - From Scratch › should add Jira source with mock server 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button:has-text("添加数据源")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button:has-text("添加数据源")')[22m
+
+
+      66 |     // Click "Add Source" button
+      67 |     const addButton = page.locator('button:has-text("添加数据源")');
+    > 68 |     await expect(addButton).toBeVisible({ timeout: 5000 });
+         |                             ^
+      69 |     await addButton.click();
+      70 |
+      71 |     // Wait for modal to appear
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-source-setup.integration.spec.ts:68:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-source-setup.integrat-067c0-ira-source-with-mock-server-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-source-setup.integrat-067c0-ira-source-with-mock-server-integration\error-context.md
+
+
+[1A[2K[93/110] [integration] › e2e\data-source-setup.integration.spec.ts:114:3 › Data Source Setup - From Scratch › should add Confluence source with mock server
+[1A[2K[94/110] [integration] › e2e\data-source-setup.integration.spec.ts:164:3 › Data Source Setup - From Scratch › should display both Jira and Confluence sources
+[1A[2K[integration] › e2e\data-source-setup.integration.spec.ts:164:3 › Data Source Setup - From Scratch › should display both Jira and Confluence sources
+✓ Data sources displayed successfully
+
+[1A[2K[95/110] [integration] › e2e\data-source-setup.integration.spec.ts:206:3 › Data Source Setup - From Scratch › should verify source status and document count
+[1A[2K[integration] › e2e\data-source-setup.integration.spec.ts:206:3 › Data Source Setup - From Scratch › should verify source status and document count
+
+=== Data Source Status ===
+
+[1A[2KTotal sources: 0
+
+[1A[2K
+✓ Source status verified
+
+[1A[2K[96/110] [integration] › e2e\data-source-setup.integration.spec.ts:253:3 › Data Source Setup - From Scratch › should test search functionality
+[1A[2K[integration] › e2e\data-source-setup.integration.spec.ts:253:3 › Data Source Setup - From Scratch › should test search functionality
+⚠ Search input not found
+
+[1A[2K[97/110] [integration] › e2e\data-source-setup.integration.spec.ts:272:3 › Data Source Setup - From Scratch › should test source filtering by type
+[1A[2K[integration] › e2e\data-source-setup.integration.spec.ts:272:3 › Data Source Setup - From Scratch › should test source filtering by type
+✓ Filtering by type tested
+
+[1A[2K[98/110] [integration] › e2e\data-source-setup.integration.spec.ts:297:3 › Data Source Setup - From Scratch › should handle source deletion
+[1A[2K[integration] › e2e\data-source-setup.integration.spec.ts:297:3 › Data Source Setup - From Scratch › should handle source deletion
+⚠ No sources available to delete
+
+[1A[2K[99/110] [integration] › e2e\diagnose-frontend.integration.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4
+[1A[2K  60) [chromium] › e2e\sidebar-navigation.spec.ts:142:3 › Sidebar Navigation Tests › should navigate to Retrieval Debug page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/retrieval-debug"]')[22m
+
+
+      143 |     console.log('\n=== Testing Retrieval Debug Page ===');
+      144 |
+    > 145 |     await page.click('aside.nav a[href="/retrieval-debug"]');
+          |                ^
+      146 |     await page.waitForLoadState('networkidle');
+      147 |
+      148 |     const heading = page.locator('h1:has-text("检索调试工具")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:145:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-bc36a-ate-to-Retrieval-Debug-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-bc36a-ate-to-Retrieval-Debug-page-chromium\error-context.md
+
+
+[1A[2K[100/110] [integration] › e2e\diagnose-frontend.integration.spec.ts:93:3 › Frontend Diagnosis › manually check API responses
+[1A[2K[integration] › e2e\diagnose-frontend.integration.spec.ts:93:3 › Frontend Diagnosis › manually check API responses
+Workspaces: {
+  "workspaces": [
+    {
+      "name": "demo",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+      "mode": "demo",
+      "setup_required": false,
+      "missing_spec_asset": null,
+      "spec_asset": {
+        "asset_id": "nvme-spec-mineru",
+        "display_name": "NVMe Spec",
+        "version": "v1",
+        "document_id": "NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified",
+        "created_at": "2026-04-19T04:07:33Z",
+        "source_pdf": "C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf",
+        "parser_used": "mineru",
+        "asset_root": ".tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1"
+      }
+    },
+    {
+      "name": "real-workspace",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\real-workspace",
+      "mode": "real",
+      "setup_required": false
+    }
+  ]
+}
+
+[1A[2K
+Using workspace: .tmp\portal-runner\workspaces\demo
+
+[1A[2K
+Profiles: {
+  "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+  "profiles": [
+    {
+      "version": 1,
+      "name": "default",
+      "inputs": {
+        "jira": {
+          "source": "demo_jira",
+          "selector_profile": "demo_jira_project"
+        },
+        "evidence": {
+          "source": "demo_confluence",
+          "selector_profile": "demo_confluence_space"
+        },
+        "spec_assets": [
+          "nvme-spec-mineru"
+        ]
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "openai-compatible",
+        "llm_prompt_mode": "strict",
+        "llm_model": "qwen-9b",
+        "llm_base_url": "http://127.0.0.1:1234/v1",
+        "llm_timeout_seconds": 1800
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_jira_confluence_default",
+      "inputs": {
+        "evidence": {
+          "selector_profile": "demo_confluence_space",
+          "source": "demo_confluence"
+        },
+        "jira": {
+          "selector_profile": "demo_jira_project",
+          "source": "demo_jira"
+        }
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "none",
+        "llm_prompt_mode": "strict"
+      }
+    },
+    {
+      "version": 1,
+      "name": "demo_nvme_default",
+      "inputs": {
+        "jira": {
+          "source": "demo_jira",
+          "selector_profile": "demo_jira_project"
+        },
+        "evidence": {
+          "source": "demo_confluence",
+          "selector_profile": "demo_confluence_space"
+        },
+        "spec_assets": [
+          "nvme-spec-mineru"
+        ]
+      },
+      "analysis": {
+        "top_k": 5,
+        "policies": [
+          "team:ssd",
+          "public"
+        ],
+        "llm_backend": "none",
+        "llm_prompt_mode": "strict"
+      }
+    }
+  ]
+}
+
+[1A[2K
+Sources: {
+  "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+  "sources": [
+    {
+      "version": 1,
+      "name": "demo_confluence",
+      "kind": "confluence",
+      "mode": "fixture",
+      "connector_type": "confluence.atlassian_api",
+      "config": {
+        "path": "fixtures/demo/confluence/nvme_demo_pages.json",
+        "auth_mode": "auto"
+      },
+      "defaults": {
+        "fetch_backend": "atlassian-api",
+        "include_attachments": true
+      },
+      "policies": [
+        "team:ssd",
+        "public"
+      ],
+      "metadata": {
+        "description": "Demo Confluence evidence pages for NVMe analysis"
+      },
+      "enabled": true,
+      "status": "fresh",
+      "status_reason": "config_hash_matches",
+      "last_refresh": "2026-04-20T14:15:02Z",
+      "document_count": 4,
+      "selector": {
+        "version": 1,
+        "name": "demo_confluence_space",
+        "source": "demo_confluence",
+        "selector": {
+          "type": "space_slice",
+          "space_key"
+
+[1A[2K
+Spec Assets: {
+  "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+  "assets": [
+    {
+      "asset_id": "nvme-spec-mineru",
+      "display_name": "NVMe Spec",
+      "version": "v1",
+      "document_id": "NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified",
+      "created_at": "2026-04-19T04:07:33Z",
+      "source_pdf": "C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf",
+      "parser_used": "mineru",
+      "asset_root": ".tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1"
+    }
+  ]
+}
+
+[1A[2K
+=== Setup Verification ===
+
+[1A[2KJira Source: ✓ demo_jira
+
+[1A[2KConfluence Source: ✓ demo_confluence
+
+[1A[2KMinerU Asset: ✓ nvme-spec-mineru
+
+[1A[2KValid Profile: ✓ default
+
+[1A[2K[101/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:54:3 › Jira/Confluence Full Integration Flow › Step 1: Navigate to Data Sources page and verify UI
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:54:3 › Jira/Confluence Full Integration Flow › Step 1: Navigate to Data Sources page and verify UI
+
+=== Test Setup ===
+
+[1A[2K  61) [chromium] › e2e\sidebar-navigation.spec.ts:154:3 › Sidebar Navigation Tests › should navigate to Strategy Comparison page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/strategy-comparison"]')[22m
+
+
+      155 |     console.log('\n=== Testing Strategy Comparison Page ===');
+      156 |
+    > 157 |     await page.click('aside.nav a[href="/strategy-comparison"]');
+          |                ^
+      158 |     await page.waitForLoadState('networkidle');
+      159 |
+      160 |     // Check for the actual heading text
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:157:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-37c79-to-Strategy-Comparison-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-37c79-to-Strategy-Comparison-page-chromium\error-context.md
+
+
+[1A[2K[102/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:82:3 › Jira/Confluence Full Integration Flow › Step 2: Add Jira source with complete configuration
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:82:3 › Jira/Confluence Full Integration Flow › Step 2: Add Jira source with complete configuration
+
+=== Test Setup ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:54:3 › Jira/Confluence Full Integration Flow › Step 1: Navigate to Data Sources page and verify UI
+✓ Setup complete
+
+
+[1A[2K
+=== Step 1: Navigate to Data Sources ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:82:3 › Jira/Confluence Full Integration Flow › Step 2: Add Jira source with complete configuration
+✓ Setup complete
+
+
+[1A[2K
+=== Step 2: Add Jira Source ===
+
+[1A[2K  62) [chromium] › e2e\sidebar-navigation.spec.ts:167:3 › Sidebar Navigation Tests › should navigate to Profiles page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/profiles"]')[22m
+
+
+      168 |     console.log('\n=== Testing Profiles Page ===');
+      169 |
+    > 170 |     await page.click('aside.nav a[href="/profiles"]');
+          |                ^
+      171 |     await page.waitForLoadState('networkidle');
+      172 |
+      173 |     const heading = page.locator('h2:has-text("Analysis Settings")');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:170:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-0351e-d-navigate-to-Profiles-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-0351e-d-navigate-to-Profiles-page-chromium\error-context.md
+
+
+[1A[2K  63) [chromium] › e2e\sidebar-navigation.spec.ts:179:3 › Sidebar Navigation Tests › should navigate to Runs page 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/runs"]')[22m
+
+
+      180 |     console.log('\n=== Testing Runs Page ===');
+      181 |
+    > 182 |     await page.click('aside.nav a[href="/runs"]');
+          |                ^
+      183 |     await page.waitForLoadState('networkidle');
+      184 |
+      185 |     // Runs page should show run history panel
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:182:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-8a093-hould-navigate-to-Runs-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-8a093-hould-navigate-to-Runs-page-chromium\error-context.md
+
+
+[1A[2K[103/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:169:3 › Jira/Confluence Full Integration Flow › Step 3: Add Confluence source with complete configuration
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:169:3 › Jira/Confluence Full Integration Flow › Step 3: Add Confluence source with complete configuration
+
+=== Test Setup ===
+
+[1A[2K[104/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:240:3 › Jira/Confluence Full Integration Flow › Step 4: Verify both sources are listed and check status
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:240:3 › Jira/Confluence Full Integration Flow › Step 4: Verify both sources are listed and check status
+
+=== Test Setup ===
+
+[1A[2K  64) [chromium] › e2e\sidebar-navigation.spec.ts:192:3 › Sidebar Navigation Tests › should highlight active navigation link 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      194 |
+      195 |     // Navigate to Data Sources
+    > 196 |     await page.click('aside.nav a[href="/data-sources"]');
+          |                ^
+      197 |     await page.waitForLoadState('networkidle');
+      198 |
+      199 |     // Check if the link has active class
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:196:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-d00f9-ight-active-navigation-link-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-d00f9-ight-active-navigation-link-chromium\error-context.md
+
+
+[1A[2K[105/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:294:3 › Jira/Confluence Full Integration Flow › Step 5: Test filtering by source type
+[1A[2K  65) [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:54:3 › Jira/Confluence Full Integration Flow › Step 1: Navigate to Data Sources page and verify UI 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('h1:has-text("数据源管理")')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1:has-text("数据源管理")')[22m
+
+
+      60 |     // Verify page elements
+      61 |     const heading = page.locator('h1:has-text("数据源管理")');
+    > 62 |     await expect(heading).toBeVisible({ timeout: 5000 });
+         |                           ^
+      63 |
+      64 |     const description = page.locator('p:has-text("统一管理")');
+      65 |     await expect(description).toBeVisible();
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\jira-confluence-full-flow.integration.spec.ts:62:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\jira-confluence-full-flow.-c0672--Sources-page-and-verify-UI-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\jira-confluence-full-flow.-c0672--Sources-page-and-verify-UI-integration\error-context.md
+
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:294:3 › Jira/Confluence Full Integration Flow › Step 5: Test filtering by source type
+
+=== Test Setup ===
+
+[1A[2K[106/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:331:3 › Jira/Confluence Full Integration Flow › Step 6: Test search functionality
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:331:3 › Jira/Confluence Full Integration Flow › Step 6: Test search functionality
+
+=== Test Setup ===
+
+[1A[2K  66) [chromium] › e2e\sidebar-navigation.spec.ts:220:3 › Sidebar Navigation Tests › should navigate through multiple pages sequentially 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('aside.nav a[href="/data-sources"]')[22m
+
+
+      231 |       console.log(`Navigating to ${route.path}...`);
+      232 |
+    > 233 |       await page.click(`aside.nav a[href="${route.path}"]`);
+          |                  ^
+      234 |       await page.waitForLoadState('networkidle');
+      235 |
+      236 |       const heading = page.locator(`h1:has-text("${route.heading}"), h2:has-text("${route.heading}")`);
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:233:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-14c36-multiple-pages-sequentially-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-14c36-multiple-pages-sequentially-chromium\error-context.md
+
+
+[1A[2K[107/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:369:3 › Jira/Confluence Full Integration Flow › Step 7: Verify source card interactions
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:369:3 › Jira/Confluence Full Integration Flow › Step 7: Verify source card interactions
+
+=== Test Setup ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:169:3 › Jira/Confluence Full Integration Flow › Step 3: Add Confluence source with complete configuration
+✓ Setup complete
+
+
+[1A[2K
+=== Step 3: Add Confluence Source ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:240:3 › Jira/Confluence Full Integration Flow › Step 4: Verify both sources are listed and check status
+✓ Setup complete
+
+
+[1A[2K
+=== Step 4: Verify Sources ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:369:3 › Jira/Confluence Full Integration Flow › Step 7: Verify source card interactions
+✓ Setup complete
+
+
+[1A[2K
+=== Step 7: Test Card Interactions ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:331:3 › Jira/Confluence Full Integration Flow › Step 6: Test search functionality
+✓ Setup complete
+
+
+[1A[2K
+=== Step 6: Test Search ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:294:3 › Jira/Confluence Full Integration Flow › Step 5: Test filtering by source type
+✓ Setup complete
+
+
+[1A[2K
+=== Step 5: Test Filtering ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:369:3 › Jira/Confluence Full Integration Flow › Step 7: Verify source card interactions
+⚠ No source cards found
+
+[1A[2K[108/110] [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:404:3 › Jira/Confluence Full Integration Flow › Step 8: Complete flow summary
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:404:3 › Jira/Confluence Full Integration Flow › Step 8: Complete flow summary
+
+=== Test Setup ===
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:331:3 › Jira/Confluence Full Integration Flow › Step 6: Test search functionality
+⚠ Search input not found
+
+[1A[2K[109/110] [integration] › e2e\test-api-direct.integration.spec.ts:4:3 › Direct API Test › should fetch workspaces via API
+[1A[2K  67) [chromium] › e2e\sidebar-navigation.spec.ts:245:3 › Sidebar Navigation Tests › should maintain workspace selection across navigation 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.inputValue: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('select[data-testid="workspace-selector"]')[22m
+
+
+      248 |     // Get initial workspace
+      249 |     const workspaceSelect = page.locator('select[data-testid="workspace-selector"]');
+    > 250 |     const initialWorkspace = await workspaceSelect.inputValue();
+          |                                                    ^
+      251 |
+      252 |     console.log(`Initial workspace: ${initialWorkspace}`);
+      253 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\sidebar-navigation.spec.ts:250:52
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sidebar-navigation-Sidebar-3429b-selection-across-navigation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sidebar-navigation-Sidebar-3429b-selection-across-navigation-chromium\error-context.md
+
+
+[1A[2K[110/110] [integration] › e2e\test-api-direct.integration.spec.ts:35:3 › Direct API Test › should load page and check workspace dropdown
+[1A[2K[integration] › e2e\test-api-direct.integration.spec.ts:4:3 › Direct API Test › should fetch workspaces via API
+API Response Status: [33m200[39m
+
+[1A[2KAPI Response Body: {"workspaces":[{"name":"demo","workspace_dir":".tmp\\portal-runner\\workspaces\\demo","mode":"demo","setup_required":false,"missing_spec_asset":null,"spec_asset":{"asset_id":"nvme-spec-mineru","display_name":"NVMe Spec","version":"v1","document_id":"NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified","created_at":"2026-04-19T04:07:33Z","source_pdf":"C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf","parser_used":"mineru","asset_root":".tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1"}},{"name":"real-workspace","workspace_dir":".tmp\\portal-runner\\workspaces\\real-workspace","mode":"real","setup_required":false}]}
+
+[1A[2KParsed workspaces: {
+  "workspaces": [
+    {
+      "name": "demo",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\demo",
+      "mode": "demo",
+      "setup_required": false,
+      "missing_spec_asset": null,
+      "spec_asset": {
+        "asset_id": "nvme-spec-mineru",
+        "display_name": "NVMe Spec",
+        "version": "v1",
+        "document_id": "NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified",
+        "created_at": "2026-04-19T04:07:33Z",
+        "source_pdf": "C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf",
+        "parser_used": "mineru",
+        "asset_root": ".tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1"
+      }
+    },
+    {
+      "name": "real-workspace",
+      "workspace_dir": ".tmp\\portal-runner\\workspaces\\real-workspace",
+      "mode": "real",
+      "setup_required": false
+    }
+  ]
+}
+
+[1A[2KDemo workspace: {
+  name: [32m'demo'[39m,
+  workspace_dir: [32m'.tmp\\portal-runner\\workspaces\\demo'[39m,
+  mode: [32m'demo'[39m,
+  setup_required: [33mfalse[39m,
+  missing_spec_asset: [1mnull[22m,
+  spec_asset: {
+    asset_id: [32m'nvme-spec-mineru'[39m,
+    display_name: [32m'NVMe Spec'[39m,
+    version: [32m'v1'[39m,
+    document_id: [32m'NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified'[39m,
+    created_at: [32m'2026-04-19T04:07:33Z'[39m,
+    source_pdf: [32m'C:\\Users\\10259\\Downloads\\documents\\NVM-Express-Base-Specification-Revision-2.1-2024.08.05-Ratified.pdf'[39m,
+    parser_used: [32m'mineru'[39m,
+    asset_root: [32m'.tmp\\portal-runner\\workspaces\\demo\\raw\\files\\spec_assets\\nvme-spec-mineru\\v1'[39m
+  }
+}
+
+[1A[2K[integration] › e2e\jira-confluence-full-flow.integration.spec.ts:404:3 › Jira/Confluence Full Integration Flow › Step 8: Complete flow summary
+✓ Setup complete
+
+
+[1A[2K
+=== Step 8: Flow Summary ===
+
+[1A[2K
+=== Integration Flow Complete ===
+
+[1A[2KTotal data sources: 0
+
+[1A[2K  - Jira sources: 0
+
+[1A[2K  - Confluence sources: 0
+
+[1A[2K
+✓ All steps completed successfully
+
+[1A[2K[integration] › e2e\test-api-direct.integration.spec.ts:35:3 › Direct API Test › should load page and check workspace dropdown
+Available workspace options: [ [32m'Default'[39m ]
+
+[1A[2KHas demo option: [33mfalse[39m
+
+[1A[2K  68) [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('a[href="/runs"]')[22m
+
+
+       6 |
+       7 |     // Navigate to the latest run
+    >  8 |     await page.click('a[href="/runs"]');
+         |                ^
+       9 |     await page.waitForSelector('text=20260421T042441644174Z-bac9f1a0-workspace-deep-analyze', { timeout: 10000 });
+      10 |     await page.click('text=20260421T042441644174Z-bac9f1a0-workspace-deep-analyze');
+      11 |
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\verify-chinese-output.spec.ts:8:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\verify-chinese-output-Veri-163b5-h-proper-markdown-rendering-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\verify-chinese-output-Veri-163b5-h-proper-markdown-rendering-chromium\error-context.md
+
+
+[1A[2K  69) [integration] › e2e\data-source-setup.integration.spec.ts:114:3 › Data Source Setup - From Scratch › should add Confluence source with mock server 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("添加数据源")')[22m
+
+
+      119 |     // Click "Add Source" button
+      120 |     const addButton = page.locator('button:has-text("添加数据源")');
+    > 121 |     await addButton.click();
+          |                     ^
+      122 |     await page.waitForTimeout(500);
+      123 |
+      124 |     // Select Confluence type
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\data-source-setup.integration.spec.ts:121:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\data-source-setup.integrat-798c2-nce-source-with-mock-server-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\data-source-setup.integrat-798c2-nce-source-with-mock-server-integration\error-context.md
+
+
+[1A[2K  70) [integration] › e2e\diagnose-frontend.integration.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.inputValue: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('label:has-text("Workspace") select')[22m
+
+
+      15 |     // Check which workspace is selected
+      16 |     const workspaceSelect = page.locator('label:has-text("Workspace") select');
+    > 17 |     const selectedWorkspace = await workspaceSelect.inputValue();
+         |                                                     ^
+      18 |     console.log('Selected workspace:', selectedWorkspace);
+      19 |
+      20 |     // Get all workspace options
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\diagnose-frontend.integration.spec.ts:17:53
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\diagnose-frontend.integrat-7c8b3-y-setup-checklist-shows-0-4-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\diagnose-frontend.integrat-7c8b3-y-setup-checklist-shows-0-4-integration\error-context.md
+
+
+[1A[2K  71) [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:82:3 › Jira/Confluence Full Integration Flow › Step 2: Add Jira source with complete configuration 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("添加数据源")')[22m
+
+
+      88 |     // Open add source modal
+      89 |     const addButton = page.locator('button:has-text("添加数据源")');
+    > 90 |     await addButton.click();
+         |                     ^
+      91 |     await page.waitForTimeout(500);
+      92 |
+      93 |     // Verify modal opened
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\jira-confluence-full-flow.integration.spec.ts:90:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\jira-confluence-full-flow.-62234-with-complete-configuration-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\jira-confluence-full-flow.-62234-with-complete-configuration-integration\error-context.md
+
+
+[1A[2K  72) [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:169:3 › Jira/Confluence Full Integration Flow › Step 3: Add Confluence source with complete configuration 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("添加数据源")')[22m
+
+
+      175 |     // Open add source modal
+      176 |     const addButton = page.locator('button:has-text("添加数据源")');
+    > 177 |     await addButton.click();
+          |                     ^
+      178 |     await page.waitForTimeout(500);
+      179 |
+      180 |     // Select Confluence type
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\jira-confluence-full-flow.integration.spec.ts:177:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\jira-confluence-full-flow.-0e507-with-complete-configuration-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\jira-confluence-full-flow.-0e507-with-complete-configuration-integration\error-context.md
+
+
+[1A[2K  73) [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:240:3 › Jira/Confluence Full Integration Flow › Step 4: Verify both sources are listed and check status 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("全部")').first()[22m
+
+
+      247 |     // Switch to "All Sources" tab
+      248 |     const allTab = page.locator('button:has-text("全部")').first();
+    > 249 |     await allTab.click();
+          |                  ^
+      250 |     await page.waitForTimeout(500);
+      251 |
+      252 |     // Get all source cards
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\jira-confluence-full-flow.integration.spec.ts:249:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\jira-confluence-full-flow.-52dd9-are-listed-and-check-status-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\jira-confluence-full-flow.-52dd9-are-listed-and-check-status-integration\error-context.md
+
+
+[1A[2K  74) [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:294:3 › Jira/Confluence Full Integration Flow › Step 5: Test filtering by source type 
+
+    [31mTest timeout of 1860000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 1860000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('button:has-text("全部")').first()[22m
+
+
+      308 |     for (const tab of tabs) {
+      309 |       const tabButton = page.locator(`button:has-text("${tab.name}")`).first();
+    > 310 |       await tabButton.click();
+          |                       ^
+      311 |       await page.waitForTimeout(500);
+      312 |
+      313 |       const sourceCards = page.locator('.bg-white.rounded-xl.border');
+        at C:\Users\10259\Documents\code\codex\codex-try\apps\portal_web\e2e\jira-confluence-full-flow.integration.spec.ts:310:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\jira-confluence-full-flow.-197e0-st-filtering-by-source-type-integration\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\jira-confluence-full-flow.-197e0-st-filtering-by-source-type-integration\error-context.md
+
+
+[1A[2K  Slow test file: [chromium] › e2e\verify-chinese-output.spec.ts (31.0m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  74 failed
+    [chromium] › e2e\analysis.spec.ts:9:3 › Analysis Page E2E Tests › should display analysis page with correct UI elements 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:9:3 › Analyze Page - Full E2E with Demo Workspace › should show 4/4 ready with demo workspace 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:27:3 › Analyze Page - Full E2E with Demo Workspace › should have profiles available 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:44:3 › Analyze Page - Full E2E with Demo Workspace › should enable Run Analysis button 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:59:3 › Analyze Page - Full E2E with Demo Workspace › should successfully run analysis on demo data 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:143:3 › Analyze Page - Full E2E with Demo Workspace › should display error when LLM is not available 
+    [chromium] › e2e\analyze-demo-workspace.spec.ts:181:3 › Analyze Page - Full E2E with Demo Workspace › should navigate to Runs page and see the run 
+    [chromium] › e2e\analyze-page.spec.ts:13:3 › Analyze Page E2E Tests › should display Analyze page with correct UI elements 
+    [chromium] › e2e\analyze-page.spec.ts:27:3 › Analyze Page E2E Tests › should show setup checklist status 
+    [chromium] › e2e\analyze-page.spec.ts:44:3 › Analyze Page E2E Tests › should have Run Analysis button 
+    [chromium] › e2e\analyze-page.spec.ts:51:3 › Analyze Page E2E Tests › should trigger analysis when form is submitted 
+    [chromium] › e2e\analyze-page.spec.ts:106:3 › Analyze Page E2E Tests › should display error message when API fails 
+    [chromium] › e2e\analyze-page.spec.ts:153:3 › Analyze Page E2E Tests › should display result view after successful analysis 
+    [chromium] › e2e\analyze-page.spec.ts:198:3 › Analyze Page E2E Tests › should navigate to other pages from sidebar 
+    [chromium] › e2e\analyze-page.spec.ts:214:3 › Analyze Page E2E Tests › should check backend connectivity 
+    [chromium] › e2e\analyze-page.spec.ts:225:3 › Analyze Page E2E Tests › should validate form inputs 
+    [chromium] › e2e\analyze-page.spec.ts:239:3 › Analyze Page E2E Tests › should display setup checklist items correctly 
+    [chromium] › e2e\analyze-page.spec.ts:255:3 › Analyze Page E2E Tests › should handle setup item navigation 
+    [chromium] › e2e\complete-flow.spec.ts:46:3 › Complete End-to-End Flow › Complete Flow: Add Data Sources → Build Index → Search 
+    [chromium] › e2e\complete-flow.spec.ts:284:3 › Complete End-to-End Flow › Flow: Data Sources → Retrieval Debug 
+    [chromium] › e2e\complete-flow.spec.ts:307:3 › Complete End-to-End Flow › Flow: Data Sources → Strategy Comparison 
+    [chromium] › e2e\complete-flow.spec.ts:326:3 › Complete End-to-End Flow › Flow: Search → Analyze → Runs 
+    [chromium] › e2e\data-sources-page.spec.ts:39:3 › Data Sources Page › should validate required fields in Jira form 
+    [chromium] › e2e\data-sources-page.spec.ts:54:3 › Data Sources Page › should add a Jira data source successfully 
+    [chromium] › e2e\data-sources-page.spec.ts:76:3 › Data Sources Page › should add a Confluence data source successfully 
+    [chromium] › e2e\data-sources-page.spec.ts:121:3 › Data Sources Page › should show delete button for existing data sources 
+    [chromium] › e2e\data-sources-page.spec.ts:147:3 › Data Sources Page › should display data source details 
+    [chromium] › e2e\document-management.spec.ts:42:3 › Document Management E2E › should load document types 
+    [chromium] › e2e\document-management.spec.ts:97:3 › Document Management E2E › should upload a new document 
+    [chromium] › e2e\document-management.spec.ts:126:3 › Document Management E2E › should search uploaded documents 
+    [chromium] › e2e\document-management.spec.ts:155:3 › Document Management E2E › should verify document appears in search with correct metadata 
+    [chromium] › e2e\index-management.spec.ts:8:3 › Index Management E2E Tests › should display home page with correct branding 
+    [chromium] › e2e\index-management.spec.ts:13:3 › Index Management E2E Tests › should show index build button in search page 
+    [chromium] › e2e\index-management.spec.ts:22:3 › Index Management E2E Tests › should navigate to search page 
+    [chromium] › e2e\index-management.spec.ts:34:3 › Index Management E2E Tests › should display document count in search page 
+    [chromium] › e2e\index-management.spec.ts:43:3 › Index Management E2E Tests › should handle index rebuild if available 
+    [chromium] › e2e\index-management.spec.ts:61:3 › Index Management E2E Tests › should show index statistics in search page 
+    [chromium] › e2e\index-management.spec.ts:75:3 › Index Management E2E Tests › should handle API errors gracefully 
+    [chromium] › e2e\search.spec.ts:9:3 › Search Page E2E Tests › should display search page with all UI elements 
+    [chromium] › e2e\search.spec.ts:23:3 › Search Page E2E Tests › should perform search and display results 
+    [chromium] › e2e\search.spec.ts:49:3 › Search Page E2E Tests › should handle empty search query 
+    [chromium] › e2e\search.spec.ts:57:3 › Search Page E2E Tests › should display search results with highlights 
+    [chromium] › e2e\search.spec.ts:82:3 › Search Page E2E Tests › should show loading state during search 
+    [chromium] › e2e\search.spec.ts:103:3 › Search Page E2E Tests › should handle Chinese search queries 
+    [chromium] › e2e\search.spec.ts:120:3 › Search Page E2E Tests › should navigate back to home page 
+    [chromium] › e2e\search.spec.ts:130:3 › Search Page E2E Tests › should display document count ──
+    [chromium] › e2e\sidebar-navigation.spec.ts:58:3 › Sidebar Navigation Tests › should display all sidebar navigation links 
+    [chromium] › e2e\sidebar-navigation.spec.ts:70:3 › Sidebar Navigation Tests › should navigate to Analyze page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:86:3 › Sidebar Navigation Tests › should navigate to Search page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:106:3 › Sidebar Navigation Tests › should navigate to Chat page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:119:3 › Sidebar Navigation Tests › should navigate to Data Sources page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:142:3 › Sidebar Navigation Tests › should navigate to Retrieval Debug page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:154:3 › Sidebar Navigation Tests › should navigate to Strategy Comparison page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:167:3 › Sidebar Navigation Tests › should navigate to Profiles page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:179:3 › Sidebar Navigation Tests › should navigate to Runs page 
+    [chromium] › e2e\sidebar-navigation.spec.ts:192:3 › Sidebar Navigation Tests › should highlight active navigation link 
+    [chromium] › e2e\sidebar-navigation.spec.ts:220:3 › Sidebar Navigation Tests › should navigate through multiple pages sequentially 
+    [chromium] › e2e\sidebar-navigation.spec.ts:245:3 › Sidebar Navigation Tests › should maintain workspace selection across navigation 
+    [chromium] › e2e\test-chinese-output.spec.ts:5:3 › Chinese Output Test › should generate Chinese analysis with qwen-9b model 
+    [chromium] › e2e\test-markdown-rendering.spec.ts:9:3 › Markdown Rendering Test › should render markdown in Runs page 
+    [chromium] › e2e\test-markdown-rendering.spec.ts:66:3 › Markdown Rendering Test › should check all section tabs for markdown rendering 
+    [chromium] › e2e\verify-chinese-output.spec.ts:4:3 › Verify Chinese Output and Markdown Rendering › should display Chinese analysis with proper markdown rendering 
+    [integration] › e2e\analyze-real-backend.integration.spec.ts:13:3 › Analyze Page - Real Backend Integration › should load workspace and profiles from backend 
+    [integration] › e2e\analyze-real-backend.integration.spec.ts:32:3 › Analyze Page - Real Backend Integration › should display setup checklist with real backend status 
+    [integration] › e2e\analyze-real-backend.integration.spec.ts:56:3 › Analyze Page - Real Backend Integration › should attempt real analysis and capture response 
+    [integration] › e2e\data-source-setup.integration.spec.ts:49:3 › Data Source Setup - From Scratch › should navigate to Data Sources page 
+    [integration] › e2e\data-source-setup.integration.spec.ts:61:3 › Data Source Setup - From Scratch › should add Jira source with mock server 
+    [integration] › e2e\data-source-setup.integration.spec.ts:114:3 › Data Source Setup - From Scratch › should add Confluence source with mock server 
+    [integration] › e2e\diagnose-frontend.integration.spec.ts:4:3 › Frontend Diagnosis › diagnose why setup checklist shows 0/4 
+    [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:54:3 › Jira/Confluence Full Integration Flow › Step 1: Navigate to Data Sources page and verify UI 
+    [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:82:3 › Jira/Confluence Full Integration Flow › Step 2: Add Jira source with complete configuration 
+    [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:169:3 › Jira/Confluence Full Integration Flow › Step 3: Add Confluence source with complete configuration 
+    [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:240:3 › Jira/Confluence Full Integration Flow › Step 4: Verify both sources are listed and check status 
+    [integration] › e2e\jira-confluence-full-flow.integration.spec.ts:294:3 › Jira/Confluence Full Integration Flow › Step 5: Test filtering by source type 
+  36 passed (2.1h)

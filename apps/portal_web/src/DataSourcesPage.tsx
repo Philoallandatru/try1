@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
 import {
   Database,
   FileText,
@@ -14,25 +13,7 @@ import {
   Upload,
   ExternalLink
 } from 'lucide-react';
-import { apiJson } from './apiUtils';
-
-// Schemas
-const sourceSchema = z.object({
-  name: z.string(),
-  kind: z.string(),
-  connector_type: z.string(),
-  mode: z.string().optional(),
-  enabled: z.boolean().optional(),
-  status: z.string().optional(),
-  document_count: z.number().optional(),
-  last_refresh: z.string().nullable().optional(),
-});
-
-const sourcesResponseSchema = z.object({
-  sources: z.array(sourceSchema),
-});
-
-type Source = z.infer<typeof sourceSchema>;
+import { api, queries, queryKeys, type Source } from './api';
 
 interface DataSourcesPageProps {
   workspaceDir?: string;
@@ -43,20 +24,12 @@ export default function DataSourcesPage({ workspaceDir = '.tmp/workspace' }: Dat
   const [selectedType, setSelectedType] = useState<'jira' | 'confluence'>('jira');
   const queryClient = useQueryClient();
 
-  const sources = useQuery({
-    queryKey: ['sources', workspaceDir],
-    queryFn: () => apiJson(`/api/workspace/sources?workspace_dir=${encodeURIComponent(workspaceDir)}`, sourcesResponseSchema),
-    enabled: Boolean(workspaceDir),
-  });
+  const sources = useQuery(queries.sources.list(workspaceDir));
 
   const deleteSource = useMutation({
-    mutationFn: (name: string) =>
-      apiJson(`/api/workspace/sources/${name}`, z.unknown(), {
-        method: 'DELETE',
-        body: JSON.stringify({ workspace_dir: workspaceDir }),
-      }),
+    mutationFn: (name: string) => api.sources.delete(name, workspaceDir),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sources', workspaceDir] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) });
     },
   });
 
@@ -344,10 +317,7 @@ function AddSourceModal({
         payload.space_key = data.space_key;
       }
 
-      return apiJson('/api/workspace/sources', z.unknown(), {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      return api.sources.create(payload);
     },
     onSuccess: () => {
       onSuccess();
