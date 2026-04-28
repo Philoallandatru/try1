@@ -4,6 +4,9 @@ import { z } from "zod";
 export const workspaceSchema = z.object({
   name: z.string().optional(),
   workspace_dir: z.string(),
+  created_at: z.string().optional(),
+  last_accessed: z.string().optional(),
+  description: z.string().optional(),
 });
 
 export const workspacesSchema = z.object({

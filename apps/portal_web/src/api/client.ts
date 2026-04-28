@@ -29,6 +29,22 @@ export const api = {
         { method: "GET" }
       ),
 
+    create: (data: { name: string }) =>
+      apiJson("/api/workspaces", workspaceSchema, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+
+    update: (workspaceDir: string, data: { name: string }) =>
+      apiJson(
+        `/api/workspaces/${encodeURIComponent(workspaceDir)}`,
+        workspaceSchema,
+        {
+          method: "PATCH",
+          body: JSON.stringify(data),
+        }
+      ),
+
     delete: (workspaceDir: string) =>
       apiJson(
         `/api/workspaces/${encodeURIComponent(workspaceDir)}`,

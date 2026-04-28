@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
-import { apiJson } from './apiUtils';
+import { api, queries, queryKeys, type Workspace } from './api';
 import {
   Folder,
   Star,
@@ -15,20 +14,6 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-
-const workspaceSchema = z.object({
-  name: z.string().optional(),
-  workspace_dir: z.string(),
-  created_at: z.string().optional(),
-  last_accessed: z.string().optional(),
-  description: z.string().optional(),
-});
-
-const workspacesSchema = z.object({
-  workspaces: z.array(workspaceSchema),
-});
-
-type Workspace = z.infer<typeof workspaceSchema>;
 
 interface WorkspacePreferences {
   favorites: string[];
@@ -106,19 +91,12 @@ export function WorkspaceManager({
 
   const queryClient = useQueryClient();
 
-  const workspaces = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: () => apiJson('/api/workspaces', workspacesSchema),
-  });
+  const workspaces = useQuery(queries.workspaces.list());
 
   const createWorkspace = useMutation({
-    mutationFn: (name: string) =>
-      apiJson('/api/workspaces', workspaceSchema, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      }),
+    mutationFn: (name: string) => api.workspaces.create({ name }),
     onSuccess: (workspace) => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all });
       onWorkspaceChange(workspace.workspace_dir);
       addToRecent(workspace.workspace_dir);
       setNewWorkspaceName('');
@@ -128,24 +106,18 @@ export function WorkspaceManager({
   });
 
   const deleteWorkspace = useMutation({
-    mutationFn: (workspaceDir: string) =>
-      apiJson(`/api/workspaces/${encodeURIComponent(workspaceDir)}`, z.unknown(), {
-        method: 'DELETE',
-      }),
+    mutationFn: (workspaceDir: string) => api.workspaces.delete(workspaceDir),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all });
       refreshPreferences();
     },
   });
 
   const renameWorkspace = useMutation({
     mutationFn: ({ workspaceDir, newName }: { workspaceDir: string; newName: string }) =>
-      apiJson(`/api/workspaces/${encodeURIComponent(workspaceDir)}`, workspaceSchema, {
-        method: 'PATCH',
-        body: JSON.stringify({ name: newName }),
-      }),
+      api.workspaces.update(workspaceDir, { name: newName }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all });
       setEditingWorkspace(null);
     },
   });
