@@ -45,6 +45,10 @@ export const sourceSchema = z.object({
   status_reason: z.string().optional(),
   last_refresh: z.string().nullable().optional(),
   document_count: z.number().optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
+  defaults: z.record(z.string(), z.unknown()).optional(),
+  policies: z.array(z.string()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   selector: z
     .object({
       name: z.string(),

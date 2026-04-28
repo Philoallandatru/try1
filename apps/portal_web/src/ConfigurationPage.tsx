@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
 import {
   Database,
   Filter,
@@ -17,45 +16,7 @@ import {
   FileText,
   Link as LinkIcon
 } from 'lucide-react';
-import { apiJson } from './apiUtils';
-
-// Schemas
-const sourceSchema = z.object({
-  name: z.string(),
-  kind: z.string(),
-  connector_type: z.string(),
-  mode: z.string().optional(),
-  enabled: z.boolean().optional(),
-  config: z.record(z.string(), z.unknown()).optional(),
-  defaults: z.record(z.string(), z.unknown()).optional(),
-  policies: z.array(z.string()).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-const selectorSchema = z.object({
-  name: z.string(),
-  source: z.string(),
-  selector: z.record(z.string(), z.unknown()).optional(),
-});
-
-const profileSchema = z.object({
-  name: z.string(),
-  inputs: z.record(z.string(), z.unknown()).optional(),
-  analysis: z.record(z.string(), z.unknown()).optional(),
-});
-
-const sourcesResponseSchema = z.object({
-  sources: z.array(sourceSchema),
-  selectors: z.array(selectorSchema).default([]),
-});
-
-const profilesResponseSchema = z.object({
-  profiles: z.array(profileSchema),
-});
-
-type Source = z.infer<typeof sourceSchema>;
-type Selector = z.infer<typeof selectorSchema>;
-type Profile = z.infer<typeof profileSchema>;
+import { api, queries, queryKeys, type Source, type Selector, type Profile } from './api';
 
 interface ConfigurationPageProps {
   workspaceDir: string;
@@ -67,17 +28,8 @@ export default function ConfigurationPage({ workspaceDir }: ConfigurationPagePro
   const [activeTab, setActiveTab] = useState<TabType>('sources');
   const queryClient = useQueryClient();
 
-  const sources = useQuery({
-    queryKey: ['sources', workspaceDir],
-    queryFn: () => apiJson(`/api/workspace/sources?workspace_dir=${encodeURIComponent(workspaceDir)}`, sourcesResponseSchema),
-    enabled: Boolean(workspaceDir),
-  });
-
-  const profiles = useQuery({
-    queryKey: ['profiles', workspaceDir],
-    queryFn: () => apiJson(`/api/workspace/profiles?workspace_dir=${encodeURIComponent(workspaceDir)}`, profilesResponseSchema),
-    enabled: Boolean(workspaceDir),
-  });
+  const sources = useQuery(queries.sources.list(workspaceDir));
+  const profiles = useQuery(queries.profiles.list(workspaceDir));
 
   const sourcesData = sources.data?.sources || [];
   const selectorsData = sources.data?.selectors || [];
@@ -177,35 +129,25 @@ function SourcesPanel({ workspaceDir, sources, onRefresh }: {
 
   const createSource = useMutation({
     mutationFn: (source: Partial<Source>) =>
-      apiJson('/api/workspace/sources', z.unknown(), {
-        method: 'POST',
-        body: JSON.stringify({ workspace_dir: workspaceDir, ...source }),
-      }),
+      api.sources.create({ workspace_dir: workspaceDir, ...source }),
     onSuccess: () => {
-      onRefresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) });
       setShowAddModal(false);
     },
   });
 
   const updateSource = useMutation({
     mutationFn: ({ name, data }: { name: string; data: Partial<Source> }) =>
-      apiJson(`/api/workspace/sources/${name}`, z.unknown(), {
-        method: 'PATCH',
-        body: JSON.stringify({ workspace_dir: workspaceDir, ...data }),
-      }),
+      api.sources.update(name, { workspace_dir: workspaceDir, ...data }),
     onSuccess: () => {
-      onRefresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) });
       setEditingSource(null);
     },
   });
 
   const deleteSource = useMutation({
-    mutationFn: (name: string) =>
-      apiJson(`/api/workspace/sources/${name}`, z.unknown(), {
-        method: 'DELETE',
-        body: JSON.stringify({ workspace_dir: workspaceDir }),
-      }),
-    onSuccess: () => onRefresh(),
+    mutationFn: (name: string) => api.sources.delete(name, workspaceDir),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) }),
   });
 
   return (
@@ -288,26 +230,20 @@ function SelectorsPanel({ workspaceDir, selectors, sources, onRefresh }: {
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSelector, setEditingSelector] = useState<Selector | null>(null);
+  const queryClient = useQueryClient();
 
   const createSelector = useMutation({
     mutationFn: (selector: Partial<Selector>) =>
-      apiJson('/api/workspace/selectors', z.unknown(), {
-        method: 'POST',
-        body: JSON.stringify({ workspace_dir: workspaceDir, ...selector }),
-      }),
+      api.selectors.create({ workspace_dir: workspaceDir, ...selector }),
     onSuccess: () => {
-      onRefresh();
+      queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) });
       setShowAddModal(false);
     },
   });
 
   const deleteSelector = useMutation({
-    mutationFn: (name: string) =>
-      apiJson(`/api/workspace/selectors/${name}`, z.unknown(), {
-        method: 'DELETE',
-        body: JSON.stringify({ workspace_dir: workspaceDir }),
-      }),
-    onSuccess: () => onRefresh(),
+    mutationFn: (name: string) => api.selectors.delete(name, workspaceDir),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.sources.all(workspaceDir) }),
   });
 
   return (
@@ -402,14 +338,11 @@ function ProfilesPanel({ workspaceDir, profiles, sources, selectors, onRefresh }
   onRefresh: () => void;
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const queryClient = useQueryClient();
 
   const deleteProfile = useMutation({
-    mutationFn: (name: string) =>
-      apiJson(`/api/workspace/profiles/${name}`, z.unknown(), {
-        method: 'DELETE',
-        body: JSON.stringify({ workspace_dir: workspaceDir }),
-      }),
-    onSuccess: () => onRefresh(),
+    mutationFn: (name: string) => api.profiles.delete(name, workspaceDir),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.profiles.all(workspaceDir) }),
   });
 
   return (
