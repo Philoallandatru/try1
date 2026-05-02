@@ -1,0 +1,26 @@
+/* Retrieval Debug Page Styles */
+
+/* Page container with max width */
+.retrieval-debug-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Centered page header */
+.retrieval-debug-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Page title */
+.retrieval-debug-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Page description */
+.retrieval-debug-description {
+  font-size: 1rem;
+  color: #6b7280;
+}

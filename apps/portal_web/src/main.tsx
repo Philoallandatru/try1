@@ -48,6 +48,7 @@ import "./share.css";
 import "./comment.css";
 import "./annotation.css";
 import "./configuration.css";
+import "./main.css";
 
 // Lazy load page components for code splitting
 const AnalysisResultsPage = lazy(() => import("./AnalysisResultsPage").then(m => ({ default: m.AnalysisResultsPage })));
@@ -453,14 +454,14 @@ function App() {
               <strong>SSD Knowledge Workspace</strong>
             </div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label htmlFor="workspace-selector" style={{ fontSize: '14px', color: '#666' }}>Workspace:</label>
+          <div className="workspace-selector-container">
+            <label htmlFor="workspace-selector" className="workspace-selector-label">Workspace:</label>
             <select
               id="workspace-selector"
               data-testid="workspace-selector"
               value={selectedWorkspace}
               onChange={(e) => setWorkspaceDir(e.target.value)}
-              style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #ddd' }}
+              className="workspace-selector-dropdown"
             >
               {workspaces.data?.workspaces.map((ws) => (
                 <option key={ws.workspace_dir} value={ws.workspace_dir}>
@@ -871,12 +872,12 @@ function ProfilesPage({
           </label>
           <label>
             Document assets (uploaded files)
-            <div style={{ maxHeight: "150px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "4px", padding: "8px" }}>
+            <div className="document-assets-container">
               {(documentAssets.data?.assets || []).length === 0 ? (
-                <p style={{ margin: 0, color: "var(--text-secondary)" }}>No uploaded documents available</p>
+                <p className="document-assets-empty">No uploaded documents available</p>
               ) : (
                 (documentAssets.data?.assets || []).map((asset: SpecAsset) => (
-                  <label key={asset.asset_id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
+                  <label key={asset.asset_id} className="document-asset-item">
                     <input
                       type="checkbox"
                       value={asset.asset_id}

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Copy, FileCheck, CheckCircle2 } from "lucide-react";
 import { ListPanel } from "../components/common/ListPanel";
 import { apiJson } from "../apiUtils";
+import "./profiles-page.css";
 
 const specAssetsSchema = z.object({
   assets: z.array(
@@ -232,24 +233,16 @@ export function ProfilesPage({
           </label>
           <label>
             Document assets (uploaded files)
-            <div
-              style={{
-                maxHeight: "150px",
-                overflowY: "auto",
-                border: "1px solid var(--border)",
-                borderRadius: "4px",
-                padding: "8px",
-              }}
-            >
+            <div className="profiles-document-assets-container">
               {(documentAssets.data?.assets || []).length === 0 ? (
-                <p style={{ margin: 0, color: "var(--text-secondary)" }}>
+                <p className="profiles-document-assets-empty">
                   No uploaded documents available
                 </p>
               ) : (
                 (documentAssets.data?.assets || []).map((asset: SpecAsset) => (
                   <label
                     key={asset.asset_id}
-                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}
+                    className="profiles-document-asset-item"
                   >
                     <input type="checkbox" value={asset.asset_id} {...form.register("documentAssetIds")} />
                     <span>{asset.asset_id}</span>
