@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './retrieval-debug.css';
 
 interface DebugResult {
   query: string;
@@ -58,10 +59,10 @@ export default function RetrievalDebugPage() {
   };
 
   return (
-    <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <header className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>检索调试工具</h1>
-        <p className="page-description" style={{ fontSize: '1rem', color: '#6b7280' }}>深入分析检索过程和结果质量</p>
+    <div className="page-container retrieval-debug-container">
+      <header className="page-header retrieval-debug-header">
+        <h1 className="retrieval-debug-title">检索调试工具</h1>
+        <p className="page-description retrieval-debug-description">深入分析检索过程和结果质量</p>
       </header>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiJson } from "./apiUtils";
+import "./retrieval-evaluation.css";
 import {
   Upload,
   Play,
@@ -226,7 +227,7 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                   onChange={(e) => setUploadContent(e.target.value)}
                   placeholder="Paste YAML content here..."
                   rows={10}
-                  style={{ fontFamily: "monospace", fontSize: "12px" }}
+                  className="retrieval-eval-textarea"
                 />
               </label>
               <button
@@ -255,17 +256,17 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                 <div className="list-row" key={dataset.dataset_id}>
                   <div>
                     <strong>{dataset.name}</strong>
-                    <p style={{ fontSize: "12px", color: "#666", margin: "4px 0" }}>
+                    <p className="dataset-description">
                       {dataset.description}
                     </p>
-                    <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "#888" }}>
+                    <div className="dataset-metadata">
                       <span>{dataset.total_queries} queries</span>
                       <span>{dataset.total_documents} documents</span>
                       <span>v{dataset.version}</span>
                     </div>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                    <div className="dataset-categories">
                       {Object.entries(dataset.categories).map(([cat, count]) => (
-                        <span key={cat} className="pill" style={{ fontSize: "11px" }}>
+                        <span key={cat} className="pill category-pill">
                           {cat}: {count}
                         </span>
                       ))}
@@ -363,14 +364,14 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                 <div className="section-heading">
                   <h3>Evaluation Results</h3>
                   {evaluationResult.run_id && (
-                    <p style={{ fontSize: "12px", color: "#666" }}>
+                    <p className="run-id-text">
                       Run ID: {evaluationResult.run_id}
                     </p>
                   )}
                 </div>
 
                 {/* Aggregate Metrics */}
-                <div className="coverage-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+                <div className="coverage-grid metrics-grid">
                   <MetricCard
                     label="MAP"
                     value={evaluationResult.aggregate_metrics.mean_average_precision.toFixed(3)}
@@ -404,7 +405,7 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                 </div>
 
                 {/* Per-Query Results */}
-                <div className="section-heading" style={{ marginTop: "24px" }}>
+                <div className="section-heading per-query-section">
                   <p className="eyebrow">Per-Query Results</p>
                   <p>{evaluationResult.per_query_results.length} queries evaluated</p>
                 </div>
@@ -414,7 +415,7 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                     <div className="list-row" key={query.query_id}>
                       <div>
                         <strong>#{index + 1} {query.query_text}</strong>
-                        <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                        <div className="query-metrics">
                           <span>AP: {query.average_precision.toFixed(3)}</span>
                           <span>RR: {query.reciprocal_rank.toFixed(3)}</span>
                           <span>NDCG@5: {query.ndcg_at_5.toFixed(3)}</span>
@@ -424,11 +425,11 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                       </div>
                       <div>
                         {query.average_precision >= 0.8 ? (
-                          <CheckCircle2 size={16} style={{ color: "#22c55e" }} />
+                          <CheckCircle2 size={16} className="status-icon-success" />
                         ) : query.average_precision >= 0.5 ? (
-                          <AlertCircle size={16} style={{ color: "#f59e0b" }} />
+                          <AlertCircle size={16} className="status-icon-warning" />
                         ) : (
-                          <XCircle size={16} style={{ color: "#ef4444" }} />
+                          <XCircle size={16} className="status-icon-error" />
                         )}
                       </div>
                     </div>
@@ -454,14 +455,14 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
                 <div className="list-row" key={result.run_id}>
                   <div>
                     <strong>{result.dataset_name}</strong>
-                    <p style={{ fontSize: "12px", color: "#666", margin: "4px 0" }}>
+                    <p className="result-timestamp">
                       {new Date(result.timestamp).toLocaleString()}
                     </p>
-                    <div style={{ display: "flex", gap: "12px", fontSize: "12px", color: "#888" }}>
+                    <div className="result-metadata">
                       <span>{result.total_queries} queries</span>
                       <span>Top-{result.top_k}</span>
                     </div>
-                    <div style={{ display: "flex", gap: "12px", fontSize: "12px", marginTop: "4px" }}>
+                    <div className="result-metrics">
                       <span>MAP: {result.aggregate_metrics.mean_average_precision.toFixed(3)}</span>
                       <span>MRR: {result.aggregate_metrics.mean_reciprocal_rank.toFixed(3)}</span>
                       <span>NDCG@5: {result.aggregate_metrics.mean_ndcg_at_5.toFixed(3)}</span>
@@ -500,11 +501,11 @@ export function RetrievalEvaluationPage({ workspaceDir }: { workspaceDir: string
 function MetricCard({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="metric-card">
-      <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
+      <div className="metric-icon-container">
         {icon}
-        <span style={{ fontSize: "12px", color: "#666" }}>{label}</span>
+        <span className="metric-label">{label}</span>
       </div>
-      <strong style={{ fontSize: "20px" }}>{value}</strong>
+      <strong className="metric-value">{value}</strong>
     </div>
   );
 }

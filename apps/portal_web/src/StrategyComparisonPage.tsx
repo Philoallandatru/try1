@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './strategy-comparison.css';
 
 interface StrategyResult {
   strategy: string;
@@ -84,10 +85,10 @@ export default function StrategyComparisonPage() {
   };
 
   return (
-    <div className="page-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      <header className="page-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>多策略检索对比</h1>
-        <p className="page-description" style={{ fontSize: '1rem', color: '#6b7280' }}>对比不同检索策略的性能和结果</p>
+    <div className="page-container strategy-comparison-container">
+      <header className="page-header strategy-comparison-header">
+        <h1 className="strategy-comparison-title">多策略检索对比</h1>
+        <p className="page-description strategy-comparison-description">对比不同检索策略的性能和结果</p>
       </header>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

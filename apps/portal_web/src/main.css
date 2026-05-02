@@ -1,0 +1,45 @@
+/* Main App Styles */
+
+/* Workspace selector container */
+.workspace-selector-container {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Workspace selector label */
+.workspace-selector-label {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Workspace selector dropdown */
+.workspace-selector-dropdown {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Document assets container */
+.document-assets-container {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+/* Document assets empty state */
+.document-assets-empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Document asset checkbox item */
+.document-asset-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}

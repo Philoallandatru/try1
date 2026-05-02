@@ -1,0 +1,114 @@
+/* Retrieval Evaluation Page Styles */
+
+/* Textarea monospace styling */
+.retrieval-eval-textarea {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* Dataset description text */
+.dataset-description {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0;
+}
+
+/* Dataset metadata row */
+.dataset-metadata {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Dataset categories container */
+.dataset-categories {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Category pill */
+.category-pill {
+  font-size: 11px;
+}
+
+/* Run ID text */
+.run-id-text {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Coverage grid for metrics */
+.metrics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* Per-query results section */
+.per-query-section {
+  margin-top: 24px;
+}
+
+/* Query metrics row */
+.query-metrics {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Metric card icon container */
+.metric-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+/* Metric label */
+.metric-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Metric value */
+.metric-value {
+  font-size: 20px;
+}
+
+/* Result timestamp */
+.result-timestamp {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0;
+}
+
+/* Result metadata */
+.result-metadata {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Result metrics */
+.result-metrics {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Status icons with colors */
+.status-icon-success {
+  color: #22c55e;
+}
+
+.status-icon-warning {
+  color: #f59e0b;
+}
+
+.status-icon-error {
+  color: #ef4444;
+}
